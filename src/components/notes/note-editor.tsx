@@ -124,7 +124,7 @@ export function NoteEditor({
       </div>
 
       <p className="text-xs text-muted-foreground">
-        {navigator.platform.includes("Mac") ? "Cmd" : "Ctrl"}+Enter to save
+        {/(Mac|iPhone|iPad)/i.test(navigator.userAgent) ? "Cmd" : "Ctrl"}+Enter to save
         &middot; Esc to cancel
       </p>
     </div>

@@ -72,7 +72,10 @@ export function PassageView({ book, chapter }: PassageViewProps) {
         containerRef.current &&
         !containerRef.current.querySelector("[data-notes-open]")?.contains(e.target as Node)
       ) {
-        // Only close if clicking on the container background, not on a verse or note
+        setOpenVerseKey(null)
+        setCreatingFor(null)
+        setEditingNoteId(null)
+        setSelectedVerses(new Set())
       }
     }
     document.addEventListener("mousedown", handleClick)
@@ -297,6 +300,7 @@ export function PassageView({ book, chapter }: PassageViewProps) {
               <div className="py-1">
                 {editingNote ? (
                   <NoteEditor
+                    key={`edit-${editingNoteId}`}
                     verseRef={editingNote.verseRef}
                     initialContent={editingNote.content}
                     initialTags={editingNote.tags}
@@ -305,6 +309,7 @@ export function PassageView({ book, chapter }: PassageViewProps) {
                   />
                 ) : isCreatingHere ? (
                   <NoteEditor
+                    key={`create-${creatingFor!.startVerse}-${creatingFor!.endVerse}`}
                     verseRef={creatingFor!}
                     onSave={handleSaveNew}
                     onCancel={handleClickAway}

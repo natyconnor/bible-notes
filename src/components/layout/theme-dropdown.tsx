@@ -8,6 +8,7 @@ import {
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { useTheme, THEMES } from "@/lib/theme-context"
 import { useState } from "react"
+import { cn } from "@/lib/utils"
 
 export function ThemeDropdown() {
   const { theme, setTheme } = useTheme()
@@ -36,12 +37,12 @@ export function ThemeDropdown() {
               <Tooltip key={t.name}>
                 <TooltipTrigger asChild>
                   <button
-                    className={[
+                    className={cn(
                       "w-full flex items-start gap-3 px-2 py-2 rounded-md text-left transition-colors cursor-pointer",
                       isActive
                         ? "bg-accent text-accent-foreground"
-                        : "hover:bg-muted",
-                    ].join(" ")}
+                        : "hover:bg-muted"
+                    )}
                     onClick={() => {
                       setTheme(t)
                       setOpen(false)

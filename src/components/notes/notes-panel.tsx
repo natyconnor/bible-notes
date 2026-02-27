@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo, useEffect } from "react"
+import { useState, useCallback, useMemo } from "react"
 import { useQuery } from "convex-helpers/react/cache"
 import { useMutation } from "convex/react"
 import { api } from "../../../convex/_generated/api"
@@ -61,19 +61,19 @@ export function NotesPanel({
   const [editingNoteId, setEditingNoteId] = useState<Id<"notes"> | null>(null)
   const [expandedVerseKey, setExpandedVerseKey] = useState<string | null>(null)
   const [internalCreating, setInternalCreating] = useState<VerseRef | null>(null)
+  const [prevCreatingForRef, setPrevCreatingForRef] = useState(creatingForRef)
 
   // Use parent-provided creating ref or internal one
   const activeCreatingRef = creatingForRef ?? internalCreating
 
-  // Clear internal state when parent provides creatingForRef (defer setState to avoid sync setState in effect)
-  useEffect(() => {
+  // Derived state: clear internal creating/editing when parent takes over creation
+  if (prevCreatingForRef !== creatingForRef) {
+    setPrevCreatingForRef(creatingForRef)
     if (creatingForRef) {
-      queueMicrotask(() => {
-        setInternalCreating(null)
-        setEditingNoteId(null)
-      })
+      setInternalCreating(null)
+      setEditingNoteId(null)
     }
-  }, [creatingForRef])
+  }
 
   // Group notes by verse key
   const notesByVerse = useMemo(() => {
@@ -162,6 +162,7 @@ export function NotesPanel({
 
         {activeCreatingRef && (
           <NoteEditor
+            key={`create-${activeCreatingRef.startVerse}-${activeCreatingRef.endVerse}`}
             verseRef={activeCreatingRef}
             onSave={handleSaveNew}
             onCancel={handleCancelCreate}

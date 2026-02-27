@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from "react"
+import { useState, useMemo, type ReactNode } from "react"
 import { TooltipButton } from "@/components/ui/tooltip-button"
 import {
   Popover,
@@ -23,13 +23,17 @@ export function PassageNavigator({ trigger }: PassageNavigatorProps = {}) {
   const [search, setSearch] = useState("")
   const { openTab } = useTabs()
 
-  const filteredBooks = search
-    ? BIBLE_BOOKS.filter(
-        (b) =>
-          b.name.toLowerCase().includes(search.toLowerCase()) ||
-          b.abbreviation.toLowerCase().includes(search.toLowerCase())
-      )
-    : BIBLE_BOOKS
+  const filteredBooks = useMemo(
+    () =>
+      search
+        ? BIBLE_BOOKS.filter(
+            (b) =>
+              b.name.toLowerCase().includes(search.toLowerCase()) ||
+              b.abbreviation.toLowerCase().includes(search.toLowerCase())
+          )
+        : BIBLE_BOOKS,
+    [search]
+  )
 
   function selectChapter(book: BookInfo, chapter: number) {
     const passageId = toPassageId(book.name, chapter)
