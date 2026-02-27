@@ -1,4 +1,4 @@
-import { Button } from "@/components/ui/button"
+import { TooltipButton } from "@/components/ui/tooltip-button"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import { useTabs } from "@/lib/use-tabs"
 import { toPassageId } from "@/lib/verse-ref-utils"
@@ -41,27 +41,29 @@ export function ChapterHeader({ book, chapter }: ChapterHeaderProps) {
 
   return (
     <div className="flex items-center justify-between py-4 px-2">
-      <Button
+      <TooltipButton
         variant="ghost"
         size="icon"
         onClick={goPrev}
         disabled={!hasPrev}
         className="h-8 w-8"
+        tooltip="Previous chapter"
       >
         <ChevronLeft className="h-4 w-4" />
-      </Button>
+      </TooltipButton>
       <h1 className="text-2xl font-serif font-semibold tracking-tight">
         {book} {chapter}
       </h1>
-      <Button
+      <TooltipButton
         variant="ghost"
         size="icon"
         onClick={goNext}
         disabled={!hasNext}
         className="h-8 w-8"
+        tooltip="Next chapter"
       >
         <ChevronRight className="h-4 w-4" />
-      </Button>
+      </TooltipButton>
     </div>
   )
 }

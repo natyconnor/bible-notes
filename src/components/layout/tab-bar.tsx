@@ -1,9 +1,10 @@
 import { useTabs } from "@/lib/use-tabs"
 import { TabItem } from "./tab-item"
-import { Button } from "@/components/ui/button"
+import { TooltipButton } from "@/components/ui/tooltip-button"
 import { Plus } from "lucide-react"
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area"
 import { SearchDialog } from "@/components/notes/search-dialog"
+import { ThemeDropdown } from "./theme-dropdown"
 
 export function TabBar() {
   const { tabs, activeTabId, setActiveTab, closeTab, openTab } = useTabs()
@@ -26,15 +27,16 @@ export function TabBar() {
       </ScrollArea>
       <div className="flex items-center gap-1 mx-1 shrink-0">
         <SearchDialog />
-        <Button
+        <ThemeDropdown />
+        <TooltipButton
           variant="ghost"
           size="icon"
           className="h-8 w-8"
           onClick={() => openTab("Genesis-1", "Genesis 1")}
-          title="New tab"
+          tooltip="New tab"
         >
           <Plus className="h-4 w-4" />
-        </Button>
+        </TooltipButton>
       </div>
     </div>
   )

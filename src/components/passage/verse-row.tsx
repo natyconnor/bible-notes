@@ -1,6 +1,7 @@
 import { memo } from "react"
 import { Plus } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 
 interface VerseRowLeftProps {
   verseNumber: number
@@ -49,16 +50,20 @@ export const VerseRowLeft = memo(function VerseRowLeft({
       <span className="font-serif text-base leading-relaxed flex-1 whitespace-pre-wrap">
         {text}
       </span>
-      <button
-        className="absolute right-1 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-primary/10"
-        onClick={(e) => {
-          e.stopPropagation()
-          onAddNote()
-        }}
-        title="Add note"
-      >
-        <Plus className="h-4 w-4 text-primary" />
-      </button>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <button
+            className="absolute right-1 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-primary/10"
+            onClick={(e) => {
+              e.stopPropagation()
+              onAddNote()
+            }}
+          >
+            <Plus className="h-4 w-4 text-primary" />
+          </button>
+        </TooltipTrigger>
+        <TooltipContent>Add note</TooltipContent>
+      </Tooltip>
     </div>
   )
 })

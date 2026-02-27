@@ -1,6 +1,7 @@
 import { memo } from "react"
 import { Pencil, Trash2, Plus, ChevronUp } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { cn } from "@/lib/utils"
 import type { VerseRef } from "@/lib/verse-ref-utils"
 import { isPassageNote } from "@/lib/verse-ref-utils"
@@ -60,21 +61,30 @@ export const VerseNotes = memo(function VerseNotes({
   return (
     <div className="space-y-2" onClick={(e) => e.stopPropagation()}>
       <div className="flex items-center justify-between">
-        <button
-          className="flex items-center gap-1 text-xs text-primary hover:text-primary/80 font-medium transition-colors"
-          onClick={onAddNote}
-        >
-          <Plus className="h-3 w-3" />
-          New note
-        </button>
-        <button
-          className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
-          onClick={onClose}
-          title="Collapse"
-        >
-          <ChevronUp className="h-3 w-3" />
-          Collapse
-        </button>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button
+              className="flex items-center gap-1 text-xs text-primary hover:text-primary/80 font-medium transition-colors"
+              onClick={onAddNote}
+            >
+              <Plus className="h-3 w-3" />
+              New note
+            </button>
+          </TooltipTrigger>
+          <TooltipContent>Add new note</TooltipContent>
+        </Tooltip>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button
+              className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+              onClick={onClose}
+            >
+              <ChevronUp className="h-3 w-3" />
+              Collapse
+            </button>
+          </TooltipTrigger>
+          <TooltipContent>Collapse notes</TooltipContent>
+        </Tooltip>
       </div>
       {notes.map((note) => (
         <ExpandedBubble
@@ -125,16 +135,20 @@ function CollapsedBubble({
           ))}
         </div>
       )}
-      <button
-        className="absolute top-1.5 right-1.5 opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-muted transition-all"
-        onClick={(e) => {
-          e.stopPropagation()
-          onEdit()
-        }}
-        title="Edit note"
-      >
-        <Pencil className="h-3 w-3 text-muted-foreground" />
-      </button>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <button
+            className="absolute top-1.5 right-1.5 opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-muted transition-all"
+            onClick={(e) => {
+              e.stopPropagation()
+              onEdit()
+            }}
+          >
+            <Pencil className="h-3 w-3 text-muted-foreground" />
+          </button>
+        </TooltipTrigger>
+        <TooltipContent>Edit note</TooltipContent>
+      </Tooltip>
     </div>
   )
 }
@@ -202,20 +216,28 @@ function ExpandedBubble({
           {note.content}
         </p>
         <div className="flex items-center gap-0.5 shrink-0">
-          <button
-            className="p-1 rounded hover:bg-muted transition-colors"
-            onClick={onEdit}
-            title="Edit note"
-          >
-            <Pencil className="h-3 w-3 text-muted-foreground" />
-          </button>
-          <button
-            className="p-1 rounded hover:bg-destructive/10 transition-colors"
-            onClick={onDelete}
-            title="Delete note"
-          >
-            <Trash2 className="h-3 w-3 text-muted-foreground hover:text-destructive" />
-          </button>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                className="p-1 rounded hover:bg-muted transition-colors"
+                onClick={onEdit}
+              >
+                <Pencil className="h-3 w-3 text-muted-foreground" />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent>Edit note</TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                className="p-1 rounded hover:bg-destructive/10 transition-colors"
+                onClick={onDelete}
+              >
+                <Trash2 className="h-3 w-3 text-muted-foreground hover:text-destructive" />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent>Delete note</TooltipContent>
+          </Tooltip>
         </div>
       </div>
       {note.tags.length > 0 && (

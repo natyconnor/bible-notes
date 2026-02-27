@@ -1,10 +1,11 @@
 import { useState } from "react"
-import { Button } from "@/components/ui/button"
+import { TooltipButton } from "@/components/ui/tooltip-button"
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Input } from "@/components/ui/input"
 import { BookOpen } from "lucide-react"
@@ -44,9 +45,9 @@ export function PassageNavigator() {
       }
     }}>
       <PopoverTrigger asChild>
-        <Button variant="ghost" size="icon" className="h-8 w-8" title="Go to passage">
+        <TooltipButton variant="ghost" size="icon" className="h-8 w-8" tooltip="Go to passage">
           <BookOpen className="h-4 w-4" />
-        </Button>
+        </TooltipButton>
       </PopoverTrigger>
       <PopoverContent className="w-80 p-0" align="start">
         {!selectedBook ? (
@@ -75,19 +76,25 @@ export function PassageNavigator() {
                           : "New Testament"}
                       </div>
                       {books.map((book) => (
-                        <button
-                          key={book.name}
-                          className="w-full text-left px-2 py-1.5 text-sm rounded-sm hover:bg-muted transition-colors"
-                          onClick={() => {
-                            if (book.chapters === 1) {
-                              selectChapter(book, 1)
-                            } else {
-                              setSelectedBook(book)
-                            }
-                          }}
-                        >
-                          {book.name}
-                        </button>
+                        <Tooltip key={book.name}>
+                          <TooltipTrigger asChild>
+                            <button
+                              className="w-full text-left px-2 py-1.5 text-sm rounded-sm hover:bg-muted transition-colors cursor-pointer"
+                              onClick={() => {
+                                if (book.chapters === 1) {
+                                  selectChapter(book, 1)
+                                } else {
+                                  setSelectedBook(book)
+                                }
+                              }}
+                            >
+                              {book.name}
+                            </button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            {book.chapters === 1 ? `Open ${book.name}` : `Select chapter in ${book.name}`}
+                          </TooltipContent>
+                        </Tooltip>
                       ))}
                     </div>
                   )
@@ -98,12 +105,17 @@ export function PassageNavigator() {
         ) : (
           <>
             <div className="p-2 border-b">
-              <button
-                className="text-sm text-muted-foreground hover:text-foreground"
-                onClick={() => setSelectedBook(null)}
-              >
-                &larr; {selectedBook.name}
-              </button>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    className="text-sm text-muted-foreground hover:text-foreground cursor-pointer"
+                    onClick={() => setSelectedBook(null)}
+                  >
+                    &larr; {selectedBook.name}
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent>Back to book list</TooltipContent>
+              </Tooltip>
             </div>
             <div className="p-3">
               <div className="grid grid-cols-6 gap-1">
@@ -111,16 +123,20 @@ export function PassageNavigator() {
                   { length: selectedBook.chapters },
                   (_, i) => i + 1
                 ).map((ch) => (
-                  <button
-                    key={ch}
-                    className={cn(
-                      "h-9 w-full rounded-sm text-sm font-medium hover:bg-primary hover:text-primary-foreground transition-colors",
-                      "bg-muted"
-                    )}
-                    onClick={() => selectChapter(selectedBook, ch)}
-                  >
-                    {ch}
-                  </button>
+                  <Tooltip key={ch}>
+                    <TooltipTrigger asChild>
+                      <button
+                        className={cn(
+                          "h-9 w-full rounded-sm text-sm font-medium hover:bg-primary hover:text-primary-foreground transition-colors cursor-pointer",
+                          "bg-muted"
+                        )}
+                        onClick={() => selectChapter(selectedBook, ch)}
+                      >
+                        {ch}
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent>Go to {selectedBook.name} {ch}</TooltipContent>
+                  </Tooltip>
                 ))}
               </div>
             </div>

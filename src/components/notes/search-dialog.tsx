@@ -5,6 +5,7 @@ import {
   Dialog,
   DialogContent,
 } from "@/components/ui/dialog"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { ScrollArea } from "@/components/ui/scroll-area"
@@ -44,7 +45,7 @@ export function SearchDialog() {
   return (
     <>
       <button
-        className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors px-3 py-1.5 rounded-md border bg-muted/30 hover:bg-muted"
+        className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors px-3 py-1.5 rounded-md border bg-muted/30 hover:bg-muted cursor-pointer"
         onClick={() => setOpen(true)}
       >
         <Search className="h-3.5 w-3.5" />
@@ -69,24 +70,33 @@ export function SearchDialog() {
 
           {allTags && allTags.length > 0 && (
             <div className="flex flex-wrap gap-1 px-3 py-2 border-b">
-              <Badge
-                variant={selectedTag === undefined ? "default" : "outline"}
-                className="text-xs cursor-pointer"
-                onClick={() => setSelectedTag(undefined)}
-              >
-                All
-              </Badge>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Badge
+                    variant={selectedTag === undefined ? "default" : "outline"}
+                    className="text-xs cursor-pointer"
+                    onClick={() => setSelectedTag(undefined)}
+                  >
+                    All
+                  </Badge>
+                </TooltipTrigger>
+                <TooltipContent>Show all notes</TooltipContent>
+              </Tooltip>
               {allTags.map((tag) => (
-                <Badge
-                  key={tag}
-                  variant={selectedTag === tag ? "default" : "outline"}
-                  className="text-xs cursor-pointer"
-                  onClick={() =>
-                    setSelectedTag(selectedTag === tag ? undefined : tag)
-                  }
-                >
-                  {tag}
-                </Badge>
+                <Tooltip key={tag}>
+                  <TooltipTrigger asChild>
+                    <Badge
+                      variant={selectedTag === tag ? "default" : "outline"}
+                      className="text-xs cursor-pointer"
+                      onClick={() =>
+                        setSelectedTag(selectedTag === tag ? undefined : tag)
+                      }
+                    >
+                      {tag}
+                    </Badge>
+                  </TooltipTrigger>
+                  <TooltipContent>Filter by {tag}</TooltipContent>
+                </Tooltip>
               ))}
             </div>
           )}
@@ -107,11 +117,12 @@ export function SearchDialog() {
             ) : (
               <div className="p-1">
                 {searchResults.map((note) => (
-                  <button
-                    key={note._id}
-                    className="w-full text-left px-3 py-2 rounded-sm hover:bg-muted transition-colors"
-                    onClick={handleSelectNote}
-                  >
+                  <Tooltip key={note._id}>
+                    <TooltipTrigger asChild>
+                      <button
+                        className="w-full text-left px-3 py-2 rounded-sm hover:bg-muted transition-colors cursor-pointer"
+                        onClick={handleSelectNote}
+                      >
                     <p className="text-sm line-clamp-2">
                       {note.content}
                     </p>
@@ -129,6 +140,9 @@ export function SearchDialog() {
                       </div>
                     )}
                   </button>
+                    </TooltipTrigger>
+                    <TooltipContent>Open note</TooltipContent>
+                  </Tooltip>
                 ))}
               </div>
             )}

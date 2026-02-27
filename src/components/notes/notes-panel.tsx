@@ -4,7 +4,7 @@ import { useMutation } from "convex/react"
 import { api } from "../../../convex/_generated/api"
 import type { Doc, Id } from "../../../convex/_generated/dataModel"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { Button } from "@/components/ui/button"
+import { TooltipButton } from "@/components/ui/tooltip-button"
 import { NoteBubble } from "./note-bubble"
 import { NoteBubbleStack } from "./note-bubble-stack"
 import { NoteEditor } from "./note-editor"
@@ -221,15 +221,16 @@ export function NotesPanel({
                     {notes.length} notes for{" "}
                     {formatVerseRef(firstNote.verseRef)}
                   </span>
-                  <Button
+                  <TooltipButton
                     variant="ghost"
                     size="sm"
                     className="h-6 text-xs gap-1"
                     onClick={() => setInternalCreating(firstNote.verseRef)}
+                    tooltip="Add new note"
                   >
                     <Plus className="h-3 w-3" />
                     New note
-                  </Button>
+                  </TooltipButton>
                 </div>
               )}
               {(isExpanded ? notes : [notes[0]]).map((note) => (
@@ -246,14 +247,15 @@ export function NotesPanel({
                 />
               ))}
               {isExpanded && (
-                <Button
+                <TooltipButton
                   variant="ghost"
                   size="sm"
                   className="w-full text-xs text-muted-foreground"
                   onClick={() => setExpandedVerseKey(null)}
+                  tooltip="Collapse notes"
                 >
                   Collapse
-                </Button>
+                </TooltipButton>
               )}
             </div>
           )

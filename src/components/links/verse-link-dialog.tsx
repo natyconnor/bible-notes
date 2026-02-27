@@ -7,7 +7,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
+import { TooltipButton } from "@/components/ui/tooltip-button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import type { VerseRef } from "@/lib/verse-ref-utils"
@@ -88,10 +88,12 @@ export function VerseLinkDialog({
             {error && <p className="text-xs text-destructive">{error}</p>}
           </div>
           <div className="flex justify-end gap-2">
-            <Button variant="ghost" onClick={() => onOpenChange(false)}>
+            <TooltipButton variant="ghost" onClick={() => onOpenChange(false)} tooltip="Cancel">
               Cancel
-            </Button>
-            <Button onClick={handleCreate}>Create Link</Button>
+            </TooltipButton>
+            <TooltipButton onClick={handleCreate} tooltip="Create verse link">
+              Create Link
+            </TooltipButton>
           </div>
         </div>
       </DialogContent>

@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect, useRef } from "react"
-import { Button } from "@/components/ui/button"
+import { TooltipButton } from "@/components/ui/tooltip-button"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
@@ -65,9 +66,9 @@ export function NoteEditor({
         <Badge variant="secondary" className="text-xs">
           {formatVerseRef(verseRef)}
         </Badge>
-        <Button variant="ghost" size="icon" className="h-6 w-6" onClick={onCancel}>
+        <TooltipButton variant="ghost" size="icon" className="h-6 w-6" onClick={onCancel} tooltip="Cancel">
           <X className="h-3.5 w-3.5" />
-        </Button>
+        </TooltipButton>
       </div>
 
       <Textarea
@@ -83,9 +84,14 @@ export function NoteEditor({
           {tags.map((tag) => (
             <Badge key={tag} variant="outline" className="text-xs gap-1">
               {tag}
-              <button onClick={() => removeTag(tag)} className="hover:text-destructive">
-                <X className="h-2.5 w-2.5" />
-              </button>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button onClick={() => removeTag(tag)} className="hover:text-destructive">
+                    <X className="h-2.5 w-2.5" />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent>Remove tag</TooltipContent>
+              </Tooltip>
             </Badge>
           ))}
         </div>
@@ -104,16 +110,17 @@ export function NoteEditor({
       </div>
 
       <div className="flex justify-end gap-2">
-        <Button variant="ghost" size="sm" onClick={onCancel}>
+        <TooltipButton variant="ghost" size="sm" onClick={onCancel} tooltip="Cancel (Esc)">
           Cancel
-        </Button>
-        <Button
+        </TooltipButton>
+        <TooltipButton
           size="sm"
           onClick={() => content.trim() && onSave(content.trim(), tags)}
           disabled={!content.trim()}
+          tooltip={content.trim() ? "Save note (⌘Enter)" : "Enter content to save"}
         >
           Save
-        </Button>
+        </TooltipButton>
       </div>
 
       <p className="text-xs text-muted-foreground">

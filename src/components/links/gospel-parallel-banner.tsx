@@ -30,7 +30,7 @@ export function GospelParallelBanner({
   return (
     <div className="border rounded-lg bg-muted/30 px-3 py-2 mb-3">
       <button
-        className="flex items-center gap-2 w-full text-left text-sm font-medium text-muted-foreground"
+        className="flex items-center gap-2 w-full text-left text-sm font-medium text-muted-foreground cursor-pointer"
         onClick={() => setExpanded(!expanded)}
       >
         <BookOpen className="h-4 w-4 shrink-0" />

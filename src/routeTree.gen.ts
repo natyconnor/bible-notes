@@ -9,9 +9,15 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as ThemeTestRouteImport } from './routes/theme-test'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as PassagePassageIdRouteImport } from './routes/passage/$passageId'
 
+const ThemeTestRoute = ThemeTestRouteImport.update({
+  id: '/theme-test',
+  path: '/theme-test',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -25,32 +31,43 @@ const PassagePassageIdRoute = PassagePassageIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/theme-test': typeof ThemeTestRoute
   '/passage/$passageId': typeof PassagePassageIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/theme-test': typeof ThemeTestRoute
   '/passage/$passageId': typeof PassagePassageIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/theme-test': typeof ThemeTestRoute
   '/passage/$passageId': typeof PassagePassageIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/passage/$passageId'
+  fullPaths: '/' | '/theme-test' | '/passage/$passageId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/passage/$passageId'
-  id: '__root__' | '/' | '/passage/$passageId'
+  to: '/' | '/theme-test' | '/passage/$passageId'
+  id: '__root__' | '/' | '/theme-test' | '/passage/$passageId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ThemeTestRoute: typeof ThemeTestRoute
   PassagePassageIdRoute: typeof PassagePassageIdRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/theme-test': {
+      id: '/theme-test'
+      path: '/theme-test'
+      fullPath: '/theme-test'
+      preLoaderRoute: typeof ThemeTestRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -70,6 +87,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ThemeTestRoute: ThemeTestRoute,
   PassagePassageIdRoute: PassagePassageIdRoute,
 }
 export const routeTree = rootRouteImport
