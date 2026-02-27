@@ -23,6 +23,8 @@ export function PassageNavigator({ trigger }: PassageNavigatorProps = {}) {
   const [search, setSearch] = useState("")
   const { openTab } = useTabs()
 
+  const [highlightedIndex, setHighlightedIndex] = useState(0)
+
   const filteredBooks = useMemo(
     () =>
       search
@@ -34,6 +36,16 @@ export function PassageNavigator({ trigger }: PassageNavigatorProps = {}) {
         : BIBLE_BOOKS,
     [search]
   )
+
+
+  function selectBook(book: BookInfo) {
+    if (book.chapters === 1) {
+      selectChapter(book, 1)
+    } else {
+      setSelectedBook(book)
+      setSearch("")
+    }
+  }
 
   function selectChapter(book: BookInfo, chapter: number) {
     const passageId = toPassageId(book.name, chapter)
@@ -65,9 +77,24 @@ export function PassageNavigator({ trigger }: PassageNavigatorProps = {}) {
               <Input
                 placeholder="Search books..."
                 value={search}
-                onChange={(e) => setSearch(e.target.value)}
+                onChange={(e) => {
+                  setSearch(e.target.value)
+                  setHighlightedIndex(0)
+                }}
                 className="h-8"
                 autoFocus
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    const book = filteredBooks[highlightedIndex]
+                    if (book) selectBook(book)
+                  } else if (e.key === "ArrowDown") {
+                    e.preventDefault()
+                    setHighlightedIndex((i) => Math.min(i + 1, filteredBooks.length - 1))
+                  } else if (e.key === "ArrowUp") {
+                    e.preventDefault()
+                    setHighlightedIndex((i) => Math.max(i - 1, 0))
+                  }
+                }}
               />
             </div>
             <ScrollArea className="h-80">
@@ -84,21 +111,24 @@ export function PassageNavigator({ trigger }: PassageNavigatorProps = {}) {
                           ? "Old Testament"
                           : "New Testament"}
                       </div>
-                      {books.map((book) => (
-                        <button
-                          key={book.name}
-                          className="w-full text-left px-2 py-1.5 text-sm rounded-sm hover:bg-muted transition-colors cursor-pointer"
-                          onClick={() => {
-                            if (book.chapters === 1) {
-                              selectChapter(book, 1)
-                            } else {
-                              setSelectedBook(book)
-                            }
-                          }}
-                        >
-                          {book.name}
-                        </button>
-                      ))}
+                      {books.map((book) => {
+                        const globalIndex = filteredBooks.indexOf(book)
+                        return (
+                          <button
+                            key={book.name}
+                            className={cn(
+                              "w-full text-left px-2 py-1.5 text-sm rounded-sm transition-colors cursor-pointer",
+                              globalIndex === highlightedIndex
+                                ? "bg-primary text-primary-foreground"
+                                : "hover:bg-muted"
+                            )}
+                            onMouseEnter={() => setHighlightedIndex(globalIndex)}
+                            onClick={() => selectBook(book)}
+                          >
+                            {book.name}
+                          </button>
+                        )
+                      })}
                     </div>
                   )
                 })}
