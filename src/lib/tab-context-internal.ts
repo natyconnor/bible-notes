@@ -6,6 +6,7 @@ export interface TabContextValue {
   tabs: Tab[]
   activeTabId: string | null
   openTab: (passageId: string, label: string) => void
+  navigateActiveTab: (passageId: string, label: string) => void
   closeTab: (tabId: string) => void
   setActiveTab: (tabId: string) => void
 }

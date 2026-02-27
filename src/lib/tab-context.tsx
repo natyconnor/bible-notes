@@ -44,6 +44,24 @@ function TabProvider({ children }: { children: ReactNode }) {
     [tabs, navigate]
   )
 
+  const navigateActiveTab = useCallback(
+    (passageId: string, label: string) => {
+      if (!activeTabId) {
+        openTab(passageId, label)
+        return
+      }
+      const updatedTabs = tabs.map((t) =>
+        t.id === activeTabId ? { ...t, passageId, label } : t
+      )
+      saveTabs(updatedTabs)
+      setTabs(updatedTabs)
+      startTransition(() => {
+        navigate({ to: "/passage/$passageId", params: { passageId } })
+      })
+    },
+    [activeTabId, tabs, navigate, openTab]
+  )
+
   const closeTab = useCallback(
     (tabId: string) => {
       const idx = tabs.findIndex((t) => t.id === tabId)
@@ -107,6 +125,7 @@ function TabProvider({ children }: { children: ReactNode }) {
         tabs,
         activeTabId,
         openTab,
+        navigateActiveTab,
         closeTab,
         setActiveTab: handleSetActiveTab,
       }}

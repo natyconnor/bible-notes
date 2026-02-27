@@ -10,7 +10,7 @@ interface ChapterHeaderProps {
 }
 
 export function ChapterHeader({ book, chapter }: ChapterHeaderProps) {
-  const { openTab } = useTabs()
+  const { navigateActiveTab } = useTabs()
   const bookInfo = getBookInfo(book)
   const bookIndex = BIBLE_BOOKS.findIndex((b) => b.name === book)
 
@@ -20,22 +20,22 @@ export function ChapterHeader({ book, chapter }: ChapterHeaderProps) {
   function goPrev() {
     if (chapter > 1) {
       const id = toPassageId(book, chapter - 1)
-      openTab(id, `${book} ${chapter - 1}`)
+      navigateActiveTab(id, `${book} ${chapter - 1}`)
     } else if (bookIndex > 0) {
       const prevBook = BIBLE_BOOKS[bookIndex - 1]
       const id = toPassageId(prevBook.name, prevBook.chapters)
-      openTab(id, `${prevBook.name} ${prevBook.chapters}`)
+      navigateActiveTab(id, `${prevBook.name} ${prevBook.chapters}`)
     }
   }
 
   function goNext() {
     if (bookInfo && chapter < bookInfo.chapters) {
       const id = toPassageId(book, chapter + 1)
-      openTab(id, `${book} ${chapter + 1}`)
+      navigateActiveTab(id, `${book} ${chapter + 1}`)
     } else if (bookIndex < BIBLE_BOOKS.length - 1) {
       const nextBook = BIBLE_BOOKS[bookIndex + 1]
       const id = toPassageId(nextBook.name, 1)
-      openTab(id, `${nextBook.name} 1`)
+      navigateActiveTab(id, `${nextBook.name} 1`)
     }
   }
 
