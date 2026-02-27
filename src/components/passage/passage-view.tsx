@@ -51,6 +51,20 @@ export function PassageView({ book, chapter }: PassageViewProps) {
   const [editingNoteId, setEditingNoteId] = useState<Id<"notes"> | null>(null)
   const containerRef = useRef<HTMLDivElement>(null)
 
+  // Reset interaction state when navigating to a different passage.
+  // Calling setState during render (not in an effect) is the React-recommended
+  // pattern for derived state — React batches these and avoids a second commit.
+  const [prevBook, setPrevBook] = useState(book)
+  const [prevChapter, setPrevChapter] = useState(chapter)
+  if (prevBook !== book || prevChapter !== chapter) {
+    setPrevBook(book)
+    setPrevChapter(chapter)
+    setSelectedVerses(new Set())
+    setOpenVerseKey(null)
+    setCreatingFor(null)
+    setEditingNoteId(null)
+  }
+
   // Click-away handler: close open notes when clicking outside
   useEffect(() => {
     function handleClick(e: MouseEvent) {
@@ -274,9 +288,9 @@ export function PassageView({ book, chapter }: PassageViewProps) {
                 isSelected={selectedVerses.has(verse.number)}
                 isInSelectionRange={isInSelection(verse.number)}
                 hasNotes={(verseNoteCounts.get(verse.number) ?? 0) > 0}
-                onAddNote={() => handleAddNote(verse.number)}
-                onMouseDown={() => handleMouseDown(verse.number)}
-                onMouseEnter={() => handleMouseEnter(verse.number)}
+                onAddNote={handleAddNote}
+                onMouseDown={handleMouseDown}
+                onMouseEnter={handleMouseEnter}
               />
 
               {/* Right: notes for this verse */}

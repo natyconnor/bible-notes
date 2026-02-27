@@ -1,4 +1,4 @@
-import { useState, useCallback, type ReactNode } from "react"
+import { useState, useCallback, startTransition, type ReactNode } from "react"
 import { useNavigate } from "@tanstack/react-router"
 
 import type { Tab } from "./tab-types"
@@ -26,7 +26,9 @@ function TabProvider({ children }: { children: ReactNode }) {
       if (existing) {
         setActiveTabId(existing.id)
         setTabHistory((h) => [...h.filter((id) => id !== existing.id), existing.id])
-        navigate({ to: "/passage/$passageId", params: { passageId } })
+        startTransition(() => {
+          navigate({ to: "/passage/$passageId", params: { passageId } })
+        })
         return
       }
       const newTab: Tab = { id: crypto.randomUUID(), passageId, label }
@@ -35,7 +37,9 @@ function TabProvider({ children }: { children: ReactNode }) {
       setTabs(newTabs)
       setActiveTabId(newTab.id)
       setTabHistory((h) => [...h, newTab.id])
-      navigate({ to: "/passage/$passageId", params: { passageId } })
+      startTransition(() => {
+        navigate({ to: "/passage/$passageId", params: { passageId } })
+      })
     },
     [tabs, navigate]
   )
@@ -90,7 +94,9 @@ function TabProvider({ children }: { children: ReactNode }) {
       if (!tab) return
       setActiveTabId(tabId)
       setTabHistory((h) => [...h.filter((id) => id !== tabId), tabId])
-      navigate({ to: "/passage/$passageId", params: { passageId: tab.passageId } })
+      startTransition(() => {
+        navigate({ to: "/passage/$passageId", params: { passageId: tab.passageId } })
+      })
     },
     [tabs, navigate]
   )

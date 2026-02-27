@@ -1,7 +1,6 @@
 import { memo } from "react"
 import { Plus } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 
 interface VerseRowLeftProps {
   verseNumber: number
@@ -9,9 +8,9 @@ interface VerseRowLeftProps {
   isSelected: boolean
   isInSelectionRange: boolean
   hasNotes: boolean
-  onAddNote: () => void
-  onMouseDown: () => void
-  onMouseEnter: () => void
+  onAddNote: (verseNumber: number) => void
+  onMouseDown: (verseNumber: number) => void
+  onMouseEnter: (verseNumber: number) => void
 }
 
 export const VerseRowLeft = memo(function VerseRowLeft({
@@ -35,9 +34,9 @@ export const VerseRowLeft = memo(function VerseRowLeft({
       )}
       onMouseDown={(e) => {
         e.preventDefault()
-        onMouseDown()
+        onMouseDown(verseNumber)
       }}
-      onMouseEnter={onMouseEnter}
+      onMouseEnter={() => onMouseEnter(verseNumber)}
     >
       <span className="flex items-start gap-1 shrink-0 pt-0.5">
         <span className="text-xs font-semibold text-muted-foreground tabular-nums min-w-[1.5rem] text-right">
@@ -50,20 +49,20 @@ export const VerseRowLeft = memo(function VerseRowLeft({
       <span className="font-serif text-base leading-relaxed flex-1 min-w-0 whitespace-pre-wrap">
         {text}
       </span>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <button
-            className="shrink-0 ml-3 self-stretch flex items-center justify-center min-w-8 opacity-0 group-hover:opacity-100 transition-opacity px-2 rounded hover:bg-primary/10"
-            onClick={(e) => {
-              e.stopPropagation()
-              onAddNote()
-            }}
-          >
-            <Plus className="h-4 w-4 text-primary" />
-          </button>
-        </TooltipTrigger>
-        <TooltipContent>Add note</TooltipContent>
-      </Tooltip>
+      <div className="group/addbtn relative shrink-0 ml-3 self-stretch flex items-center justify-center min-w-8 opacity-0 group-hover:opacity-100 transition-opacity">
+        <button
+          className="w-full h-full flex items-center justify-center px-2 rounded hover:bg-primary/10"
+          onClick={(e) => {
+            e.stopPropagation()
+            onAddNote(verseNumber)
+          }}
+        >
+          <Plus className="h-4 w-4 text-primary" />
+        </button>
+        <span className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 px-3 py-1.5 text-xs rounded-md bg-foreground text-background whitespace-nowrap opacity-0 group-hover/addbtn:opacity-100 transition-opacity z-50">
+          Add note
+        </span>
+      </div>
     </div>
   )
 })
