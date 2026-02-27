@@ -10,5 +10,5 @@ function PassagePage() {
   const { passageId } = Route.useParams()
   const { book, chapter } = parsePassageId(passageId)
 
-  return <PassageView book={book} chapter={chapter} />
+  return <PassageView key={passageId} book={book} chapter={chapter} />
 }
