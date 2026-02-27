@@ -23,6 +23,8 @@ interface VerseNotesProps {
   onEdit: (noteId: Id<"notes">) => void
   onDelete: (noteId: Id<"notes">) => void
   onAddNote: () => void
+  onMouseEnter?: () => void
+  onMouseLeave?: () => void
 }
 
 export const VerseNotes = memo(function VerseNotes({
@@ -33,6 +35,8 @@ export const VerseNotes = memo(function VerseNotes({
   onEdit,
   onDelete,
   onAddNote,
+  onMouseEnter,
+  onMouseLeave,
 }: VerseNotesProps) {
   if (notes.length === 0) return null
 
@@ -43,6 +47,8 @@ export const VerseNotes = memo(function VerseNotes({
           note={notes[0]}
           onClick={onOpen}
           onEdit={() => onEdit(notes[0].noteId)}
+          onMouseEnter={onMouseEnter}
+          onMouseLeave={onMouseLeave}
         />
       )
     }
@@ -51,12 +57,14 @@ export const VerseNotes = memo(function VerseNotes({
         count={notes.length}
         preview={notes[0].content}
         onClick={onOpen}
+        onMouseEnter={onMouseEnter}
+        onMouseLeave={onMouseLeave}
       />
     )
   }
 
   return (
-    <div className="space-y-2" onClick={(e) => e.stopPropagation()}>
+    <div className="space-y-2" onClick={(e) => e.stopPropagation()} onMouseEnter={onMouseEnter} onMouseLeave={onMouseLeave}>
       <div className="flex items-center justify-between">
         <Tooltip>
           <TooltipTrigger asChild>
@@ -99,10 +107,14 @@ function CollapsedBubble({
   note,
   onClick,
   onEdit,
+  onMouseEnter,
+  onMouseLeave,
 }: {
   note: VerseNote
   onClick: () => void
   onEdit: () => void
+  onMouseEnter?: () => void
+  onMouseLeave?: () => void
 }) {
   const preview =
     note.content.length > 100
@@ -113,6 +125,8 @@ function CollapsedBubble({
     <div
       className="group relative border rounded-lg px-3 py-2 cursor-pointer transition-all hover:shadow-sm text-sm bg-card border-border"
       onClick={onClick}
+      onMouseEnter={onMouseEnter}
+      onMouseLeave={onMouseLeave}
     >
       <p className="text-muted-foreground line-clamp-2 leading-relaxed">
         {preview}
@@ -148,13 +162,17 @@ function StackedBubble({
   count,
   preview,
   onClick,
+  onMouseEnter,
+  onMouseLeave,
 }: {
   count: number
   preview: string
   onClick: () => void
+  onMouseEnter?: () => void
+  onMouseLeave?: () => void
 }) {
   return (
-    <div className="relative cursor-pointer" onClick={onClick}>
+    <div className="relative cursor-pointer" onClick={onClick} onMouseEnter={onMouseEnter} onMouseLeave={onMouseLeave}>
       {count > 2 && (
         <div className="absolute inset-0 translate-x-1 translate-y-1 rounded-lg border bg-muted/40" />
       )}
@@ -238,6 +256,8 @@ interface PassageNotesBubbleProps {
   onEdit: (noteId: Id<"notes">) => void
   onDelete: (noteId: Id<"notes">) => void
   onAddNote: () => void
+  onMouseEnter?: () => void
+  onMouseLeave?: () => void
 }
 
 export const PassageNotesBubble = memo(function PassageNotesBubble({
@@ -250,6 +270,8 @@ export const PassageNotesBubble = memo(function PassageNotesBubble({
   onEdit,
   onDelete,
   onAddNote,
+  onMouseEnter,
+  onMouseLeave,
 }: PassageNotesBubbleProps) {
   if (notes.length === 0) return null
 
@@ -269,6 +291,8 @@ export const PassageNotesBubble = memo(function PassageNotesBubble({
           isGlowing && "animate-pulse-subtle ring-1 ring-amber-400/50 shadow-sm shadow-amber-200/60 dark:shadow-amber-950/60"
         )}
         onClick={onOpen}
+        onMouseEnter={onMouseEnter}
+        onMouseLeave={onMouseLeave}
       >
         <div className={cn("px-3 py-2", compact && "px-2.5 py-1.5")}>
           <div className="flex items-center gap-1.5 mb-1">
@@ -327,6 +351,8 @@ export const PassageNotesBubble = memo(function PassageNotesBubble({
     <div
       className="space-y-2 rounded-lg border border-amber-200 bg-amber-50/40 dark:bg-amber-950/10 dark:border-amber-800 p-2"
       onClick={(e) => e.stopPropagation()}
+      onMouseEnter={onMouseEnter}
+      onMouseLeave={onMouseLeave}
     >
       <div className="flex items-center justify-between px-1">
         <div className="flex items-center gap-1.5">

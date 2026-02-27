@@ -10,7 +10,8 @@ interface VerseRowLeftProps {
   hasOwnNote: boolean
   isPassageAnchor: boolean
   isInPassageRange: boolean
-  isPassageHovered: boolean
+  isPassageRangeActive: boolean
+  isNoteBubbleHovered: boolean
   onAddNote: (verseNumber: number) => void
   onMouseDown: (verseNumber: number) => void
   onMouseEnter: (verseNumber: number) => void
@@ -25,7 +26,8 @@ export const VerseRowLeft = memo(function VerseRowLeft({
   hasOwnNote,
   isPassageAnchor,
   isInPassageRange,
-  isPassageHovered,
+  isPassageRangeActive,
+  isNoteBubbleHovered,
   onAddNote,
   onMouseDown,
   onMouseEnter,
@@ -38,7 +40,8 @@ export const VerseRowLeft = memo(function VerseRowLeft({
         "group relative flex gap-2 py-2 px-3 min-h-10 rounded-sm transition-colors select-none cursor-pointer",
         isSelected && "bg-primary/10 ring-1 ring-primary/20",
         isInSelectionRange && !isSelected && "bg-primary/5",
-        isPassageHovered && !isSelected && !isInSelectionRange && "bg-amber-50/60 dark:bg-amber-950/15",
+        isNoteBubbleHovered && !isSelected && !isInSelectionRange && "bg-muted/70",
+        isPassageRangeActive && !isSelected && !isInSelectionRange && !isNoteBubbleHovered && "bg-amber-50/60 dark:bg-amber-950/15",
         !isSelected && !isInSelectionRange && "hover:bg-muted"
       )}
       onMouseDown={(e) => {

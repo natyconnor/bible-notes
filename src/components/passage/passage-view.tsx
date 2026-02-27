@@ -48,6 +48,10 @@ export function PassageView({ book, chapter }: PassageViewProps) {
 
   const [selectedVerses, setSelectedVerses] = useState<Set<number>>(new Set())
   const [hoveredVerse, setHoveredVerse] = useState<number | null>(null)
+  // Separate tracked states so a single-verse note bubble at the anchor verse
+  // doesn't accidentally trigger the passage range highlight.
+  const [hoveredSingleBubble, setHoveredSingleBubble] = useState<number | null>(null)
+  const [hoveredPassageBubble, setHoveredPassageBubble] = useState<number | null>(null)
   const [openVerseKey, setOpenVerseKey] = useState<number | null>(null)
   const [openPassageKey, setOpenPassageKey] = useState<number | null>(null)
   const [creatingFor, setCreatingFor] = useState<VerseRef | null>(null)
@@ -62,6 +66,8 @@ export function PassageView({ book, chapter }: PassageViewProps) {
     setPrevChapter(chapter)
     setSelectedVerses(new Set())
     setHoveredVerse(null)
+    setHoveredSingleBubble(null)
+    setHoveredPassageBubble(null)
     setOpenVerseKey(null)
     setOpenPassageKey(null)
     setCreatingFor(null)
@@ -227,6 +233,22 @@ export function PassageView({ book, chapter }: PassageViewProps) {
     setHoveredVerse(null)
   }, [])
 
+  const handleSingleBubbleMouseEnter = useCallback((verseNumber: number) => {
+    setHoveredSingleBubble(verseNumber)
+  }, [])
+
+  const handleSingleBubbleMouseLeave = useCallback(() => {
+    setHoveredSingleBubble(null)
+  }, [])
+
+  const handlePassageBubbleMouseEnter = useCallback((verseNumber: number) => {
+    setHoveredPassageBubble(verseNumber)
+  }, [])
+
+  const handlePassageBubbleMouseLeave = useCallback(() => {
+    setHoveredPassageBubble(null)
+  }, [])
+
   const handleAddNote = useCallback(
     (verseNumber: number) => {
       setCreatingFor({
@@ -292,10 +314,6 @@ export function PassageView({ book, chapter }: PassageViewProps) {
     clearSelection()
   }, [clearSelection])
 
-  // For passage range hover highlighting: derive the anchor of the hovered verse's passage
-  const hoveredPassageAnchor =
-    hoveredVerse !== null ? verseToPassageAnchor.get(hoveredVerse) : undefined
-
   if (loading) {
     return (
       <div className="flex items-center justify-center h-full">
@@ -349,9 +367,15 @@ export function PassageView({ book, chapter }: PassageViewProps) {
 
           const isPassageAnchor = passageNotesByAnchor.has(verse.number)
           const isInPassageRange = passageAnchor !== undefined && !isPassageAnchor
-          const isPassageHovered =
-            hoveredPassageAnchor !== undefined &&
-            verseToPassageAnchor.get(verse.number) === hoveredPassageAnchor
+
+          // Range highlight: only the anchor verse row or the passage bubble can trigger this
+          const isPassageRangeActive =
+            passageAnchor !== undefined &&
+            (hoveredVerse === passageAnchor || hoveredPassageBubble === passageAnchor)
+
+          // Verse highlight: when the single-verse bubble OR the passage bubble at this verse is hovered
+          const isNoteBubbleHovered =
+            hoveredSingleBubble === verse.number || hoveredPassageBubble === verse.number
 
           const isVerseOpen = openVerseKey === verse.number
           const isPassageOpen = openPassageKey === verse.number
@@ -385,7 +409,7 @@ export function PassageView({ book, chapter }: PassageViewProps) {
             <PassageNotesBubble
               notes={passageNotes}
               isOpen={isPassageOpen}
-              isGlowing={isPassageHovered && !isPassageOpen}
+              isGlowing={isPassageRangeActive && !isPassageOpen}
               compact={useRowLayout}
               onOpen={() => {
                 setOpenPassageKey(verse.number)
@@ -407,6 +431,8 @@ export function PassageView({ book, chapter }: PassageViewProps) {
                   endVerse: passageNotes[0].verseRef.endVerse,
                 })
               }
+              onMouseEnter={() => handlePassageBubbleMouseEnter(verse.number)}
+              onMouseLeave={handlePassageBubbleMouseLeave}
             />
           ) : editingPassageNote ? (
             <NoteEditor
@@ -433,7 +459,8 @@ export function PassageView({ book, chapter }: PassageViewProps) {
                 hasOwnNote={singleNotes.length > 0}
                 isPassageAnchor={isPassageAnchor}
                 isInPassageRange={isInPassageRange}
-                isPassageHovered={isPassageHovered}
+                isPassageRangeActive={isPassageRangeActive}
+                isNoteBubbleHovered={isNoteBubbleHovered}
                 onAddNote={handleAddNote}
                 onMouseDown={handleVerseMouseDown}
                 onMouseEnter={handleMouseEnter}
@@ -473,6 +500,8 @@ export function PassageView({ book, chapter }: PassageViewProps) {
                       }}
                       onDelete={handleDelete}
                       onAddNote={() => handleAddNote(verse.number)}
+                      onMouseEnter={() => handleSingleBubbleMouseEnter(verse.number)}
+                      onMouseLeave={handleSingleBubbleMouseLeave}
                     />
                   ) : null}
                 </div>
