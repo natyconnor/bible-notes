@@ -5,7 +5,6 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { useTheme, THEMES } from "@/lib/theme-context"
 import { useState } from "react"
 import { cn } from "@/lib/utils"
@@ -34,20 +33,19 @@ export function ThemeDropdown() {
           {THEMES.map((t) => {
             const isActive = t.name === theme.name
             return (
-              <Tooltip key={t.name}>
-                <TooltipTrigger asChild>
-                  <button
-                    className={cn(
-                      "w-full flex items-start gap-3 px-2 py-2 rounded-md text-left transition-colors cursor-pointer",
-                      isActive
-                        ? "bg-accent text-accent-foreground"
-                        : "hover:bg-muted"
-                    )}
-                    onClick={() => {
-                      setTheme(t)
-                      setOpen(false)
-                    }}
-                  >
+              <button
+                key={t.name}
+                className={cn(
+                  "w-full flex items-start gap-3 px-2 py-2 rounded-md text-left transition-colors cursor-pointer",
+                  isActive
+                    ? "bg-accent text-accent-foreground"
+                    : "hover:bg-muted"
+                )}
+                onClick={() => {
+                  setTheme(t)
+                  setOpen(false)
+                }}
+              >
                 {/* Color swatches */}
                 <div className="flex gap-0.5 mt-0.5 shrink-0">
                   {[t.vars["--primary"], t.vars["--secondary"], t.vars["--background"]].map(
@@ -70,9 +68,6 @@ export function ThemeDropdown() {
                   </p>
                 </div>
               </button>
-                </TooltipTrigger>
-                <TooltipContent>Apply {t.name} theme</TooltipContent>
-              </Tooltip>
             )
           })}
         </div>
