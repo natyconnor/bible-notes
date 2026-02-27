@@ -37,7 +37,7 @@ export const NoteBubble = memo(function NoteBubble({
       className={cn(
         "group relative border rounded-lg p-3 transition-all cursor-pointer",
         isPassage
-          ? "bg-amber-50/80 border-amber-200 dark:bg-amber-950/20 dark:border-amber-800"
+          ? "bg-amber-50/80 border-amber-200 dark:bg-amber-900/20 dark:border-amber-700/50"
           : "bg-card border-border",
         isExpanded && "shadow-md"
       )}
@@ -49,7 +49,7 @@ export const NoteBubble = memo(function NoteBubble({
             {formatVerseRef(verseRef)}
           </Badge>
           {isPassage && (
-            <Badge variant="outline" className="text-xs font-normal text-amber-700 dark:text-amber-400 border-amber-300">
+            <Badge variant="outline" className="text-xs font-normal text-amber-700 dark:text-amber-400/70 border-amber-300 dark:border-amber-600/50">
               passage
             </Badge>
           )}

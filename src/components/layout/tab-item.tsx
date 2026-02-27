@@ -1,7 +1,6 @@
 import type { Tab } from "@/lib/tab-types"
 import { X } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 
 interface TabItemProps {
   tab: Tab
@@ -22,23 +21,18 @@ export function TabItem({ tab, isActive, onActivate, onClose }: TabItemProps) {
       onClick={onActivate}
     >
       <span className="truncate max-w-[140px]">{tab.label}</span>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <button
-            className={cn(
-              "ml-1 rounded-sm p-0.5 hover:bg-muted-foreground/20 transition-opacity",
-              isActive ? "opacity-100" : "opacity-0 group-hover:opacity-100"
-            )}
-            onClick={(e) => {
-              e.stopPropagation()
-              onClose()
-            }}
-          >
-            <X className="h-3 w-3" />
-          </button>
-        </TooltipTrigger>
-        <TooltipContent>Close tab</TooltipContent>
-      </Tooltip>
+      <button
+        className={cn(
+          "ml-1 rounded-sm p-0.5 hover:bg-muted-foreground/20 transition-opacity",
+          isActive ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+        )}
+        onClick={(e) => {
+          e.stopPropagation()
+          onClose()
+        }}
+      >
+        <X className="h-3 w-3" />
+      </button>
     </div>
   )
 }

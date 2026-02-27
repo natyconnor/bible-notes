@@ -286,8 +286,8 @@ export const PassageNotesBubble = memo(function PassageNotesBubble({
       <div
         className={cn(
           "group relative cursor-pointer rounded-lg border-l-2 border text-sm transition-all",
-          "border-l-amber-400 border-amber-200 bg-amber-50/80 dark:bg-amber-950/20 dark:border-amber-800 dark:border-l-amber-500",
-          "hover:shadow-sm hover:bg-amber-50 dark:hover:bg-amber-950/30",
+          "border-l-amber-400 border-amber-200 bg-amber-50/80 dark:bg-amber-900/20 dark:border-amber-700/50 dark:border-l-amber-600/70",
+          "hover:shadow-sm hover:bg-amber-50 dark:hover:bg-amber-800/25",
           isGlowing && "animate-pulse-subtle ring-1 ring-amber-400/50 shadow-sm shadow-amber-200/60 dark:shadow-amber-950/60"
         )}
         onClick={onOpen}
@@ -296,14 +296,14 @@ export const PassageNotesBubble = memo(function PassageNotesBubble({
       >
         <div className={cn("px-3 py-2", compact && "px-2.5 py-1.5")}>
           <div className="flex items-center gap-1.5 mb-1">
-            <BookOpen className="h-3 w-3 text-amber-600 dark:text-amber-400 shrink-0" />
-            <span className={cn("font-semibold text-amber-700 dark:text-amber-400 uppercase tracking-wide truncate", compact ? "text-[9px]" : "text-[10px]")}>
+            <BookOpen className="h-3 w-3 text-amber-600 dark:text-amber-400/70 shrink-0" />
+            <span className={cn("font-semibold text-amber-700 dark:text-amber-400/70 uppercase tracking-wide truncate", compact ? "text-[9px]" : "text-[10px]")}>
               {formatVerseRef(notes[0].verseRef)}
             </span>
             {notes.length > 1 && (
               <Badge
                 variant="outline"
-                className="text-[10px] px-1.5 py-0 border-amber-300 text-amber-700 dark:border-amber-700 dark:text-amber-400 ml-auto shrink-0"
+                className="text-[10px] px-1.5 py-0 border-amber-300 text-amber-700 dark:border-amber-600/50 dark:text-amber-400/70 ml-auto shrink-0"
               >
                 {notes.length}
               </Badge>
@@ -318,7 +318,7 @@ export const PassageNotesBubble = memo(function PassageNotesBubble({
                 <Badge
                   key={tag}
                   variant="outline"
-                  className="text-[10px] px-1.5 py-0 border-amber-300 dark:border-amber-700"
+                  className="text-[10px] px-1.5 py-0 border-amber-300 dark:border-amber-600/45"
                 >
                   {tag}
                 </Badge>
@@ -330,7 +330,7 @@ export const PassageNotesBubble = memo(function PassageNotesBubble({
           <Tooltip>
             <TooltipTrigger asChild>
               <button
-                className="absolute top-1.5 right-1.5 opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-amber-100 dark:hover:bg-amber-900/40 transition-all"
+                className="absolute top-1.5 right-1.5 opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-amber-100 dark:hover:bg-amber-800/30 transition-all"
                 onClick={(e) => {
                   e.stopPropagation()
                   onEdit(notes[0].noteId)
@@ -349,15 +349,15 @@ export const PassageNotesBubble = memo(function PassageNotesBubble({
   // Expanded state
   return (
     <div
-      className="space-y-2 rounded-lg border border-amber-200 bg-amber-50/40 dark:bg-amber-950/10 dark:border-amber-800 p-2"
+      className="space-y-2 rounded-lg border border-amber-200 bg-amber-50/40 dark:bg-amber-900/15 dark:border-amber-700/50 p-2"
       onClick={(e) => e.stopPropagation()}
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
     >
       <div className="flex items-center justify-between px-1">
         <div className="flex items-center gap-1.5">
-          <BookOpen className="h-3 w-3 text-amber-600 dark:text-amber-400 shrink-0" />
-          <span className="text-[10px] font-semibold text-amber-700 dark:text-amber-400 uppercase tracking-wide">
+          <BookOpen className="h-3 w-3 text-amber-600 dark:text-amber-400/70 shrink-0" />
+          <span className="text-[10px] font-semibold text-amber-700 dark:text-amber-400/70 uppercase tracking-wide">
             {formatVerseRef(notes[0].verseRef)}
           </span>
         </div>
@@ -410,14 +410,14 @@ function ExpandedPassageNote({
   onDelete: () => void
 }) {
   return (
-    <div className="rounded-md border border-amber-200/70 bg-amber-50/60 dark:bg-amber-950/20 dark:border-amber-800/60 px-3 py-2 text-sm">
+    <div className="rounded-md border border-amber-200/70 bg-amber-50/60 dark:bg-amber-900/18 dark:border-amber-700/45 px-3 py-2 text-sm">
       <div className="flex items-start justify-between gap-2">
         <p className="leading-relaxed whitespace-pre-wrap flex-1">{note.content}</p>
         <div className="flex items-center gap-0.5 shrink-0">
           <Tooltip>
             <TooltipTrigger asChild>
               <button
-                className="p-1 rounded hover:bg-amber-100 dark:hover:bg-amber-900/40 transition-colors"
+                className="p-1 rounded hover:bg-amber-100 dark:hover:bg-amber-800/30 transition-colors"
                 onClick={onEdit}
               >
                 <Pencil className="h-3 w-3 text-muted-foreground" />

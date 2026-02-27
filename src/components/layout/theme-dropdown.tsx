@@ -1,16 +1,17 @@
-import { Palette, Check } from "lucide-react"
+import { Palette, Check, Sun, Moon } from "lucide-react"
 import { TooltipButton } from "@/components/ui/tooltip-button"
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
-import { useTheme, THEMES } from "@/lib/theme-context"
+import { useTheme } from "@/lib/use-theme"
+import { THEMES } from "@/lib/themes"
 import { useState } from "react"
 import { cn } from "@/lib/utils"
 
 export function ThemeDropdown() {
-  const { theme, setTheme } = useTheme()
+  const { theme, setTheme, darkMode, setDarkMode } = useTheme()
   const [open, setOpen] = useState(false)
 
   return (
@@ -32,6 +33,7 @@ export function ThemeDropdown() {
         <div className="space-y-0.5">
           {THEMES.map((t) => {
             const isActive = t.name === theme.name
+            const swatchVars = darkMode ? t.darkVars : t.vars
             return (
               <button
                 key={t.name}
@@ -46,9 +48,8 @@ export function ThemeDropdown() {
                   setOpen(false)
                 }}
               >
-                {/* Color swatches */}
                 <div className="flex gap-0.5 mt-0.5 shrink-0">
-                  {[t.vars["--primary"], t.vars["--secondary"], t.vars["--background"]].map(
+                  {[swatchVars["--primary"], swatchVars["--secondary"], swatchVars["--background"]].map(
                     (color, i) => (
                       <div
                         key={i}
@@ -70,6 +71,35 @@ export function ThemeDropdown() {
               </button>
             )
           })}
+        </div>
+
+        <div className="mt-1 pt-1.5 border-t border-border">
+          <button
+            className="w-full flex items-center justify-between px-2 py-2 rounded-md hover:bg-muted transition-colors cursor-pointer"
+            onClick={() => setDarkMode(!darkMode)}
+          >
+            <div className="flex items-center gap-2">
+              {darkMode ? (
+                <Moon className="h-3.5 w-3.5 text-muted-foreground" />
+              ) : (
+                <Sun className="h-3.5 w-3.5 text-muted-foreground" />
+              )}
+              <span className="text-sm font-medium">Dark mode</span>
+            </div>
+            <div
+              className={cn(
+                "relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors",
+                darkMode ? "bg-primary" : "bg-muted-foreground/30"
+              )}
+            >
+              <span
+                className={cn(
+                  "inline-block h-3.5 w-3.5 rounded-full bg-white shadow-sm transition-transform",
+                  darkMode ? "translate-x-4" : "translate-x-0.5"
+                )}
+              />
+            </div>
+          </button>
         </div>
       </PopoverContent>
     </Popover>

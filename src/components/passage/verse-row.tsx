@@ -41,7 +41,7 @@ export const VerseRowLeft = memo(function VerseRowLeft({
         isSelected && "bg-primary/10 ring-1 ring-primary/20",
         isInSelectionRange && !isSelected && "bg-primary/5",
         isNoteBubbleHovered && !isSelected && !isInSelectionRange && "bg-muted/70",
-        isPassageRangeActive && !isSelected && !isInSelectionRange && !isNoteBubbleHovered && "bg-amber-50/60 dark:bg-amber-950/15",
+        isPassageRangeActive && !isSelected && !isInSelectionRange && !isNoteBubbleHovered && "bg-amber-50/60 dark:bg-amber-800/20",
         !isSelected && !isInSelectionRange && "hover:bg-muted"
       )}
       onMouseDown={(e) => {
@@ -61,10 +61,10 @@ export const VerseRowLeft = memo(function VerseRowLeft({
             <span className="w-1.5 h-1.5 rounded-full bg-primary/60 shrink-0" />
           )}
           {isPassageAnchor && (
-            <span className="w-1.5 h-1.5 rounded-sm bg-amber-400/80 dark:bg-amber-500/70 shrink-0" />
+            <span className="w-1.5 h-1.5 rounded-sm bg-amber-400/80 dark:bg-amber-400/50 shrink-0" />
           )}
           {isInPassageRange && !isPassageAnchor && (
-            <span className="w-2 h-0.5 rounded bg-amber-300/70 dark:bg-amber-600/60 mt-0.5 shrink-0" />
+            <span className="w-2 h-0.5 rounded bg-amber-300/70 dark:bg-amber-500/40 mt-0.5 shrink-0" />
           )}
         </span>
       </span>
