@@ -1,5 +1,6 @@
 import { query, mutation } from "./_generated/server"
 import { v } from "convex/values"
+import { getCurrentUserId, getCurrentUserIdOrNull } from "./lib/auth"
 
 export const create = mutation({
   args: {
@@ -7,7 +8,8 @@ export const create = mutation({
     verseRefId2: v.id("verseRefs"),
   },
   handler: async (ctx, args) => {
-    // Normalize ordering to prevent duplicate pairs
+    const userId = await getCurrentUserId(ctx)
+
     const [id1, id2] =
       args.verseRefId1 < args.verseRefId2
         ? [args.verseRefId1, args.verseRefId2]
@@ -15,12 +17,15 @@ export const create = mutation({
 
     const existing = await ctx.db
       .query("verseLinks")
-      .withIndex("by_verseRefId1", (q) => q.eq("verseRefId1", id1))
+      .withIndex("by_userId_verseRefId1", (q) =>
+        q.eq("userId", userId).eq("verseRefId1", id1)
+      )
       .collect()
     const match = existing.find((l) => l.verseRefId2 === id2)
     if (match) return match._id
 
     return await ctx.db.insert("verseLinks", {
+      userId,
       verseRefId1: id1,
       verseRefId2: id2,
     })
@@ -30,13 +35,19 @@ export const create = mutation({
 export const getLinksForVerseRef = query({
   args: { verseRefId: v.id("verseRefs") },
   handler: async (ctx, args) => {
+    const userId = await getCurrentUserIdOrNull(ctx)
+    if (!userId) return []
+
     const asFirst = await ctx.db
       .query("verseLinks")
-      .withIndex("by_verseRefId1", (q) => q.eq("verseRefId1", args.verseRefId))
+      .withIndex("by_userId_verseRefId1", (q) =>
+        q.eq("userId", userId).eq("verseRefId1", args.verseRefId)
+      )
       .collect()
     const asSecond = await ctx.db
       .query("verseLinks")
       .withIndex("by_verseRefId2", (q) => q.eq("verseRefId2", args.verseRefId))
+      .filter((q) => q.eq(q.field("userId"), userId))
       .collect()
 
     const linkedIds = [
@@ -54,13 +65,17 @@ export const remove = mutation({
     verseRefId2: v.id("verseRefs"),
   },
   handler: async (ctx, args) => {
+    const userId = await getCurrentUserId(ctx)
+
     const [id1, id2] =
       args.verseRefId1 < args.verseRefId2
         ? [args.verseRefId1, args.verseRefId2]
         : [args.verseRefId2, args.verseRefId1]
     const links = await ctx.db
       .query("verseLinks")
-      .withIndex("by_verseRefId1", (q) => q.eq("verseRefId1", id1))
+      .withIndex("by_userId_verseRefId1", (q) =>
+        q.eq("userId", userId).eq("verseRefId1", id1)
+      )
       .collect()
     const link = links.find((l) => l.verseRefId2 === id2)
     if (link) await ctx.db.delete(link._id)

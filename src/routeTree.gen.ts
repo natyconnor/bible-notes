@@ -10,12 +10,18 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as ThemeTestRouteImport } from './routes/theme-test'
+import { Route as LoginRouteImport } from './routes/login'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as PassagePassageIdRouteImport } from './routes/passage/$passageId'
 
 const ThemeTestRoute = ThemeTestRouteImport.update({
   id: '/theme-test',
   path: '/theme-test',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -31,30 +37,34 @@ const PassagePassageIdRoute = PassagePassageIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/login': typeof LoginRoute
   '/theme-test': typeof ThemeTestRoute
   '/passage/$passageId': typeof PassagePassageIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/login': typeof LoginRoute
   '/theme-test': typeof ThemeTestRoute
   '/passage/$passageId': typeof PassagePassageIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/login': typeof LoginRoute
   '/theme-test': typeof ThemeTestRoute
   '/passage/$passageId': typeof PassagePassageIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/theme-test' | '/passage/$passageId'
+  fullPaths: '/' | '/login' | '/theme-test' | '/passage/$passageId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/theme-test' | '/passage/$passageId'
-  id: '__root__' | '/' | '/theme-test' | '/passage/$passageId'
+  to: '/' | '/login' | '/theme-test' | '/passage/$passageId'
+  id: '__root__' | '/' | '/login' | '/theme-test' | '/passage/$passageId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  LoginRoute: typeof LoginRoute
   ThemeTestRoute: typeof ThemeTestRoute
   PassagePassageIdRoute: typeof PassagePassageIdRoute
 }
@@ -66,6 +76,13 @@ declare module '@tanstack/react-router' {
       path: '/theme-test'
       fullPath: '/theme-test'
       preLoaderRoute: typeof ThemeTestRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -87,6 +104,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  LoginRoute: LoginRoute,
   ThemeTestRoute: ThemeTestRoute,
   PassagePassageIdRoute: PassagePassageIdRoute,
 }

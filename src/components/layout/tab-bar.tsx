@@ -1,13 +1,16 @@
-import { useTabs } from "@/lib/use-tabs"
-import { TabItem } from "./tab-item"
-import { Plus } from "lucide-react"
-import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area"
-import { SearchDialog } from "@/components/notes/search-dialog"
-import { ThemeDropdown } from "./theme-dropdown"
-import { PassageNavigator } from "@/components/bible/passage-navigator"
+import { useTabs } from "@/lib/use-tabs";
+import { TabItem } from "./tab-item";
+import { LogOut, Plus } from "lucide-react";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
+import { SearchDialog } from "@/components/notes/search-dialog";
+import { ThemeDropdown } from "./theme-dropdown";
+import { PassageNavigator } from "@/components/bible/passage-navigator";
+import { useAuthActions } from "@convex-dev/auth/react";
+import { TooltipButton } from "@/components/ui/tooltip-button";
 
 export function TabBar() {
-  const { tabs, activeTabId, setActiveTab, closeTab } = useTabs()
+  const { tabs, activeTabId, setActiveTab, closeTab } = useTabs();
+  const { signOut } = useAuthActions();
 
   return (
     <div className="flex items-center border-b bg-muted/30 h-10 shrink-0">
@@ -35,7 +38,17 @@ export function TabBar() {
       <div className="flex items-center gap-1 mx-1 shrink-0">
         <SearchDialog />
         <ThemeDropdown />
+        <TooltipButton
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8"
+          onClick={() => void signOut()}
+          tooltip="Sign out"
+          aria-label="Sign out"
+        >
+          <LogOut className="h-4 w-4" />
+        </TooltipButton>
       </div>
     </div>
-  )
+  );
 }
