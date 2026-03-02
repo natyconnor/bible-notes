@@ -153,6 +153,7 @@ export const VerseRowWithNotes = memo(function VerseRowWithNotes({
         <motion.div
           key={`edit-passage-${editingNoteId}`}
           layout
+          data-note-surface
           initial={{ opacity: 0, height: 0 }}
           animate={{ opacity: 1, height: "auto" }}
           exit={{ opacity: 0, height: 0 }}
@@ -215,6 +216,7 @@ export const VerseRowWithNotes = memo(function VerseRowWithNotes({
             <motion.div
               key={`edit-${editingNoteId}`}
               layout
+              data-note-surface
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: "auto" }}
               exit={{ opacity: 0, height: 0 }}
@@ -261,6 +263,7 @@ export const VerseRowWithNotes = memo(function VerseRowWithNotes({
             <motion.div
               key={`create-${creatingFor.startVerse}-${creatingFor.endVerse}`}
               layout
+              data-note-surface
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: "auto" }}
               exit={{ opacity: 0, height: 0 }}

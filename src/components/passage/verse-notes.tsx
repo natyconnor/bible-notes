@@ -83,6 +83,7 @@ export const VerseNotes = memo(function VerseNotes({
         <motion.div
           key="expanded"
           {...fadeInOut}
+          data-note-surface
           className="space-y-2"
           onClick={(e) => e.stopPropagation()}
           onMouseEnter={onMouseEnter}
@@ -149,6 +150,7 @@ function CollapsedBubble({
 }) {
   return (
     <div
+      data-note-trigger
       className="group relative border rounded-lg px-3 py-2 cursor-pointer transition-all hover:shadow-sm text-sm bg-card border-border"
       onClick={onClick}
       onMouseEnter={onMouseEnter}
@@ -179,7 +181,7 @@ function StackedBubble({
   onMouseLeave?: () => void
 }) {
   return (
-    <div className="relative cursor-pointer" onClick={onClick} onMouseEnter={onMouseEnter} onMouseLeave={onMouseLeave}>
+    <div data-note-trigger className="relative cursor-pointer" onClick={onClick} onMouseEnter={onMouseEnter} onMouseLeave={onMouseLeave}>
       <StackedCardBackground count={count} variant="muted" />
       <div className="relative border rounded-lg px-3 py-2 transition-all hover:shadow-sm text-sm bg-card border-border">
         <div className="flex items-center justify-between mb-0.5">
@@ -200,6 +202,7 @@ function VerseNotesPill({ count, onClick }: { count: number; onClick: () => void
     <Tooltip>
       <TooltipTrigger asChild>
         <button
+          data-note-trigger
           className="inline-flex items-center gap-1 px-2 py-1 rounded-full border bg-card hover:bg-muted/50 transition-colors cursor-pointer text-xs text-muted-foreground"
           onClick={onClick}
         >
@@ -274,6 +277,7 @@ export const PassageNotesBubble = memo(function PassageNotesBubble({
     <motion.div layout transition={{ layout: layoutTransition }}>
       {!isOpen ? (
         <div
+          data-note-trigger
           className={cn(
             "group relative cursor-pointer rounded-lg border-l-2 border text-sm transition-colors",
           "border-l-amber-400 border-amber-200 bg-amber-50/80 dark:bg-amber-900/20 dark:border-amber-700/50 dark:border-l-amber-600/70",
@@ -335,6 +339,7 @@ export const PassageNotesBubble = memo(function PassageNotesBubble({
         </div>
       ) : (
         <div
+          data-note-surface
           className="space-y-2 rounded-lg border border-amber-200 bg-amber-50/40 dark:bg-amber-900/15 dark:border-amber-700/50 p-2"
           onClick={(e) => e.stopPropagation()}
           onMouseEnter={onMouseEnter}

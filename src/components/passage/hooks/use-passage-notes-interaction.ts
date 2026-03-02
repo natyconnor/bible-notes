@@ -74,6 +74,7 @@ export function usePassageNotesInteraction(
   const [creatingFor, setCreatingFor] = useState<VerseRef | null>(null)
   const [editingNoteId, setEditingNoteId] = useState<Id<"notes"> | null>(null)
   const containerRef = useRef<HTMLDivElement>(null)
+  const suppressNextDocumentClickRef = useRef(false)
 
   /* eslint-disable react-hooks/set-state-in-effect -- Intentional reset on prop change */
   useEffect(() => {
@@ -89,11 +90,23 @@ export function usePassageNotesInteraction(
   /* eslint-enable react-hooks/set-state-in-effect */
 
   useEffect(() => {
-    function handleClick(e: MouseEvent) {
-      if (
-        containerRef.current &&
-        !containerRef.current.querySelector("[data-notes-open]")?.contains(e.target as Node)
-      ) {
+    function handleOutsideClick(e: MouseEvent) {
+      if (suppressNextDocumentClickRef.current) {
+        suppressNextDocumentClickRef.current = false
+        return
+      }
+
+      const path = e.composedPath()
+      const hasSelectorInPath = (selector: string) =>
+        path.some((node) => node instanceof Element && node.matches(selector))
+      const isInteractiveTarget =
+        hasSelectorInPath("[data-note-trigger]") ||
+        hasSelectorInPath("[data-note-surface]") ||
+        hasSelectorInPath("[data-verse-number]")
+
+      // Interactive targets (verse rows, note triggers, note surfaces) manage
+      // their own state. Any other click should act as click-away.
+      if (!isInteractiveTarget) {
         setOpenVerseKey(null)
         setOpenPassageKey(null)
         setCreatingFor(null)
@@ -101,8 +114,8 @@ export function usePassageNotesInteraction(
         setSelectedVerses(new Set())
       }
     }
-    document.addEventListener("mousedown", handleClick)
-    return () => document.removeEventListener("mousedown", handleClick)
+    document.addEventListener("click", handleOutsideClick)
+    return () => document.removeEventListener("click", handleOutsideClick)
   }, [])
 
   const singleVerseNotes = useMemo(
@@ -192,7 +205,10 @@ export function usePassageNotesInteraction(
   }, [])
 
   const handleMouseUp = useCallback(() => {
-    selectionHandleMouseUp()
+    const didCompleteSelection = selectionHandleMouseUp()
+    if (didCompleteSelection) {
+      suppressNextDocumentClickRef.current = true
+    }
     setHoveredVerse(null)
   }, [selectionHandleMouseUp])
 
