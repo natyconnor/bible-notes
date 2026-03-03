@@ -14,6 +14,8 @@ const layoutTransition = { duration: 0.24, ease: [0.22, 1, 0.36, 1] as const }
 export interface VerseRowWithNotesProps {
   verseNumber: number
   text: string
+  viewMode?: "compose" | "read"
+  editorMode?: "inline" | "dialog"
 
   selectedVerses: Set<number>
   isInSelectionRange: boolean
@@ -54,6 +56,8 @@ export interface VerseRowWithNotesProps {
 export const VerseRowWithNotes = memo(function VerseRowWithNotes({
   verseNumber,
   text,
+  viewMode = "compose",
+  editorMode = "inline",
   selectedVerses,
   isInSelectionRange,
   isPassageSelection,
@@ -85,6 +89,10 @@ export const VerseRowWithNotes = memo(function VerseRowWithNotes({
   onClickAway,
   onStartCreatingPassageNote,
 }: VerseRowWithNotesProps) {
+  const isReadMode = viewMode === "read"
+  const useDialogEditors = editorMode === "dialog"
+  const shouldShowInlineEditors = !useDialogEditors
+
   const isPassageAnchor = passageNotes.length > 0
   const isInPassageRange = passageAnchor !== undefined && !isPassageAnchor
 
@@ -114,13 +122,18 @@ export const VerseRowWithNotes = memo(function VerseRowWithNotes({
     !!editingPassageNote
 
   const hasBothNoteTypes = singleNotes.length > 0 && passageNotes.length > 0
-  const useSideBySide = hasBothNoteTypes && !isCreatingHere && !editingSingleNote && !editingPassageNote
+  const useSideBySide =
+    !isReadMode &&
+    hasBothNoteTypes &&
+    !isCreatingHere &&
+    !editingSingleNote &&
+    !editingPassageNote
   const showVerseAsPill = useSideBySide && isPassageOpen
   const showPassageCompact = useSideBySide && !isPassageOpen
 
   const passageNoteJsx = (
     <AnimatePresence initial={false}>
-      {passageNotes.length > 0 && !editingPassageNote ? (
+      {passageNotes.length > 0 && (!editingPassageNote || !shouldShowInlineEditors) ? (
         <motion.div
           layout
           initial={{ opacity: 0 }}
@@ -133,6 +146,7 @@ export const VerseRowWithNotes = memo(function VerseRowWithNotes({
             notes={passageNotes}
             isOpen={isPassageOpen}
             isGlowing={isPassageRangeActive}
+            viewMode={viewMode}
             compact={showPassageCompact}
             onOpen={() => onOpenPassageNotes(verseNumber)}
             onClose={onClickAway}
@@ -150,7 +164,7 @@ export const VerseRowWithNotes = memo(function VerseRowWithNotes({
             onMouseLeave={onPassageBubbleMouseLeave}
           />
         </motion.div>
-      ) : editingPassageNote ? (
+      ) : editingPassageNote && shouldShowInlineEditors ? (
         <motion.div
           key={`edit-passage-${editingNoteId}`}
           layout
@@ -177,7 +191,11 @@ export const VerseRowWithNotes = memo(function VerseRowWithNotes({
     <motion.div
       layout="position"
       transition={{ layout: layoutTransition }}
-      className="grid grid-cols-[1fr_minmax(280px,360px)] gap-4 items-start"
+      className={
+        isReadMode
+          ? "grid grid-cols-[minmax(360px,1fr)_minmax(520px,1.4fr)] gap-6 items-start"
+          : "grid grid-cols-[1fr_minmax(280px,360px)] gap-4 items-start"
+      }
     >
       <motion.div layout="position" transition={{ layout: layoutTransition }}>
         <VerseRowLeft
@@ -213,7 +231,7 @@ export const VerseRowWithNotes = memo(function VerseRowWithNotes({
         {...(isAnyOpen ? { "data-notes-open": "" } : {})}
       >
         <AnimatePresence mode="popLayout" initial={false}>
-          {editingSingleNote ? (
+          {editingSingleNote && shouldShowInlineEditors ? (
             <motion.div
               key={`edit-${editingNoteId}`}
               layout
@@ -244,6 +262,7 @@ export const VerseRowWithNotes = memo(function VerseRowWithNotes({
               <VerseNotes
                 notes={singleNotes}
                 isOpen={isVerseOpen}
+                viewMode={viewMode}
                 isPill={showVerseAsPill}
                 onOpen={() => onOpenVerseNotes(verseNumber)}
                 onClose={onClickAway}
@@ -260,7 +279,11 @@ export const VerseRowWithNotes = memo(function VerseRowWithNotes({
         {passageNoteJsx}
 
         <AnimatePresence initial={false}>
-          {!editingSingleNote && !editingPassageNote && isCreatingHere && creatingFor && (
+          {shouldShowInlineEditors &&
+            !editingSingleNote &&
+            !editingPassageNote &&
+            isCreatingHere &&
+            creatingFor && (
             <motion.div
               key={`create-${creatingFor.startVerse}-${creatingFor.endVerse}`}
               layout

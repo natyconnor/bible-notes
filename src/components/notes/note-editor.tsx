@@ -14,6 +14,7 @@ interface NoteEditorProps {
   initialContent?: string
   initialTags?: string[]
   variant?: "default" | "passage"
+  presentation?: "card" | "dialog"
   onSave: (content: string, tags: string[]) => void
   onCancel: () => void
 }
@@ -23,6 +24,7 @@ export function NoteEditor({
   initialContent = "",
   initialTags = [],
   variant = "default",
+  presentation = "card",
   onSave,
   onCancel,
 }: NoteEditorProps) {
@@ -64,14 +66,20 @@ export function NoteEditor({
   )
 
   const isPassage = variant === "passage"
+  const isDialogPresentation = presentation === "dialog"
 
   return (
     <div
       className={cn(
-        "rounded-lg p-3 shadow-sm space-y-3",
-        isPassage
-          ? "border-l-2 border border-amber-200 bg-amber-50/80 dark:bg-amber-900/20 dark:border-amber-700/50 border-l-amber-400 dark:border-l-amber-600/70"
-          : "border bg-card"
+        "space-y-3",
+        isDialogPresentation
+          ? "px-1 pb-1"
+          : cn(
+              "rounded-lg p-3 shadow-sm",
+              isPassage
+                ? "border-l-2 border border-amber-200 bg-amber-50/80 dark:bg-amber-900/20 dark:border-amber-700/50 border-l-amber-400 dark:border-l-amber-600/70"
+                : "border bg-card"
+            )
       )}
       onKeyDown={handleKeyDown}
     >
@@ -88,9 +96,17 @@ export function NoteEditor({
             {formatVerseRef(verseRef)}
           </Badge>
         )}
-        <TooltipButton variant="ghost" size="icon" className="h-6 w-6" onClick={onCancel} tooltip="Cancel">
-          <X className="h-3.5 w-3.5" />
-        </TooltipButton>
+        {!isDialogPresentation && (
+          <TooltipButton
+            variant="ghost"
+            size="icon"
+            className="h-6 w-6"
+            onClick={onCancel}
+            tooltip="Cancel"
+          >
+            <X className="h-3.5 w-3.5" />
+          </TooltipButton>
+        )}
       </div>
 
       <Textarea
@@ -98,7 +114,7 @@ export function NoteEditor({
         placeholder="Write your note..."
         value={content}
         onChange={(e) => setContent(e.target.value)}
-        className="min-h-[100px] resize-y text-sm"
+        className={cn("resize-y text-sm", isDialogPresentation ? "min-h-[180px]" : "min-h-[100px]")}
       />
 
       <div className="space-y-2">
@@ -139,9 +155,11 @@ export function NoteEditor({
       </div>
 
       <div className="flex justify-end gap-2">
-        <TooltipButton variant="ghost" size="sm" onClick={onCancel} tooltip="Cancel (Esc)">
-          Cancel
-        </TooltipButton>
+        {!isDialogPresentation && (
+          <TooltipButton variant="ghost" size="sm" onClick={onCancel} tooltip="Cancel (Esc)">
+            Cancel
+          </TooltipButton>
+        )}
         <TooltipButton
           size="sm"
           onClick={() => content.trim() && onSave(content.trim(), tags)}

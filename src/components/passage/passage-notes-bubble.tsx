@@ -23,6 +23,7 @@ interface PassageNotesBubbleProps {
   notes: PassageNote[];
   isOpen: boolean;
   isGlowing: boolean;
+  viewMode?: "compose" | "read";
   compact?: boolean;
   onOpen: () => void;
   onClose: () => void;
@@ -37,6 +38,7 @@ export const PassageNotesBubble = memo(function PassageNotesBubble({
   notes,
   isOpen,
   isGlowing,
+  viewMode = "compose",
   compact = false,
   onOpen,
   onClose,
@@ -47,6 +49,7 @@ export const PassageNotesBubble = memo(function PassageNotesBubble({
   onMouseLeave,
 }: PassageNotesBubbleProps) {
   if (notes.length === 0) return null;
+  const isReadMode = viewMode === "read";
 
   const layoutTransition = {
     duration: 0.24,
@@ -60,7 +63,7 @@ export const PassageNotesBubble = memo(function PassageNotesBubble({
 
   return (
     <motion.div layout transition={{ layout: layoutTransition }}>
-      {!isOpen ? (
+      {!isOpen && !isReadMode ? (
         <div
           data-note-trigger
           className={cn(
@@ -144,7 +147,11 @@ export const PassageNotesBubble = memo(function PassageNotesBubble({
       ) : (
         <div
           data-note-surface
-          className="space-y-2 rounded-lg border border-amber-200 bg-amber-50/40 dark:bg-amber-900/15 dark:border-amber-700/50 p-2"
+          className={
+            isReadMode
+              ? "space-y-3 rounded-xl border border-amber-200 bg-amber-50/30 dark:bg-amber-900/20 dark:border-amber-700/50 p-3"
+              : "space-y-2 rounded-lg border border-amber-200 bg-amber-50/40 dark:bg-amber-900/15 dark:border-amber-700/50 p-2"
+          }
           onClick={(e) => e.stopPropagation()}
           onMouseEnter={onMouseEnter}
           onMouseLeave={onMouseLeave}
@@ -169,18 +176,20 @@ export const PassageNotesBubble = memo(function PassageNotesBubble({
                 </TooltipTrigger>
                 <TooltipContent>Add new note for this passage</TooltipContent>
               </Tooltip>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <button
-                    className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
-                    onClick={onClose}
-                  >
-                    <ChevronUp className="h-3 w-3" />
-                    Collapse
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent>Collapse notes</TooltipContent>
-              </Tooltip>
+              {!isReadMode && (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                      onClick={onClose}
+                    >
+                      <ChevronUp className="h-3 w-3" />
+                      Collapse
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent>Collapse notes</TooltipContent>
+                </Tooltip>
+              )}
             </div>
           </div>
           {notes.map((note, index) => (
@@ -192,6 +201,7 @@ export const PassageNotesBubble = memo(function PassageNotesBubble({
             >
               <ExpandedPassageNote
                 note={note}
+                density={isReadMode ? "reading" : "default"}
                 onEdit={() => onEdit(note.noteId)}
                 onDelete={() => onDelete(note.noteId)}
               />
@@ -205,24 +215,42 @@ export const PassageNotesBubble = memo(function PassageNotesBubble({
 
 function ExpandedPassageNote({
   note,
+  density = "default",
   onEdit,
   onDelete,
 }: {
   note: PassageNote;
+  density?: "default" | "reading";
   onEdit: () => void;
   onDelete: () => void;
 }) {
+  const isReading = density === "reading";
   return (
-    <div className="rounded-md border border-amber-200/70 bg-amber-50/60 dark:bg-amber-900/18 dark:border-amber-700/45 px-3 py-2 text-sm">
+    <div
+      className={
+        isReading
+          ? "rounded-lg border border-amber-200/70 bg-amber-50/60 dark:bg-amber-900/18 dark:border-amber-700/45 px-4 py-3"
+          : "rounded-md border border-amber-200/70 bg-amber-50/60 dark:bg-amber-900/18 dark:border-amber-700/45 px-3 py-2 text-sm"
+      }
+    >
       <div className="flex items-start justify-between gap-2">
-        <NoteContent content={note.content} className="flex-1" />
+        <NoteContent
+          content={note.content}
+          density={density}
+          className={isReading ? "flex-1 text-foreground" : "flex-1"}
+        />
         <NoteCardActions
           onEdit={onEdit}
           onDelete={onDelete}
           variant="passage"
         />
       </div>
-      <NoteTagList tags={note.tags} variant="passage" className="mt-1.5" />
+      <NoteTagList
+        tags={note.tags}
+        variant="passage"
+        size={isReading ? "sm" : "xs"}
+        className="mt-2"
+      />
     </div>
   );
 }

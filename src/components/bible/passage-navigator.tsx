@@ -1,18 +1,18 @@
-import { useState, useMemo, type ReactNode } from "react"
-import { motion, AnimatePresence } from "framer-motion"
-import { TooltipButton } from "@/components/ui/tooltip-button"
+import { useState, useMemo, type ReactNode } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { TooltipButton } from "@/components/ui/tooltip-button";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@/components/ui/popover"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { Input } from "@/components/ui/input"
-import { BookOpen } from "lucide-react"
-import { BIBLE_BOOKS, type BookInfo } from "@/lib/bible-books"
-import { useTabs } from "@/lib/use-tabs"
-import { toPassageId } from "@/lib/verse-ref-utils"
-import { cn } from "@/lib/utils"
+} from "@/components/ui/popover";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Input } from "@/components/ui/input";
+import { TableOfContents } from "lucide-react";
+import { BIBLE_BOOKS, type BookInfo } from "@/lib/bible-books";
+import { useTabs } from "@/lib/use-tabs";
+import { toPassageId } from "@/lib/verse-ref-utils";
+import { cn } from "@/lib/utils";
 
 const slideVariants = {
   enterFromRight: { x: 20, opacity: 0 },
@@ -20,19 +20,19 @@ const slideVariants = {
   center: { x: 0, opacity: 1 },
   exitToLeft: { x: -20, opacity: 0 },
   exitToRight: { x: 20, opacity: 0 },
-}
+};
 
 interface PassageNavigatorProps {
-  trigger?: ReactNode
+  trigger?: ReactNode;
 }
 
 export function PassageNavigator({ trigger }: PassageNavigatorProps = {}) {
-  const [open, setOpen] = useState(false)
-  const [selectedBook, setSelectedBook] = useState<BookInfo | null>(null)
-  const [search, setSearch] = useState("")
-  const { openTab } = useTabs()
+  const [open, setOpen] = useState(false);
+  const [selectedBook, setSelectedBook] = useState<BookInfo | null>(null);
+  const [search, setSearch] = useState("");
+  const { openTab } = useTabs();
 
-  const [highlightedIndex, setHighlightedIndex] = useState(0)
+  const [highlightedIndex, setHighlightedIndex] = useState(0);
 
   const filteredBooks = useMemo(
     () =>
@@ -44,38 +44,45 @@ export function PassageNavigator({ trigger }: PassageNavigatorProps = {}) {
           )
         : BIBLE_BOOKS,
     [search]
-  )
-
+  );
 
   function selectBook(book: BookInfo) {
     if (book.chapters === 1) {
-      selectChapter(book, 1)
+      selectChapter(book, 1);
     } else {
-      setSelectedBook(book)
-      setSearch("")
+      setSelectedBook(book);
+      setSearch("");
     }
   }
 
   function selectChapter(book: BookInfo, chapter: number) {
-    const passageId = toPassageId(book.name, chapter)
-    openTab(passageId, `${book.name} ${chapter}`)
-    setOpen(false)
-    setSelectedBook(null)
-    setSearch("")
+    const passageId = toPassageId(book.name, chapter);
+    openTab(passageId, `${book.name} ${chapter}`);
+    setOpen(false);
+    setSelectedBook(null);
+    setSearch("");
   }
 
   return (
-    <Popover open={open} onOpenChange={(o) => {
-      setOpen(o)
-      if (!o) {
-        setSelectedBook(null)
-        setSearch("")
-      }
-    }}>
+    <Popover
+      open={open}
+      onOpenChange={(o) => {
+        setOpen(o);
+        if (!o) {
+          setSelectedBook(null);
+          setSearch("");
+        }
+      }}
+    >
       <PopoverTrigger asChild>
         {trigger ?? (
-          <TooltipButton variant="ghost" size="icon" className="h-8 w-8" tooltip="Go to passage">
-            <BookOpen className="h-4 w-4" />
+          <TooltipButton
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8"
+            tooltip="Go to passage"
+          >
+            <TableOfContents className="h-4 w-4" />
           </TooltipButton>
         )}
       </PopoverTrigger>
@@ -95,21 +102,23 @@ export function PassageNavigator({ trigger }: PassageNavigatorProps = {}) {
                   placeholder="Search books..."
                   value={search}
                   onChange={(e) => {
-                    setSearch(e.target.value)
-                    setHighlightedIndex(0)
+                    setSearch(e.target.value);
+                    setHighlightedIndex(0);
                   }}
                   className="h-8"
                   autoFocus
                   onKeyDown={(e) => {
                     if (e.key === "Enter") {
-                      const book = filteredBooks[highlightedIndex]
-                      if (book) selectBook(book)
+                      const book = filteredBooks[highlightedIndex];
+                      if (book) selectBook(book);
                     } else if (e.key === "ArrowDown") {
-                      e.preventDefault()
-                      setHighlightedIndex((i) => Math.min(i + 1, filteredBooks.length - 1))
+                      e.preventDefault();
+                      setHighlightedIndex((i) =>
+                        Math.min(i + 1, filteredBooks.length - 1)
+                      );
                     } else if (e.key === "ArrowUp") {
-                      e.preventDefault()
-                      setHighlightedIndex((i) => Math.max(i - 1, 0))
+                      e.preventDefault();
+                      setHighlightedIndex((i) => Math.max(i - 1, 0));
                     }
                   }}
                 />
@@ -119,8 +128,8 @@ export function PassageNavigator({ trigger }: PassageNavigatorProps = {}) {
                   {(["OT", "NT"] as const).map((testament) => {
                     const books = filteredBooks.filter(
                       (b) => b.testament === testament
-                    )
-                    if (books.length === 0) return null
+                    );
+                    if (books.length === 0) return null;
                     return (
                       <div key={testament}>
                         <div className="px-2 py-1 text-xs font-semibold text-muted-foreground">
@@ -129,7 +138,7 @@ export function PassageNavigator({ trigger }: PassageNavigatorProps = {}) {
                             : "New Testament"}
                         </div>
                         {books.map((book) => {
-                          const globalIndex = filteredBooks.indexOf(book)
+                          const globalIndex = filteredBooks.indexOf(book);
                           return (
                             <button
                               key={book.name}
@@ -139,15 +148,17 @@ export function PassageNavigator({ trigger }: PassageNavigatorProps = {}) {
                                   ? "bg-primary text-primary-foreground"
                                   : "hover:bg-muted"
                               )}
-                              onMouseEnter={() => setHighlightedIndex(globalIndex)}
+                              onMouseEnter={() =>
+                                setHighlightedIndex(globalIndex)
+                              }
                               onClick={() => selectBook(book)}
                             >
                               {book.name}
                             </button>
-                          )
+                          );
                         })}
                       </div>
-                    )
+                    );
                   })}
                 </div>
               </ScrollArea>
@@ -193,5 +204,5 @@ export function PassageNavigator({ trigger }: PassageNavigatorProps = {}) {
         </AnimatePresence>
       </PopoverContent>
     </Popover>
-  )
+  );
 }

@@ -29,6 +29,7 @@ export type VerseNote = NoteWithRef;
 interface VerseNotesProps {
   notes: VerseNote[];
   isOpen: boolean;
+  viewMode?: "compose" | "read";
   isPill?: boolean;
   onOpen: () => void;
   onClose: () => void;
@@ -42,6 +43,7 @@ interface VerseNotesProps {
 export const VerseNotes = memo(function VerseNotes({
   notes,
   isOpen,
+  viewMode = "compose",
   isPill = false,
   onOpen,
   onClose,
@@ -52,6 +54,7 @@ export const VerseNotes = memo(function VerseNotes({
   onMouseLeave,
 }: VerseNotesProps) {
   if (notes.length === 0) return null;
+  const isReadMode = viewMode === "read";
 
   return (
     <AnimatePresence mode="popLayout" initial={false}>
@@ -59,7 +62,7 @@ export const VerseNotes = memo(function VerseNotes({
         <motion.div key="pill" {...fadeInOut}>
           <VerseNotesPill count={notes.length} onClick={onOpen} />
         </motion.div>
-      ) : !isOpen ? (
+      ) : !isOpen && !isReadMode ? (
         notes.length === 1 ? (
           <motion.div key="collapsed-single" {...fadeInOut}>
             <CollapsedBubble
@@ -86,7 +89,7 @@ export const VerseNotes = memo(function VerseNotes({
           key="expanded"
           {...fadeInOut}
           data-note-surface
-          className="space-y-2"
+          className={isReadMode ? "space-y-3" : "space-y-2"}
           onClick={(e) => e.stopPropagation()}
           onMouseEnter={onMouseEnter}
           onMouseLeave={onMouseLeave}
@@ -104,18 +107,20 @@ export const VerseNotes = memo(function VerseNotes({
               </TooltipTrigger>
               <TooltipContent>Add new note for this verse</TooltipContent>
             </Tooltip>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <button
-                  className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
-                  onClick={onClose}
-                >
-                  <ChevronUp className="h-3 w-3" />
-                  Collapse
-                </button>
-              </TooltipTrigger>
-              <TooltipContent>Collapse notes</TooltipContent>
-            </Tooltip>
+            {!isReadMode && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                    onClick={onClose}
+                  >
+                    <ChevronUp className="h-3 w-3" />
+                    Collapse
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent>Collapse notes</TooltipContent>
+              </Tooltip>
+            )}
           </div>
           {notes.map((note, index) => (
             <motion.div
@@ -126,6 +131,7 @@ export const VerseNotes = memo(function VerseNotes({
             >
               <ExpandedBubble
                 note={note}
+                density={isReadMode ? "reading" : "default"}
                 onEdit={() => onEdit(note.noteId)}
                 onDelete={() => onDelete(note.noteId)}
               />
@@ -231,20 +237,33 @@ function VerseNotesPill({
 
 function ExpandedBubble({
   note,
+  density = "default",
   onEdit,
   onDelete,
 }: {
   note: VerseNote;
+  density?: "default" | "reading";
   onEdit: () => void;
   onDelete: () => void;
 }) {
+  const isReading = density === "reading";
   return (
-    <div className="border rounded-lg px-3 py-2 shadow-sm text-sm bg-card border-border">
+    <div
+      className={
+        isReading
+          ? "border rounded-xl px-4 py-3 shadow-sm bg-card border-border"
+          : "border rounded-lg px-3 py-2 shadow-sm text-sm bg-card border-border"
+      }
+    >
       <div className="flex items-start justify-between gap-2">
-        <NoteContent content={note.content} className="flex-1" />
+        <NoteContent
+          content={note.content}
+          density={density}
+          className={isReading ? "flex-1 text-foreground" : "flex-1"}
+        />
         <NoteCardActions onEdit={onEdit} onDelete={onDelete} />
       </div>
-      <NoteTagList tags={note.tags} className="mt-1.5" />
+      <NoteTagList tags={note.tags} size={isReading ? "sm" : "xs"} className="mt-2" />
     </div>
   );
 }

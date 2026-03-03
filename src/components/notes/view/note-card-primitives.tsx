@@ -75,16 +75,23 @@ export function NoteTagList({ tags, variant = "default", size = "xs", className 
 export interface NoteContentProps {
   content: string
   truncateAt?: number
+  density?: "default" | "reading"
   className?: string
 }
 
-export function NoteContent({ content, truncateAt, className }: NoteContentProps) {
+export function NoteContent({
+  content,
+  truncateAt,
+  density = "default",
+  className,
+}: NoteContentProps) {
   const displayContent = truncateAt && content.length > truncateAt
     ? content.slice(0, truncateAt) + "..."
     : content
+  const densityClass = density === "reading" ? "text-base leading-7" : "leading-relaxed"
 
   return (
-    <p className={cn("leading-relaxed whitespace-pre-wrap", className)}>
+    <p className={cn("whitespace-pre-wrap", densityClass, className)}>
       {displayContent}
     </p>
   )
