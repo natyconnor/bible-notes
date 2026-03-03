@@ -133,6 +133,25 @@ export function usePassageNotesInteraction(
     [chapterNotes]
   )
 
+  const getSelectedVersesForPassageAnchor = useCallback(
+    (anchorVerse: number) => {
+      const passageNotes = passageNotesByAnchor.get(anchorVerse) ?? []
+      if (passageNotes.length === 0) {
+        return new Set([anchorVerse])
+      }
+
+      const verses = new Set<number>()
+      for (const note of passageNotes) {
+        const { startVerse, endVerse } = note.verseRef
+        for (let v = startVerse; v <= endVerse; v++) {
+          verses.add(v)
+        }
+      }
+      return verses
+    },
+    [passageNotesByAnchor]
+  )
+
   const handleSelectionComplete = useCallback(
     (selection: { startVerse: number; endVerse: number }) => {
       if (selection.startVerse === selection.endVerse) {
@@ -140,18 +159,20 @@ export function usePassageNotesInteraction(
         const singleNotes = singleVerseNotes.get(v) ?? []
         const passageAnchor = verseToPassageAnchor.get(v)
 
-        setSelectedVerses(new Set([v]))
         setEditingNoteId(null)
 
         if (singleNotes.length > 0) {
+          setSelectedVerses(new Set([v]))
           setOpenVerseKey(v)
           setOpenPassageKey(null)
           setCreatingFor(null)
         } else if (passageAnchor === v) {
+          setSelectedVerses(getSelectedVersesForPassageAnchor(v))
           setOpenPassageKey(v)
           setOpenVerseKey(null)
           setCreatingFor(null)
         } else {
+          setSelectedVerses(new Set([v]))
           setCreatingFor({ book, chapter, startVerse: v, endVerse: v })
           setOpenVerseKey(null)
           setOpenPassageKey(null)
@@ -173,7 +194,7 @@ export function usePassageNotesInteraction(
         setEditingNoteId(null)
       }
     },
-    [book, chapter, singleVerseNotes, verseToPassageAnchor]
+    [book, chapter, getSelectedVersesForPassageAnchor, singleVerseNotes, verseToPassageAnchor]
   )
 
   const {
@@ -304,21 +325,25 @@ export function usePassageNotesInteraction(
   const openPassageNotes = useCallback((verseNumber: number) => {
     setOpenPassageKey(verseNumber)
     setOpenVerseKey(null)
-    setSelectedVerses(new Set([verseNumber]))
+    setSelectedVerses(getSelectedVersesForPassageAnchor(verseNumber))
     setCreatingFor(null)
     setEditingNoteId(null)
-  }, [])
+  }, [getSelectedVersesForPassageAnchor])
 
   const startEditingNote = useCallback(
     (noteId: Id<"notes">, verseNumber: number, isPassage: boolean) => {
       setEditingNoteId(noteId)
       if (isPassage) {
         setOpenPassageKey(verseNumber)
+        setOpenVerseKey(null)
+        setSelectedVerses(getSelectedVersesForPassageAnchor(verseNumber))
       } else {
         setOpenVerseKey(verseNumber)
+        setOpenPassageKey(null)
+        setSelectedVerses(new Set([verseNumber]))
       }
     },
-    []
+    [getSelectedVersesForPassageAnchor]
   )
 
   const cancelEditing = useCallback(() => {
