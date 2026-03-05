@@ -14,6 +14,8 @@ interface TagFilterControlProps {
   onToggleTag: (tag: string) => void
   onClear: () => void
   resolveTagStyle?: (tag: string) => CSSProperties | undefined
+  /** When true, the autocomplete dropdown floats over content instead of pushing it down */
+  popoverDropdown?: boolean
 }
 
 export function TagFilterControl({
@@ -22,6 +24,7 @@ export function TagFilterControl({
   onToggleTag,
   onClear,
   resolveTagStyle,
+  popoverDropdown = false,
 }: TagFilterControlProps) {
   const [input, setInput] = useState("")
   const [isFocused, setIsFocused] = useState(false)
@@ -104,7 +107,7 @@ export function TagFilterControl({
           </div>
         )
       ) : (
-        <div className="space-y-2">
+        <div className={popoverDropdown ? "relative" : "space-y-2"}>
           <Input
             placeholder="Filter tags..."
             value={input}
@@ -126,7 +129,13 @@ export function TagFilterControl({
             className="h-8 text-sm"
           />
           {isFocused && suggestions.length > 0 && (
-            <div className="rounded-md border bg-popover p-1">
+            <div
+              className={
+                popoverDropdown
+                  ? "absolute left-0 right-0 top-full z-50 mt-1 max-h-48 overflow-y-auto rounded-md border bg-popover p-1 shadow-lg"
+                  : "rounded-md border bg-popover p-1"
+              }
+            >
               {suggestions.map((tag) => (
                 <button
                   key={`suggestion-${tag}`}

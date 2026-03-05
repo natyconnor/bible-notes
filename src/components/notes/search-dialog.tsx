@@ -1,56 +1,58 @@
-import { useState, useEffect, useCallback, useMemo, useRef } from "react"
-import { motion } from "framer-motion"
-import { useQuery } from "convex-helpers/react/cache"
-import { useMutation } from "convex/react"
-import { useNavigate } from "@tanstack/react-router"
-import { api } from "../../../convex/_generated/api"
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import { motion } from "framer-motion";
+import { useQuery } from "convex-helpers/react/cache";
+import { useMutation } from "convex/react";
+import { useNavigate } from "@tanstack/react-router";
+import { api } from "../../../convex/_generated/api";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import {
-  Dialog,
-  DialogContent,
-} from "@/components/ui/dialog"
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
-import { Input } from "@/components/ui/input"
-import { Badge } from "@/components/ui/badge"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { Search } from "lucide-react"
-import { useTabs } from "@/lib/use-tabs"
-import { useStarterTagBadgeStyle } from "@/lib/tag-color-styles"
-import { normalizeTags, type TagMatchMode } from "@/lib/tag-utils"
-import { toPassageId } from "@/lib/verse-ref-utils"
-import { HighlightedText } from "@/components/search/highlighted-text"
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Search } from "lucide-react";
+import { useTabs } from "@/lib/use-tabs";
+import { useStarterTagBadgeStyle } from "@/lib/tag-color-styles";
+import { normalizeTags, type TagMatchMode } from "@/lib/tag-utils";
+import { toPassageId } from "@/lib/verse-ref-utils";
+import { HighlightedText } from "@/components/search/highlighted-text";
+import { TagFilterControl } from "@/components/search/tag-filter-control";
 
 interface SearchDialogProps {
-  showTrigger?: boolean
+  showTrigger?: boolean;
 }
 
 export function SearchDialog({ showTrigger = true }: SearchDialogProps) {
-  const navigate = useNavigate()
-  const { openTab } = useTabs()
-  const [open, setOpen] = useState(false)
-  const [query, setQuery] = useState("")
-  const [selectedTags, setSelectedTags] = useState<string[]>([])
-  const [matchMode, setMatchMode] = useState<TagMatchMode>("any")
-  const attemptedBackfillRef = useRef(false)
-  const backfillCatalog = useMutation(api.tags.backfillCatalogFromNotes)
-  const resolveTagStyle = useStarterTagBadgeStyle()
+  const navigate = useNavigate();
+  const { openTab } = useTabs();
+  const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState("");
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [matchMode, setMatchMode] = useState<TagMatchMode>("any");
+  const attemptedBackfillRef = useRef(false);
+  const backfillCatalog = useMutation(api.tags.backfillCatalogFromNotes);
+  const resolveTagStyle = useStarterTagBadgeStyle();
 
   // Keyboard shortcut
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
       if ((e.metaKey || e.ctrlKey) && e.key === "k") {
-        e.preventDefault()
-        setOpen((o) => !o)
+        e.preventDefault();
+        setOpen((o) => !o);
       }
     }
-    document.addEventListener("keydown", handleKeyDown)
-    return () => document.removeEventListener("keydown", handleKeyDown)
-  }, [])
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, []);
 
-  const catalog = useQuery(api.tags.listCatalog)
-  const normalizedQuery = query.trim()
-  const hasTextQuery = normalizedQuery.length >= 2
-  const hasTagFilters = selectedTags.length > 0
-  const shouldSearch = hasTextQuery || hasTagFilters
+  const catalog = useQuery(api.tags.listCatalog);
+  const normalizedQuery = query.trim();
+  const hasTextQuery = normalizedQuery.length >= 2;
+  const hasTagFilters = selectedTags.length > 0;
+  const shouldSearch = hasTextQuery || hasTagFilters;
 
   const searchResults = useQuery(
     api.notes.searchWorkspace,
@@ -62,63 +64,74 @@ export function SearchDialog({ showTrigger = true }: SearchDialogProps) {
           limit: 50,
         }
       : "skip"
-  )
+  );
 
-  const availableTags = useMemo(() => catalog?.map((entry) => entry.tag) ?? [], [catalog])
+  const availableTags = useMemo(
+    () => catalog?.map((entry) => entry.tag) ?? [],
+    [catalog]
+  );
 
   useEffect(() => {
-    if (!open) return
-    if (attemptedBackfillRef.current) return
-    if (!catalog || catalog.length > 0) return
-    attemptedBackfillRef.current = true
-    void backfillCatalog({ noteLimit: 1000 })
-  }, [backfillCatalog, catalog, open])
+    if (!open) return;
+    if (attemptedBackfillRef.current) return;
+    if (!catalog || catalog.length > 0) return;
+    attemptedBackfillRef.current = true;
+    void backfillCatalog({ noteLimit: 1000 });
+  }, [backfillCatalog, catalog, open]);
 
   const toggleTag = useCallback((tag: string) => {
     setSelectedTags((prev) =>
-      prev.includes(tag) ? prev.filter((current) => current !== tag) : [...prev, tag]
-    )
-  }, [])
+      prev.includes(tag)
+        ? prev.filter((current) => current !== tag)
+        : [...prev, tag]
+    );
+  }, []);
 
-  const openAdvancedSearch = useCallback((noteId?: string) => {
-    const nextQuery = query.trim()
-    const nextTags = normalizeTags(selectedTags)
-    void navigate({
-      to: "/search",
-      search: {
-        q: nextQuery.length > 0 ? nextQuery : undefined,
-        tags: nextTags.length > 0 ? nextTags.join(",") : undefined,
-        mode: matchMode,
-        noteId,
-      },
-    })
-    setOpen(false)
-  }, [matchMode, navigate, query, selectedTags])
+  const openAdvancedSearch = useCallback(
+    (noteId?: string) => {
+      const nextQuery = query.trim();
+      const nextTags = normalizeTags(selectedTags);
+      void navigate({
+        to: "/search",
+        search: {
+          q: nextQuery.length > 0 ? nextQuery : undefined,
+          tags: nextTags.length > 0 ? nextTags.join(",") : undefined,
+          mode: matchMode,
+          noteId,
+        },
+      });
+      setOpen(false);
+    },
+    [matchMode, navigate, query, selectedTags]
+  );
 
   const jumpToSearchResultVerse = useCallback(
-    (noteId: string, primaryRef: { book: string; chapter: number; startVerse: number; endVerse: number } | null) => {
+    (
+      noteId: string,
+      primaryRef: {
+        book: string;
+        chapter: number;
+        startVerse: number;
+        endVerse: number;
+      } | null
+    ) => {
       if (!primaryRef) {
-        openAdvancedSearch(noteId)
-        return
+        openAdvancedSearch(noteId);
+        return;
       }
 
-      const passageId = toPassageId(primaryRef.book, primaryRef.chapter)
-      const label = `${primaryRef.book} ${primaryRef.chapter}`
+      const passageId = toPassageId(primaryRef.book, primaryRef.chapter);
+      const label = `${primaryRef.book} ${primaryRef.chapter}`;
       openTab(passageId, label, {
         source: "search",
         mode: "read",
         startVerse: primaryRef.startVerse,
         endVerse: primaryRef.endVerse,
-      })
-      setOpen(false)
+      });
+      setOpen(false);
     },
     [openAdvancedSearch, openTab]
-  )
-
-  const clearFilters = useCallback(() => {
-    setSelectedTags([])
-    setMatchMode("any")
-  }, [])
+  );
 
   return (
     <>
@@ -136,7 +149,7 @@ export function SearchDialog({ showTrigger = true }: SearchDialogProps) {
       ) : null}
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="sm:max-w-lg p-0 gap-0">
+        <DialogContent className="sm:max-w-xl p-0 gap-0">
           <div className="flex items-center border-b px-3">
             <Search className="h-4 w-4 text-muted-foreground shrink-0" />
             <Input
@@ -145,8 +158,8 @@ export function SearchDialog({ showTrigger = true }: SearchDialogProps) {
               onChange={(e) => setQuery(e.target.value)}
               onKeyDown={(event) => {
                 if (event.key === "Enter") {
-                  event.preventDefault()
-                  openAdvancedSearch()
+                  event.preventDefault();
+                  openAdvancedSearch();
                 }
               }}
               className="border-0 focus-visible:ring-0 shadow-none"
@@ -155,77 +168,54 @@ export function SearchDialog({ showTrigger = true }: SearchDialogProps) {
           </div>
 
           {availableTags.length > 0 && (
-            <div className="flex flex-wrap gap-1 px-3 py-2 border-b">
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Badge
-                    variant={selectedTags.length === 0 ? "default" : "outline"}
-                    className="text-xs cursor-pointer"
-                    onClick={clearFilters}
-                  >
-                    Clear
-                  </Badge>
-                </TooltipTrigger>
-                <TooltipContent>Clear tag filters</TooltipContent>
-              </Tooltip>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Badge
-                    variant={matchMode === "any" ? "default" : "outline"}
-                    className="text-xs cursor-pointer"
-                    onClick={() => setMatchMode("any")}
-                  >
-                    Any
-                  </Badge>
-                </TooltipTrigger>
-                <TooltipContent>Match notes containing any selected tag</TooltipContent>
-              </Tooltip>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Badge
-                    variant={matchMode === "all" ? "default" : "outline"}
-                    className="text-xs cursor-pointer"
-                    onClick={() => setMatchMode("all")}
-                  >
-                    All
-                  </Badge>
-                </TooltipTrigger>
-                <TooltipContent>Match notes containing every selected tag</TooltipContent>
-              </Tooltip>
-              {selectedTags.map((tag) => (
-                <Tooltip key={`selected-${tag}`}>
-                  <TooltipTrigger asChild>
-                    <Badge
-                      variant="default"
-                      className="text-xs cursor-pointer"
-                      onClick={() => toggleTag(tag)}
-                    >
-                      {tag}
-                    </Badge>
-                  </TooltipTrigger>
-                  <TooltipContent>Remove {tag} filter</TooltipContent>
-                </Tooltip>
-              ))}
-              {availableTags
-                .filter((tag) => !selectedTags.includes(tag))
-                .map((tag) => (
-                <Tooltip key={tag}>
-                  <TooltipTrigger asChild>
-                    <Badge
-                      variant="outline"
-                      className="text-xs cursor-pointer"
-                      onClick={() => toggleTag(tag)}
-                    >
-                      {tag}
-                    </Badge>
-                  </TooltipTrigger>
-                  <TooltipContent>Add {tag} filter</TooltipContent>
-                </Tooltip>
-              ))}
+            <div className="px-3 py-2 border-b space-y-2">
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                  Match
+                </span>
+                <div className="flex gap-1">
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Badge
+                        variant={matchMode === "any" ? "default" : "outline"}
+                        className="text-xs cursor-pointer"
+                        onClick={() => setMatchMode("any")}
+                      >
+                        Any
+                      </Badge>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      Match notes containing any selected tag
+                    </TooltipContent>
+                  </Tooltip>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Badge
+                        variant={matchMode === "all" ? "default" : "outline"}
+                        className="text-xs cursor-pointer"
+                        onClick={() => setMatchMode("all")}
+                      >
+                        All
+                      </Badge>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      Match notes containing every selected tag
+                    </TooltipContent>
+                  </Tooltip>
+                </div>
+              </div>
+              <TagFilterControl
+                availableTags={availableTags}
+                selectedTags={selectedTags}
+                onToggleTag={toggleTag}
+                onClear={() => setSelectedTags([])}
+                resolveTagStyle={resolveTagStyle}
+                popoverDropdown
+              />
             </div>
           )}
 
-          <ScrollArea className="max-h-80">
+          <ScrollArea className="max-h-80 min-w-0">
             {!shouldSearch ? (
               <div className="p-6 text-center text-sm text-muted-foreground">
                 Type at least 2 characters or choose one or more tags.
@@ -241,7 +231,7 @@ export function SearchDialog({ showTrigger = true }: SearchDialogProps) {
                   : "No results found for that query."}
               </div>
             ) : (
-              <div className="p-1">
+              <div className="p-1 min-w-0 overflow-hidden">
                 {searchResults.map((note, index) => (
                   <motion.div
                     key={note.noteId}
@@ -249,33 +239,36 @@ export function SearchDialog({ showTrigger = true }: SearchDialogProps) {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.15, delay: index * 0.03 }}
                   >
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <button
-                          className="w-full text-left px-3 py-2 rounded-sm hover:bg-muted transition-colors cursor-pointer"
-                          onClick={() => jumpToSearchResultVerse(String(note.noteId), note.primaryRef)}
-                        >
-                          <p className="text-sm line-clamp-2">
-                            <HighlightedText text={note.content} query={normalizedQuery} />
-                          </p>
-                          {note.tags.length > 0 && (
-                            <div className="flex gap-1 mt-1">
-                              {note.tags.map((tag) => (
-                                <Badge
-                                  key={tag}
-                                  variant="outline"
-                                  className="text-xs"
-                                  style={resolveTagStyle(tag)}
-                                >
-                                  {tag}
-                                </Badge>
-                              ))}
-                            </div>
-                          )}
-                        </button>
-                      </TooltipTrigger>
-                      <TooltipContent>Go to verse in chapter</TooltipContent>
-                    </Tooltip>
+                    <button
+                      className="w-full text-left px-3 py-2 rounded-sm hover:bg-muted transition-colors cursor-pointer"
+                      onClick={() =>
+                        jumpToSearchResultVerse(
+                          String(note.noteId),
+                          note.primaryRef
+                        )
+                      }
+                    >
+                      <p className="text-sm line-clamp-2">
+                        <HighlightedText
+                          text={note.content}
+                          query={normalizedQuery}
+                        />
+                      </p>
+                      {note.tags.length > 0 && (
+                        <div className="flex flex-wrap gap-1 mt-1">
+                          {note.tags.map((tag) => (
+                            <Badge
+                              key={tag}
+                              variant="outline"
+                              className="text-xs"
+                              style={resolveTagStyle(tag)}
+                            >
+                              {tag}
+                            </Badge>
+                          ))}
+                        </div>
+                      )}
+                    </button>
                   </motion.div>
                 ))}
               </div>
@@ -292,5 +285,5 @@ export function SearchDialog({ showTrigger = true }: SearchDialogProps) {
         </DialogContent>
       </Dialog>
     </>
-  )
+  );
 }
