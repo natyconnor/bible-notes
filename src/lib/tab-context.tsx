@@ -4,6 +4,7 @@ import { useNavigate } from "@tanstack/react-router"
 import type { Tab } from "./tab-types"
 import {
   TabContext,
+  type PassageNavigationSearch,
   loadTabs,
   saveTabs,
 } from "./tab-context-internal"
@@ -13,6 +14,7 @@ function TabProvider({ children }: { children: ReactNode }) {
   const [activeTabId, setActiveTabId] = useState<string | null>(
     () => loadTabs()[0]?.id ?? null
   )
+  const [searchModeActive, setSearchModeActiveState] = useState(false)
   // Most recently used tab ids, newest at the end
   const [tabHistory, setTabHistory] = useState<string[]>(() => {
     const initial = loadTabs()[0]?.id
@@ -20,14 +22,22 @@ function TabProvider({ children }: { children: ReactNode }) {
   })
   const navigate = useNavigate()
 
+  const setSearchModeActive = useCallback((active: boolean) => {
+    setSearchModeActiveState(active)
+    if (active) {
+      setActiveTabId(null)
+    }
+  }, [])
+
   const openTab = useCallback(
-    (passageId: string, label: string) => {
+    (passageId: string, label: string, search: PassageNavigationSearch = {}) => {
+      setSearchModeActiveState(false)
       const existing = tabs.find((t) => t.passageId === passageId)
       if (existing) {
         setActiveTabId(existing.id)
         setTabHistory((h) => [...h.filter((id) => id !== existing.id), existing.id])
         startTransition(() => {
-          navigate({ to: "/passage/$passageId", params: { passageId } })
+          navigate({ to: "/passage/$passageId", params: { passageId }, search })
         })
         return
       }
@@ -38,16 +48,17 @@ function TabProvider({ children }: { children: ReactNode }) {
       setActiveTabId(newTab.id)
       setTabHistory((h) => [...h, newTab.id])
       startTransition(() => {
-        navigate({ to: "/passage/$passageId", params: { passageId } })
+        navigate({ to: "/passage/$passageId", params: { passageId }, search })
       })
     },
     [tabs, navigate]
   )
 
   const navigateActiveTab = useCallback(
-    (passageId: string, label: string) => {
+    (passageId: string, label: string, search: PassageNavigationSearch = {}) => {
+      setSearchModeActiveState(false)
       if (!activeTabId) {
-        openTab(passageId, label)
+        openTab(passageId, label, search)
         return
       }
       const updatedTabs = tabs.map((t) =>
@@ -56,7 +67,7 @@ function TabProvider({ children }: { children: ReactNode }) {
       saveTabs(updatedTabs)
       setTabs(updatedTabs)
       startTransition(() => {
-        navigate({ to: "/passage/$passageId", params: { passageId } })
+        navigate({ to: "/passage/$passageId", params: { passageId }, search })
       })
     },
     [activeTabId, tabs, navigate, openTab]
@@ -77,9 +88,14 @@ function TabProvider({ children }: { children: ReactNode }) {
         }
         saveTabs([fallback])
         setTabs([fallback])
+        setSearchModeActiveState(false)
         setActiveTabId(fallback.id)
         setTabHistory([fallback.id])
-        navigate({ to: "/passage/$passageId", params: { passageId: "John-1" } })
+        navigate({
+          to: "/passage/$passageId",
+          params: { passageId: "John-1" },
+          search: {},
+        })
         return
       }
 
@@ -100,6 +116,7 @@ function TabProvider({ children }: { children: ReactNode }) {
         navigate({
           to: "/passage/$passageId",
           params: { passageId: nextTab.passageId },
+          search: {},
         })
       }
     },
@@ -110,10 +127,15 @@ function TabProvider({ children }: { children: ReactNode }) {
     (tabId: string) => {
       const tab = tabs.find((t) => t.id === tabId)
       if (!tab) return
+      setSearchModeActiveState(false)
       setActiveTabId(tabId)
       setTabHistory((h) => [...h.filter((id) => id !== tabId), tabId])
       startTransition(() => {
-        navigate({ to: "/passage/$passageId", params: { passageId: tab.passageId } })
+        navigate({
+          to: "/passage/$passageId",
+          params: { passageId: tab.passageId },
+          search: {},
+        })
       })
     },
     [tabs, navigate]
@@ -124,10 +146,12 @@ function TabProvider({ children }: { children: ReactNode }) {
       value={{
         tabs,
         activeTabId,
+        searchModeActive,
         openTab,
         navigateActiveTab,
         closeTab,
         setActiveTab: handleSetActiveTab,
+        setSearchModeActive,
       }}
     >
       {children}

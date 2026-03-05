@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router"
 import { useEffect, useMemo, useState } from "react"
 import { useQuery } from "convex-helpers/react/cache"
 import { useMutation } from "convex/react"
-import { Check, Loader2, Trash2 } from "lucide-react"
+import { Check, FlaskConical, Loader2, Trash2 } from "lucide-react"
 
 import { api } from "../../../convex/_generated/api"
 import { Button } from "@/components/ui/button"
@@ -38,11 +38,23 @@ function StarterTagsSettingsPage() {
   const removeCustomTagAndDetach = useMutation(api.tags.removeCustomTagAndDetach)
   const completeSetup = useMutation(api.userSettings.completeStarterTagsSetup)
   const setCategoryColor = useMutation(api.userSettings.setStarterTagCategoryColor)
+  const seedDevChapterNotes = useMutation(api.seed.seedDevChapterNotes)
 
   const [busyAction, setBusyAction] = useState<string | null>(null)
   const [draftCategoryColors, setDraftCategoryColors] = useState<Record<string, string>>({})
   const [customTagInput, setCustomTagInput] = useState("")
   const [deleteTagCandidate, setDeleteTagCandidate] = useState<string | null>(null)
+  const [seedResult, setSeedResult] = useState<{
+    seed: number
+    selectedChapters: number
+    heavyChapters: number
+    notesCreated: number
+    verseRefsCreated: number
+    linksCreated: number
+    testamentDistribution: { ot: number; nt: number }
+    cleanup: { notesDeleted: number; linksDeleted: number; verseRefsDeleted: number }
+    usedTags: string[]
+  } | null>(null)
 
   const catalogByTag = useMemo(() => {
     const entries = catalog ?? []
@@ -110,6 +122,7 @@ function StarterTagsSettingsPage() {
   }, [catalogByTag])
 
   const isLoading = catalog === undefined || setupStatus === undefined
+  const isDev = import.meta.env.DEV
 
   const handleAddAll = async () => {
     setBusyAction("add-all")
@@ -189,6 +202,28 @@ function StarterTagsSettingsPage() {
     try {
       await removeCustomTagAndDetach({ tag: deleteTagCandidate })
       setDeleteTagCandidate(null)
+    } finally {
+      setBusyAction(null)
+    }
+  }
+
+  const handleRunDevSeed = async () => {
+    setBusyAction("seed-dev-notes")
+    try {
+      const result = await seedDevChapterNotes({
+        confirmReplace: true,
+      })
+      setSeedResult({
+        seed: result.seed,
+        selectedChapters: result.selectedChapters,
+        heavyChapters: result.heavyChapters,
+        notesCreated: result.notesCreated,
+        verseRefsCreated: result.verseRefsCreated,
+        linksCreated: result.linksCreated,
+        testamentDistribution: result.testamentDistribution,
+        cleanup: result.cleanup,
+        usedTags: result.usedTags,
+      })
     } finally {
       setBusyAction(null)
     }
@@ -302,6 +337,70 @@ function StarterTagsSettingsPage() {
             </div>
           )}
         </section>
+
+        {isDev && (
+          <section className="rounded-lg border bg-card p-4 space-y-3">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="space-y-1">
+                <h2 className="text-sm font-semibold inline-flex items-center gap-2">
+                  <FlaskConical className="h-4 w-4 text-muted-foreground" />
+                  Dev note seed
+                </h2>
+                <p className="text-xs text-muted-foreground">
+                  Replace your current notes with generated chapter-linked test data (50 chapters, 10 heavy).
+                </p>
+              </div>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => void handleRunDevSeed()}
+                disabled={busyAction !== null}
+              >
+                {busyAction === "seed-dev-notes" && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+                Generate dev test notes
+              </Button>
+            </div>
+
+            {seedResult && (
+              <div className="rounded-md border bg-background p-3 space-y-2 text-xs">
+                <p className="text-muted-foreground">
+                  Seed <code>{seedResult.seed}</code> complete.
+                </p>
+                <div className="grid gap-1 sm:grid-cols-2">
+                  <p>
+                    Notes created: <span className="font-semibold">{seedResult.notesCreated}</span>
+                  </p>
+                  <p>
+                    Verse refs created: <span className="font-semibold">{seedResult.verseRefsCreated}</span>
+                  </p>
+                  <p>
+                    Links created: <span className="font-semibold">{seedResult.linksCreated}</span>
+                  </p>
+                  <p>
+                    Chapters:{" "}
+                    <span className="font-semibold">
+                      {seedResult.selectedChapters} ({seedResult.testamentDistribution.ot} OT /{" "}
+                      {seedResult.testamentDistribution.nt} NT)
+                    </span>
+                  </p>
+                  <p>
+                    Heavy chapters: <span className="font-semibold">{seedResult.heavyChapters}</span>
+                  </p>
+                  <p>
+                    Cleanup removed:{" "}
+                    <span className="font-semibold">
+                      {seedResult.cleanup.notesDeleted} notes, {seedResult.cleanup.linksDeleted} links,{" "}
+                      {seedResult.cleanup.verseRefsDeleted} verse refs
+                    </span>
+                  </p>
+                </div>
+                <p className="text-muted-foreground">
+                  Starter tags used: <span className="font-medium">{seedResult.usedTags.length}</span>
+                </p>
+              </div>
+            )}
+          </section>
+        )}
 
         <div className="rounded-lg border bg-card p-4">
           <div className="flex flex-wrap items-center justify-between gap-3">

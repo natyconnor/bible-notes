@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
@@ -23,6 +23,9 @@ import { BookOpen, Loader2, Pencil } from "lucide-react";
 interface PassageViewProps {
   book: string;
   chapter: number;
+  focusRange?: { startVerse: number; endVerse: number } | null;
+  forcedViewMode?: PassageViewMode;
+  focusSource?: "search";
 }
 
 type PassageViewMode = "compose" | "read";
@@ -41,10 +44,23 @@ function resolveInitialViewMode(): PassageViewMode {
   return "compose";
 }
 
-export function PassageView({ book, chapter }: PassageViewProps) {
+export function PassageView({
+  book,
+  chapter,
+  focusRange = null,
+  forcedViewMode,
+  focusSource,
+}: PassageViewProps) {
   const { data, loading, error } = useEsvPassage(book, chapter);
+  const handledFocusRequestRef = useRef<string | null>(null);
+  const [searchModeLock, setSearchModeLock] = useState<boolean>(
+    () => focusSource === "search" && forcedViewMode === "read" && !!focusRange
+  );
   const [viewMode, setViewModeState] = useState<PassageViewMode>(
-    resolveInitialViewMode
+    () =>
+      focusSource === "search" && forcedViewMode === "read"
+        ? "read"
+        : resolveInitialViewMode()
   );
   const [showOnlyWithNotes, setShowOnlyWithNotes] = useState(false);
   const [activeTag, setActiveTag] = useState("all");
@@ -84,6 +100,7 @@ export function PassageView({ book, chapter }: PassageViewProps) {
   } = usePassageNotesInteraction(book, chapter);
 
   const setViewMode = useCallback((next: PassageViewMode) => {
+    setSearchModeLock(false);
     setViewModeState(next);
     try {
       localStorage.setItem(READING_MODE_STORAGE_KEY, next);
@@ -92,7 +109,13 @@ export function PassageView({ book, chapter }: PassageViewProps) {
     }
   }, []);
 
-  const isReadMode = viewMode === "read";
+  const isFocusNavigation =
+    searchModeLock &&
+    focusSource === "search" &&
+    forcedViewMode === "read" &&
+    !!focusRange;
+  const effectiveViewMode: PassageViewMode = isFocusNavigation ? "read" : viewMode;
+  const isReadMode = effectiveViewMode === "read";
   const editorMode = isReadMode ? "dialog" : "inline";
 
   const noteById = useMemo(() => {
@@ -132,18 +155,18 @@ export function PassageView({ book, chapter }: PassageViewProps) {
       const passageNotes = passageNotesByAnchor.get(verse.number) ?? [];
 
       const singleVisible =
-        isReadMode && activeTag !== "all"
+        isReadMode && !isFocusNavigation && activeTag !== "all"
           ? singleNotes.filter((note) => note.tags.includes(activeTag))
           : singleNotes;
 
       const passageVisible =
-        isReadMode && activeTag !== "all"
+        isReadMode && !isFocusNavigation && activeTag !== "all"
           ? passageNotes.filter((note) => note.tags.includes(activeTag))
           : passageNotes;
 
       const hasVisibleNotes =
         singleVisible.length > 0 || passageVisible.length > 0;
-      if (isReadMode && showOnlyWithNotes && !hasVisibleNotes) {
+      if (isReadMode && !isFocusNavigation && showOnlyWithNotes && !hasVisibleNotes) {
         return [];
       }
 
@@ -159,6 +182,7 @@ export function PassageView({ book, chapter }: PassageViewProps) {
   }, [
     activeTag,
     data,
+    isFocusNavigation,
     isReadMode,
     passageNotesByAnchor,
     showOnlyWithNotes,
@@ -173,6 +197,57 @@ export function PassageView({ book, chapter }: PassageViewProps) {
   const containerClass = isReadMode
     ? "max-w-[1400px] mx-auto px-6 pb-16"
     : "max-w-6xl mx-auto px-4 pb-16";
+  const focusStartVerse = focusRange?.startVerse;
+  const focusEndVerse = focusRange?.endVerse;
+  const focusRequestKey =
+    isFocusNavigation &&
+    typeof focusStartVerse === "number" &&
+    typeof focusEndVerse === "number"
+      ? `${book}|${chapter}|${focusStartVerse}|${focusEndVerse}`
+      : null;
+
+  useEffect(() => {
+    if (!focusRequestKey) {
+      handledFocusRequestRef.current = null;
+      return;
+    }
+    if (!data || effectiveViewMode !== "read") return;
+    if (handledFocusRequestRef.current === focusRequestKey) return;
+
+    let attempts = 0;
+    const maxAttempts = 30;
+
+    const scrollToTarget = () => {
+      const selector = `[data-verse-number="${focusStartVerse}"]`;
+      const target =
+        containerRef.current?.querySelector<HTMLElement>(selector) ??
+        document.querySelector<HTMLElement>(selector);
+      if (!target) return false;
+      target.scrollIntoView({ behavior: "smooth", block: "center" });
+      handledFocusRequestRef.current = focusRequestKey;
+      return true;
+    };
+
+    if (!scrollToTarget()) {
+      const intervalId = window.setInterval(() => {
+        attempts += 1;
+        if (scrollToTarget() || attempts >= maxAttempts) {
+          window.clearInterval(intervalId);
+        }
+      }, 100);
+      return () => {
+        window.clearInterval(intervalId);
+      };
+    }
+  }, [
+    book,
+    chapter,
+    containerRef,
+    data,
+    effectiveViewMode,
+    focusRequestKey,
+    focusStartVerse,
+  ]);
 
   if (loading) {
     return (
@@ -218,7 +293,7 @@ export function PassageView({ book, chapter }: PassageViewProps) {
             <div className="inline-flex items-center rounded-md border bg-background p-0.5">
               <Button
                 size="xs"
-                variant={viewMode === "compose" ? "secondary" : "ghost"}
+                variant={effectiveViewMode === "compose" ? "secondary" : "ghost"}
                 onClick={() => setViewMode("compose")}
               >
                 <Pencil className="h-3 w-3" />
@@ -226,7 +301,7 @@ export function PassageView({ book, chapter }: PassageViewProps) {
               </Button>
               <Button
                 size="xs"
-                variant={viewMode === "read" ? "secondary" : "ghost"}
+                variant={effectiveViewMode === "read" ? "secondary" : "ghost"}
                 onClick={() => setViewMode("read")}
               >
                 <BookOpen className="h-3 w-3" />
@@ -277,7 +352,7 @@ export function PassageView({ book, chapter }: PassageViewProps) {
             key={verse.verseNumber}
             verseNumber={verse.verseNumber}
             text={verse.text}
-            viewMode={viewMode}
+            viewMode={effectiveViewMode}
             editorMode={editorMode}
             selectedVerses={selectedVerses}
             isInSelectionRange={isInSelection(verse.verseNumber)}
@@ -292,6 +367,12 @@ export function PassageView({ book, chapter }: PassageViewProps) {
             openPassageKey={openPassageKey}
             creatingFor={creatingFor}
             editingNoteId={editingNoteId}
+            isFocusTarget={
+              focusSource === "search" && focusRange
+                ? verse.verseNumber >= focusRange.startVerse &&
+                  verse.verseNumber <= focusRange.endVerse
+                : false
+            }
             onAddNote={handleAddNote}
             onMouseDown={handleVerseMouseDown}
             onMouseEnter={handleMouseEnter}

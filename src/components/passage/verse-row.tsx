@@ -19,6 +19,10 @@ export interface VerseHoverState {
   isNoteBubbleHovered: boolean
 }
 
+export interface VerseFocusState {
+  isTarget: boolean
+}
+
 export interface VerseInteractionHandlers {
   onAddNote: (verseNumber: number) => void
   onMouseDown: (verseNumber: number) => void
@@ -32,6 +36,7 @@ interface VerseRowLeftProps {
   selection: VerseSelectionState
   noteIndicator: VerseNoteIndicatorState
   hover: VerseHoverState
+  focus?: VerseFocusState
   handlers: VerseInteractionHandlers
 }
 
@@ -41,11 +46,13 @@ export const VerseRowLeft = memo(function VerseRowLeft({
   selection,
   noteIndicator,
   hover,
+  focus,
   handlers,
 }: VerseRowLeftProps) {
   const { isSelected, isInSelectionRange, isPassageSelection } = selection
   const { hasOwnNote, isPassageAnchor, isInPassageRange } = noteIndicator
   const { isPassageRangeActive, isNoteBubbleHovered } = hover
+  const isFocusTarget = focus?.isTarget ?? false
   const { onAddNote, onMouseDown, onMouseEnter, onMouseLeave } = handlers
   return (
     <div
@@ -56,6 +63,7 @@ export const VerseRowLeft = memo(function VerseRowLeft({
         isSelected && !isPassageSelection && "bg-primary/10 ring-1 ring-primary/20",
         isInSelectionRange && !isSelected && isPassageSelection && "bg-amber-50/60 dark:bg-amber-800/20",
         isInSelectionRange && !isSelected && !isPassageSelection && "bg-primary/5",
+        isFocusTarget && "bg-sky-100/70 ring-1 ring-sky-400/40 dark:bg-sky-900/20 dark:ring-sky-500/40",
         isNoteBubbleHovered && !isSelected && !isInSelectionRange && "bg-muted/70",
         isPassageRangeActive && !isSelected && !isInSelectionRange && !isNoteBubbleHovered && "bg-amber-50/60 dark:bg-amber-800/20",
         !isSelected && !isInSelectionRange && "hover:bg-muted"
