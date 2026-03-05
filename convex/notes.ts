@@ -1,5 +1,6 @@
 import { query, mutation } from "./_generated/server"
 import { v } from "convex/values"
+import type { Doc, Id } from "./_generated/dataModel"
 import { getCurrentUserId, getCurrentUserIdOrNull } from "./lib/auth"
 import { matchesTagFilters, normalizeTags, syncUserTagsFromNote } from "./lib/tags"
 
@@ -7,10 +8,46 @@ const DEFAULT_SEARCH_LIMIT = 50
 const MAX_SEARCH_LIMIT = 100
 const SEARCH_WINDOW_MULTIPLIER = 4
 const MAX_SEARCH_WINDOW = 400
+const MAX_WORKSPACE_RESULTS = 100
+
+const verseRefSummary = v.object({
+  book: v.string(),
+  chapter: v.number(),
+  startVerse: v.number(),
+  endVerse: v.number(),
+})
+
+const workspaceSearchResult = v.object({
+  noteId: v.id("notes"),
+  content: v.string(),
+  tags: v.array(v.string()),
+  createdAt: v.number(),
+  updatedAt: v.number(),
+  verseRefs: v.array(verseRefSummary),
+  primaryRef: v.union(verseRefSummary, v.null()),
+})
 
 function resolveSearchLimit(limit: number | undefined): number {
   if (typeof limit !== "number" || Number.isNaN(limit)) return DEFAULT_SEARCH_LIMIT
   return Math.min(Math.max(Math.floor(limit), 1), MAX_SEARCH_LIMIT)
+}
+
+function compareVerseRefs(
+  a: { book: string; chapter: number; startVerse: number; endVerse: number },
+  b: { book: string; chapter: number; startVerse: number; endVerse: number }
+): number {
+  const byBook = a.book.localeCompare(b.book)
+  if (byBook !== 0) return byBook
+  if (a.chapter !== b.chapter) return a.chapter - b.chapter
+  if (a.startVerse !== b.startVerse) return a.startVerse - b.startVerse
+  return a.endVerse - b.endVerse
+}
+
+function isVerseRefForUser(
+  ref: Doc<"verseRefs"> | null,
+  userId: Id<"users">
+): ref is Doc<"verseRefs"> {
+  return !!ref && ref.userId === userId
 }
 
 export const getById = query({
@@ -66,6 +103,81 @@ export const search = query({
     return baseResults
       .filter((note) => matchesTagFilters(note.tags, selectedTags, matchMode))
       .slice(0, limit)
+  },
+})
+
+export const searchWorkspace = query({
+  args: {
+    query: v.optional(v.string()),
+    tags: v.optional(v.array(v.string())),
+    matchMode: v.optional(v.union(v.literal("any"), v.literal("all"))),
+    limit: v.optional(v.number()),
+  },
+  returns: v.array(workspaceSearchResult),
+  handler: async (ctx, args) => {
+    const userId = await getCurrentUserIdOrNull(ctx)
+    if (!userId) return []
+
+    const queryText = args.query?.trim() ?? ""
+    const selectedTags = normalizeTags(args.tags ?? [])
+    const matchMode = args.matchMode ?? "any"
+    const limit = Math.min(resolveSearchLimit(args.limit), MAX_WORKSPACE_RESULTS)
+    const searchWindow = Math.min(
+      Math.max(limit * SEARCH_WINDOW_MULTIPLIER, DEFAULT_SEARCH_LIMIT),
+      MAX_SEARCH_WINDOW
+    )
+
+    if (queryText.length < 2 && selectedTags.length === 0) {
+      return []
+    }
+
+    const baseResults =
+      queryText.length >= 2
+        ? await ctx.db
+            .query("notes")
+            .withSearchIndex("search_content", (search) =>
+              search.search("content", queryText).eq("userId", userId)
+            )
+            .take(searchWindow)
+        : await ctx.db
+            .query("notes")
+            .withIndex("by_userId", (q) => q.eq("userId", userId))
+            .order("desc")
+            .take(searchWindow)
+
+    const notes = baseResults
+      .filter((note) => matchesTagFilters(note.tags, selectedTags, matchMode))
+      .slice(0, limit)
+
+    return await Promise.all(
+      notes.map(async (note) => {
+        const links = await ctx.db
+          .query("noteVerseLinks")
+          .withIndex("by_noteId", (q) => q.eq("noteId", note._id))
+          .filter((q) => q.eq(q.field("userId"), userId))
+          .collect()
+        const refs = await Promise.all(links.map((link) => ctx.db.get(link.verseRefId)))
+        const verseRefs = refs
+          .filter((ref): ref is Doc<"verseRefs"> => isVerseRefForUser(ref, userId))
+          .map((ref) => ({
+            book: ref.book,
+            chapter: ref.chapter,
+            startVerse: ref.startVerse,
+            endVerse: ref.endVerse,
+          }))
+          .sort(compareVerseRefs)
+
+        return {
+          noteId: note._id,
+          content: note.content,
+          tags: note.tags,
+          createdAt: note.createdAt,
+          updatedAt: note.updatedAt,
+          verseRefs,
+          primaryRef: verseRefs[0] ?? null,
+        }
+      })
+    )
   },
 })
 

@@ -33,6 +33,7 @@ export interface VerseRowWithNotesProps {
   openPassageKey: number | null
   creatingFor: VerseRef | null
   editingNoteId: Id<"notes"> | null
+  isFocusTarget?: boolean
 
   onAddNote: (verseNumber: number) => void
   onMouseDown: (verseNumber: number) => void
@@ -71,6 +72,7 @@ export const VerseRowWithNotes = memo(function VerseRowWithNotes({
   openPassageKey,
   creatingFor,
   editingNoteId,
+  isFocusTarget = false,
   onAddNote,
   onMouseDown,
   onMouseEnter,
@@ -214,6 +216,9 @@ export const VerseRowWithNotes = memo(function VerseRowWithNotes({
           hover={{
             isPassageRangeActive,
             isNoteBubbleHovered,
+          }}
+          focus={{
+            isTarget: isFocusTarget,
           }}
           handlers={{
             onAddNote,

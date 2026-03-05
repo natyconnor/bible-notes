@@ -1,18 +1,29 @@
 import { AnimatePresence } from "framer-motion";
 import { useTabs } from "@/lib/use-tabs";
 import { TabItem } from "./tab-item";
-import { LogOut, Plus, Tags } from "lucide-react";
+import { LogOut, Plus, Search, Tags } from "lucide-react";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { SearchDialog } from "@/components/notes/search-dialog";
 import { ThemeDropdown } from "./theme-dropdown";
 import { PassageNavigator } from "@/components/bible/passage-navigator";
 import { useAuthActions } from "@convex-dev/auth/react";
 import { TooltipButton } from "@/components/ui/tooltip-button";
-import { Link } from "@tanstack/react-router";
+import { Link, useLocation } from "@tanstack/react-router";
+import { readSearchWorkspaceState } from "@/lib/search-workspace-state";
+import { cn } from "@/lib/utils";
 
 export function TabBar() {
   const { tabs, activeTabId, setActiveTab, closeTab } = useTabs();
   const { signOut } = useAuthActions();
+  const location = useLocation();
+  const isSearchRoute = location.pathname === "/search";
+  const savedSearchState = readSearchWorkspaceState();
+  const searchLinkState = {
+    q: savedSearchState.params.q,
+    tags: savedSearchState.params.tags,
+    mode: savedSearchState.params.mode,
+    noteId: savedSearchState.params.noteId,
+  };
 
   return (
     <div className="flex items-center border-b bg-muted/30 h-10 shrink-0">
@@ -23,7 +34,7 @@ export function TabBar() {
               <TabItem
                 key={tab.id}
                 tab={tab}
-                isActive={tab.id === activeTabId}
+                isActive={!isSearchRoute && tab.id === activeTabId}
                 onActivate={() => setActiveTab(tab.id)}
                 onClose={() => closeTab(tab.id)}
               />
@@ -40,7 +51,22 @@ export function TabBar() {
         <ScrollBar orientation="horizontal" />
       </ScrollArea>
       <div className="flex items-center gap-1 mx-1 shrink-0">
-        <SearchDialog />
+        <TooltipButton
+          asChild
+          variant="ghost"
+          size="icon"
+          className={cn(
+            "h-8 w-8",
+            isSearchRoute &&
+              "h-10 w-10 rounded-none border-b-2 border-b-primary bg-background text-foreground"
+          )}
+          tooltip="Open search workspace"
+          aria-label="Open search workspace"
+        >
+          <Link to="/search" search={searchLinkState}>
+            <Search className="h-4 w-4" />
+          </Link>
+        </TooltipButton>
         <TooltipButton
           asChild
           variant="ghost"
@@ -65,6 +91,7 @@ export function TabBar() {
           <LogOut className="h-4 w-4" />
         </TooltipButton>
       </div>
+      <SearchDialog showTrigger={false} />
     </div>
   );
 }
