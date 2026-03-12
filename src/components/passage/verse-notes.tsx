@@ -1,54 +1,54 @@
-import { memo } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { Pencil, Plus, ChevronUp } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import { memo } from "react"
+import { motion, AnimatePresence } from "framer-motion"
+import { Pencil, Plus, ChevronUp } from "lucide-react"
+import { Badge } from "@/components/ui/badge"
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { NoteEditor } from "@/components/notes/note-editor";
-import type { Id } from "../../../convex/_generated/dataModel";
-import type { NoteWithRef } from "@/components/notes/model/note-model";
-import type { NoteBody } from "@/lib/note-inline-content";
+} from "@/components/ui/tooltip"
+import { NoteEditor } from "@/components/notes/note-editor"
+import type { Id } from "../../../convex/_generated/dataModel"
+import type { NoteWithRef } from "@/components/notes/model/note-model"
+import type { NoteBody } from "@/lib/note-inline-content"
 import {
   NoteCardActions,
   NoteTagList,
   StackedCardBackground,
   HoverEditButton,
   NoteContent,
-} from "@/components/notes/view/note-card-primitives";
+} from "@/components/notes/view/note-card-primitives"
 
 const fadeInOut = {
   initial: { opacity: 0, y: -4 },
   animate: { opacity: 1, y: 0 },
   exit: { opacity: 0, y: -4 },
   transition: { duration: 0.15 },
-};
+}
 
-export type VerseNote = NoteWithRef;
+export type VerseNote = NoteWithRef
 
 interface CurrentChapter {
-  book: string;
-  chapter: number;
+  book: string
+  chapter: number
 }
 
 interface VerseNotesProps {
-  notes: VerseNote[];
-  isOpen: boolean;
-  viewMode?: "compose" | "read";
-  isPill?: boolean;
-  currentChapter?: CurrentChapter;
-  editingNoteId?: Id<"notes"> | null;
-  onSaveEdit?: (body: NoteBody, tags: string[]) => void | Promise<void>;
-  onCancelEdit?: () => void;
-  onOpen: () => void;
-  onClose: () => void;
-  onEdit: (noteId: Id<"notes">) => void;
-  onDelete: (noteId: Id<"notes">) => void;
-  onAddNote: () => void;
-  onMouseEnter?: () => void;
-  onMouseLeave?: () => void;
+  notes: VerseNote[]
+  isOpen: boolean
+  viewMode?: "compose" | "read"
+  isPill?: boolean
+  currentChapter?: CurrentChapter
+  editingNoteId?: Id<"notes"> | null
+  onSaveEdit?: (body: NoteBody, tags: string[]) => void | Promise<void>
+  onCancelEdit?: () => void
+  onOpen: () => void
+  onClose: () => void
+  onEdit: (noteId: Id<"notes">) => void
+  onDelete: (noteId: Id<"notes">) => void
+  onAddNote: () => void
+  onMouseEnter?: () => void
+  onMouseLeave?: () => void
 }
 
 export const VerseNotes = memo(function VerseNotes({
@@ -68,16 +68,16 @@ export const VerseNotes = memo(function VerseNotes({
   onMouseEnter,
   onMouseLeave,
 }: VerseNotesProps) {
-  if (notes.length === 0) return null;
-  const isReadMode = viewMode === "read";
-  const supportsInlineEditing = !!onSaveEdit && !!onCancelEdit;
+  if (notes.length === 0) return null
+  const isReadMode = viewMode === "read"
+  const supportsInlineEditing = !!onSaveEdit && !!onCancelEdit
   const editingNote =
     supportsInlineEditing && editingNoteId
       ? notes.find((note) => note.noteId === editingNoteId)
-      : undefined;
-  const isEditingWithinGroup = !!editingNote;
-  const shouldShowExpanded = isOpen || isReadMode || isEditingWithinGroup;
-  const layoutTransition = { duration: 0.2, ease: [0.22, 1, 0.36, 1] as const };
+      : undefined
+  const isEditingWithinGroup = !!editingNote
+  const shouldShowExpanded = isOpen || isReadMode || isEditingWithinGroup
+  const layoutTransition = { duration: 0.2, ease: [0.22, 1, 0.36, 1] as const }
 
   return (
     <AnimatePresence mode="popLayout" initial={false}>
@@ -164,8 +164,8 @@ export const VerseNotes = memo(function VerseNotes({
                     initialBody={note.body}
                     initialTags={note.tags}
                     currentChapter={currentChapter}
-                    onSave={onSaveEdit!}
-                    onCancel={onCancelEdit!}
+                    onSave={onSaveEdit}
+                    onCancel={onCancelEdit}
                   />
                 </div>
               ) : (
@@ -182,8 +182,8 @@ export const VerseNotes = memo(function VerseNotes({
         </motion.div>
       )}
     </AnimatePresence>
-  );
-});
+  )
+})
 
 function CollapsedBubble({
   note,
@@ -193,32 +193,37 @@ function CollapsedBubble({
   onMouseEnter,
   onMouseLeave,
 }: {
-  note: VerseNote;
-  currentChapter?: { book: string; chapter: number };
-  onClick: () => void;
-  onEdit: () => void;
-  onMouseEnter?: () => void;
-  onMouseLeave?: () => void;
+  note: VerseNote
+  currentChapter?: { book: string; chapter: number }
+  onClick: () => void
+  onEdit: () => void
+  onMouseEnter?: () => void
+  onMouseLeave?: () => void
 }) {
   return (
     <div
-      data-note-trigger
-      className="group relative border rounded-lg px-2.5 py-1.5 cursor-pointer transition-all hover:shadow-sm text-[13px] bg-card border-border"
-      onClick={onClick}
+      className="group relative"
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
     >
-      <NoteContent
-        content={note.content}
-        body={note.body}
-        truncateAt={100}
-        currentChapter={currentChapter}
-        className="text-muted-foreground line-clamp-2"
-      />
-      <NoteTagList tags={note.tags} className="mt-1" />
+      <button
+        type="button"
+        data-note-trigger
+        className="w-full cursor-pointer rounded-lg border border-border bg-card px-2.5 py-1.5 text-left text-[13px] transition-all hover:shadow-sm"
+        onClick={onClick}
+      >
+        <NoteContent
+          content={note.content}
+          body={note.body}
+          truncateAt={100}
+          currentChapter={currentChapter}
+          className="text-muted-foreground line-clamp-2"
+        />
+        <NoteTagList tags={note.tags} className="mt-1" />
+      </button>
       <HoverEditButton onEdit={onEdit} />
     </div>
-  );
+  )
 }
 
 function StackedBubble({
@@ -228,16 +233,17 @@ function StackedBubble({
   onMouseEnter,
   onMouseLeave,
 }: {
-  count: number;
-  preview: string;
-  onClick: () => void;
-  onMouseEnter?: () => void;
-  onMouseLeave?: () => void;
+  count: number
+  preview: string
+  onClick: () => void
+  onMouseEnter?: () => void
+  onMouseLeave?: () => void
 }) {
   return (
-    <div
+    <button
+      type="button"
       data-note-trigger
-      className="relative cursor-pointer"
+      className="relative block w-full cursor-pointer text-left"
       onClick={onClick}
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
@@ -251,16 +257,16 @@ function StackedBubble({
         </div>
         <p className="text-muted-foreground line-clamp-1 text-xs">{preview}</p>
       </div>
-    </div>
-  );
+    </button>
+  )
 }
 
 function VerseNotesPill({
   count,
   onClick,
 }: {
-  count: number;
-  onClick: () => void;
+  count: number
+  onClick: () => void
 }) {
   return (
     <Tooltip>
@@ -278,7 +284,7 @@ function VerseNotesPill({
         {count} verse {count === 1 ? "note" : "notes"}
       </TooltipContent>
     </Tooltip>
-  );
+  )
 }
 
 function ExpandedBubble({
@@ -288,13 +294,13 @@ function ExpandedBubble({
   onEdit,
   onDelete,
 }: {
-  note: VerseNote;
-  currentChapter?: { book: string; chapter: number };
-  density?: "default" | "reading";
-  onEdit: () => void;
-  onDelete: () => void;
+  note: VerseNote
+  currentChapter?: { book: string; chapter: number }
+  density?: "default" | "reading"
+  onEdit: () => void
+  onDelete: () => void
 }) {
-  const isReading = density === "reading";
+  const isReading = density === "reading"
   return (
     <div
       className={
@@ -313,7 +319,11 @@ function ExpandedBubble({
         />
         <NoteCardActions onEdit={onEdit} onDelete={onDelete} />
       </div>
-      <NoteTagList tags={note.tags} size={isReading ? "sm" : "xs"} className="mt-2" />
+      <NoteTagList
+        tags={note.tags}
+        size={isReading ? "sm" : "xs"}
+        className="mt-2"
+      />
     </div>
-  );
+  )
 }

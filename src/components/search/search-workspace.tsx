@@ -1,11 +1,13 @@
-import { useCallback, useEffect, useMemo, useRef, type CSSProperties } from "react"
+import { useCallback, useMemo, useRef, type CSSProperties } from "react"
 import { useQuery } from "convex-helpers/react/cache"
-import { useNavigate } from "@tanstack/react-router"
 import { api } from "../../../convex/_generated/api"
 import { useTabs } from "@/lib/use-tabs"
 import { useEsvReference } from "@/hooks/use-esv-reference"
-import { formatVerseRef, toPassageId, type VerseRef } from "@/lib/verse-ref-utils"
-import { normalizeTags, type TagMatchMode } from "@/lib/tag-utils"
+import {
+  formatVerseRef,
+  toPassageId,
+  type VerseRef,
+} from "@/lib/verse-ref-utils"
 import { useStarterTagBadgeStyle } from "@/lib/tag-color-styles"
 import { TagFilterControl } from "@/components/search/tag-filter-control"
 import { HighlightedText } from "@/components/search/highlighted-text"
@@ -15,11 +17,9 @@ import { Badge } from "@/components/ui/badge"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Loader2 } from "lucide-react"
 import { cn } from "@/lib/utils"
-import {
-  readSearchWorkspaceState,
-  writeSearchWorkspaceParams,
-  writeSearchWorkspaceScroll,
-} from "@/lib/search-workspace-state"
+import { type TagMatchMode } from "@/lib/tag-utils"
+import { useSearchWorkspaceRouting } from "./hooks/use-search-workspace-routing"
+import { useSearchWorkspacePersistence } from "./hooks/use-search-workspace-persistence"
 
 export interface SearchWorkspaceRouteState {
   q?: string
@@ -54,16 +54,6 @@ interface SearchResultGroup {
 function toRefKey(ref: SearchVerseRef | null): string {
   if (!ref) return "__unlinked__"
   return `${ref.book}|${ref.chapter}|${ref.startVerse}|${ref.endVerse}`
-}
-
-function parseTags(serializedTags: string | undefined): string[] {
-  if (!serializedTags) return []
-  return normalizeTags(serializedTags.split(","))
-}
-
-function serializeTags(tags: string[]): string | undefined {
-  const normalized = normalizeTags(tags)
-  return normalized.length > 0 ? normalized.join(",") : undefined
 }
 
 function toVerseRefLabel(ref: SearchVerseRef): string {
@@ -118,39 +108,43 @@ function SearchResultGroupRow({
           </p>
         )}
 
-      {!ref ? (
-        <p className="text-sm text-muted-foreground">
-          These notes are not linked to verse references yet.
-        </p>
-      ) : loading ? (
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <Loader2 className="h-4 w-4 animate-spin" />
-          Loading scripture context...
-        </div>
-      ) : error ? (
-        <p className="text-sm text-destructive">{error}</p>
-      ) : !data || data.verses.length === 0 ? (
-        <p className="text-sm text-muted-foreground">No scripture context available.</p>
-      ) : (
-        <div className="space-y-0.5">
-          {data.verses.map((verse) => (
-            <button
-              key={verse.number}
-              type="button"
-              className={cn(
-                "grid w-full grid-cols-[2rem_1fr] gap-2 rounded-sm px-2 py-1.5 text-left transition-colors",
-                "bg-sky-100/70 ring-1 ring-sky-400/30 hover:bg-sky-100 dark:bg-sky-900/20 dark:ring-sky-500/40 dark:hover:bg-sky-900/30"
-              )}
-              onClick={() => onJumpToRef(ref)}
-            >
-              <span className="text-xs font-semibold text-muted-foreground tabular-nums">
-                {verse.number}
-              </span>
-              <p className="font-serif text-base leading-relaxed">{verse.text}</p>
-            </button>
-          ))}
-        </div>
-      )}
+        {!ref ? (
+          <p className="text-sm text-muted-foreground">
+            These notes are not linked to verse references yet.
+          </p>
+        ) : loading ? (
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Loader2 className="h-4 w-4 animate-spin" />
+            Loading scripture context...
+          </div>
+        ) : error ? (
+          <p className="text-sm text-destructive">{error}</p>
+        ) : !data || data.verses.length === 0 ? (
+          <p className="text-sm text-muted-foreground">
+            No scripture context available.
+          </p>
+        ) : (
+          <div className="space-y-0.5">
+            {data.verses.map((verse) => (
+              <button
+                key={verse.number}
+                type="button"
+                className={cn(
+                  "grid w-full grid-cols-[2rem_1fr] gap-2 rounded-sm px-2 py-1.5 text-left transition-colors",
+                  "bg-sky-100/70 ring-1 ring-sky-400/30 hover:bg-sky-100 dark:bg-sky-900/20 dark:ring-sky-500/40 dark:hover:bg-sky-900/30",
+                )}
+                onClick={() => onJumpToRef(ref)}
+              >
+                <span className="text-xs font-semibold text-muted-foreground tabular-nums">
+                  {verse.number}
+                </span>
+                <p className="font-serif text-base leading-relaxed">
+                  {verse.text}
+                </p>
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       <div className="space-y-2">
@@ -164,7 +158,7 @@ function SearchResultGroupRow({
                 "w-full rounded-md border px-3 py-2 text-left transition-colors",
                 isSelected
                   ? "border-primary/40 bg-primary/5"
-                  : "border-transparent hover:bg-muted"
+                  : "border-transparent hover:bg-muted",
               )}
               onClick={() => onSelectNote(note.noteId)}
             >
@@ -192,21 +186,23 @@ function SearchResultGroupRow({
 }
 
 export function SearchWorkspace({ search }: SearchWorkspaceProps) {
-  const navigate = useNavigate()
   const { openTab } = useTabs()
   const resolveTagStyle = useStarterTagBadgeStyle()
-  const resultsScrollAreaRef = useRef<HTMLDivElement | null>(null)
-  const hasRestoredScrollRef = useRef(false)
-
-  const query = search.q ?? ""
-  const matchMode: TagMatchMode = search.mode === "all" ? "all" : "any"
-  const selectedTags = useMemo(() => parseTags(search.tags), [search.tags])
-  const selectedNoteId = search.noteId
-
-  const normalizedQuery = query.trim()
-  const hasTextQuery = normalizedQuery.length >= 2
-  const hasTagFilters = selectedTags.length > 0
-  const shouldSearch = hasTextQuery || hasTagFilters
+  const resultsViewportRef = useRef<HTMLDivElement | null>(null)
+  const {
+    query,
+    matchMode,
+    selectedTags,
+    selectedNoteId,
+    normalizedQuery,
+    hasTextQuery,
+    shouldSearch,
+    updateQuery,
+    updateMatchMode,
+    toggleTag,
+    clearTags,
+    selectNote,
+  } = useSearchWorkspaceRouting(search)
 
   const catalog = useQuery(api.tags.listCatalog)
   const searchResults = useQuery(
@@ -218,12 +214,12 @@ export function SearchWorkspace({ search }: SearchWorkspaceProps) {
           matchMode,
           limit: 100,
         }
-      : "skip"
+      : "skip",
   )
 
   const availableTags = useMemo(
     () => (catalog ?? []).map((entry) => entry.tag),
-    [catalog]
+    [catalog],
   )
 
   const groupedResults = useMemo<SearchResultGroup[]>(() => {
@@ -255,63 +251,6 @@ export function SearchWorkspace({ search }: SearchWorkspaceProps) {
     })
   }, [searchResults])
 
-  const updateSearch = useCallback(
-    (next: SearchWorkspaceRouteState) => {
-      void navigate({
-        to: "/search",
-        search: {
-          q: "q" in next ? next.q : search.q,
-          tags: "tags" in next ? next.tags : search.tags,
-          mode: "mode" in next ? next.mode : search.mode,
-          noteId: "noteId" in next ? next.noteId : search.noteId,
-        },
-        replace: true,
-      })
-    },
-    [navigate, search]
-  )
-
-  const updateQuery = useCallback(
-    (nextQuery: string) => {
-      updateSearch({
-        q: nextQuery.length > 0 ? nextQuery : undefined,
-        noteId: undefined,
-      })
-    },
-    [updateSearch]
-  )
-
-  const updateMatchMode = useCallback(
-    (nextMatchMode: TagMatchMode) => {
-      updateSearch({ mode: nextMatchMode, noteId: undefined })
-    },
-    [updateSearch]
-  )
-
-  const toggleTag = useCallback(
-    (tag: string) => {
-      const nextTags = selectedTags.includes(tag)
-        ? selectedTags.filter((currentTag) => currentTag !== tag)
-        : [...selectedTags, tag]
-      updateSearch({
-        tags: serializeTags(nextTags),
-        noteId: undefined,
-      })
-    },
-    [selectedTags, updateSearch]
-  )
-
-  const clearTags = useCallback(() => {
-    updateSearch({ tags: undefined, noteId: undefined })
-  }, [updateSearch])
-
-  const selectNote = useCallback(
-    (noteId: string) => {
-      updateSearch({ noteId })
-    },
-    [updateSearch]
-  )
-
   const jumpToReference = useCallback(
     (ref: SearchVerseRef) => {
       const passageId = toPassageId(ref.book, ref.chapter)
@@ -324,48 +263,17 @@ export function SearchWorkspace({ search }: SearchWorkspaceProps) {
       }
       openTab(passageId, label, focusSearch)
     },
-    [openTab]
+    [openTab],
   )
 
   const panelScrollClass = "h-[32vh] md:h-[34vh] lg:h-[calc(100vh-2.6rem)]"
 
-  useEffect(() => {
-    writeSearchWorkspaceParams({
-      q: search.q,
-      tags: search.tags,
-      mode: search.mode,
-      noteId: search.noteId,
-    })
-  }, [search.noteId, search.q, search.tags, search.mode])
-
-  useEffect(() => {
-    const viewport = resultsScrollAreaRef.current?.querySelector<HTMLElement>(
-      "[data-slot='scroll-area-viewport']"
-    )
-    if (!viewport) return
-
-    const handleScroll = () => {
-      writeSearchWorkspaceScroll(viewport.scrollTop)
-    }
-
-    viewport.addEventListener("scroll", handleScroll, { passive: true })
-    return () => viewport.removeEventListener("scroll", handleScroll)
-  }, [])
-
-  useEffect(() => {
-    if (hasRestoredScrollRef.current) return
-    if (!shouldSearch) return
-    if (searchResults === undefined) return
-    const viewport = resultsScrollAreaRef.current?.querySelector<HTMLElement>(
-      "[data-slot='scroll-area-viewport']"
-    )
-    if (!viewport) return
-    const saved = readSearchWorkspaceState()
-    if (saved.scrollTop > 0) {
-      viewport.scrollTop = saved.scrollTop
-    }
-    hasRestoredScrollRef.current = true
-  }, [groupedResults.length, searchResults, shouldSearch])
+  useSearchWorkspacePersistence({
+    search,
+    shouldSearch,
+    searchResultsReady: searchResults !== undefined,
+    viewportRef: resultsViewportRef,
+  })
 
   return (
     <div className="h-full overflow-hidden">
@@ -384,33 +292,36 @@ export function SearchWorkspace({ search }: SearchWorkspaceProps) {
               </div>
             </div>
           </div>
-          <div ref={resultsScrollAreaRef}>
-            <ScrollArea className={panelScrollClass}>
-            {!shouldSearch ? (
-              <div className="px-4 py-6 text-sm text-muted-foreground">
-                Enter at least 2 characters or choose one or more tags.
-              </div>
-            ) : groupedResults.length === 0 ? (
-              <div className="px-4 py-6 text-sm text-muted-foreground">
-                {searchResults === undefined
-                  ? "Searching..."
-                  : "No notes matched your search and filters."}
-              </div>
-            ) : (
-              <div className="space-y-3 p-3">
-                {groupedResults.map((group) => (
-                  <SearchResultGroupRow
-                    key={group.key}
-                    group={group}
-                    selectedNoteId={selectedNoteId}
-                    normalizedQuery={normalizedQuery}
-                    onSelectNote={selectNote}
-                    onJumpToRef={jumpToReference}
-                    resolveTagStyle={resolveTagStyle}
-                  />
-                ))}
-              </div>
-            )}
+          <div>
+            <ScrollArea
+              className={panelScrollClass}
+              viewportRef={resultsViewportRef}
+            >
+              {!shouldSearch ? (
+                <div className="px-4 py-6 text-sm text-muted-foreground">
+                  Enter at least 2 characters or choose one or more tags.
+                </div>
+              ) : groupedResults.length === 0 ? (
+                <div className="px-4 py-6 text-sm text-muted-foreground">
+                  {searchResults === undefined
+                    ? "Searching..."
+                    : "No notes matched your search and filters."}
+                </div>
+              ) : (
+                <div className="space-y-3 p-3">
+                  {groupedResults.map((group) => (
+                    <SearchResultGroupRow
+                      key={group.key}
+                      group={group}
+                      selectedNoteId={selectedNoteId}
+                      normalizedQuery={normalizedQuery}
+                      onSelectNote={selectNote}
+                      onJumpToRef={jumpToReference}
+                      resolveTagStyle={resolveTagStyle}
+                    />
+                  ))}
+                </div>
+              )}
             </ScrollArea>
           </div>
         </section>

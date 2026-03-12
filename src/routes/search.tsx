@@ -1,10 +1,14 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router"
 import { useEffect } from "react"
-import { SearchWorkspace, type SearchWorkspaceRouteState } from "@/components/search/search-workspace"
-import { useTabs } from "@/lib/use-tabs"
+import {
+  SearchWorkspace,
+  type SearchWorkspaceRouteState,
+} from "@/components/search/search-workspace"
 import { readSearchWorkspaceState } from "@/lib/search-workspace-state"
 
-function normalizeSearchState(search: Record<string, unknown>): SearchWorkspaceRouteState {
+function normalizeSearchState(
+  search: Record<string, unknown>,
+): SearchWorkspaceRouteState {
   const q = typeof search.q === "string" ? search.q : undefined
   const tags = typeof search.tags === "string" ? search.tags : undefined
   const mode = search.mode === "all" ? "all" : "any"
@@ -26,12 +30,6 @@ export const Route = createFileRoute("/search")({
 function SearchPage() {
   const search = Route.useSearch()
   const navigate = useNavigate()
-  const { setSearchModeActive } = useTabs()
-
-  useEffect(() => {
-    setSearchModeActive(true)
-    return () => setSearchModeActive(false)
-  }, [setSearchModeActive])
 
   useEffect(() => {
     const hasRouteState =

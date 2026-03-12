@@ -1,58 +1,40 @@
-import { useState, useMemo, useCallback, useEffect, useRef } from "react";
-import { AnimatePresence, motion } from "framer-motion";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Button } from "@/components/ui/button";
+import { useMemo, useRef, useState } from "react"
+import { AnimatePresence, motion } from "framer-motion"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { Button } from "@/components/ui/button"
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { useEsvPassage } from "@/hooks/use-esv-passage";
-import { ChapterHeader } from "@/components/bible/chapter-header";
-import { ChapterPager } from "@/components/bible/chapter-pager";
-import { CopyrightNotice } from "@/components/bible/copyright-notice";
-import { VerseRowWithNotes } from "./view/verse-row-with-notes";
-import { usePassageNotesInteraction } from "./hooks/use-passage-notes-interaction";
-import { NoteEditor } from "@/components/notes/note-editor";
-import type { Id } from "../../../convex/_generated/dataModel";
-import type { NoteWithRef } from "@/components/notes/model/note-model";
-import { BookOpen, Loader2, Pencil } from "lucide-react";
-import { useTabs } from "@/lib/use-tabs";
-import { getAdjacentChapterDestinations } from "@/lib/chapter-navigation";
-import { cn } from "@/lib/utils";
+} from "@/components/ui/dialog"
+import { useEsvPassage } from "@/hooks/use-esv-passage"
+import { ChapterHeader } from "@/components/bible/chapter-header"
+import { ChapterPager } from "@/components/bible/chapter-pager"
+import { CopyrightNotice } from "@/components/bible/copyright-notice"
+import { VerseRowWithNotes } from "./view/verse-row-with-notes"
+import { usePassageNotesInteraction } from "./hooks/use-passage-notes-interaction"
+import { NoteEditor } from "@/components/notes/note-editor"
+import type { Id } from "../../../convex/_generated/dataModel"
+import type { NoteWithRef } from "@/components/notes/model/note-model"
+import { BookOpen, Loader2, Pencil } from "lucide-react"
+import { useTabs } from "@/lib/use-tabs"
+import { getAdjacentChapterDestinations } from "@/lib/chapter-navigation"
+import { cn } from "@/lib/utils"
+import { usePassageViewMode } from "./hooks/use-passage-view-mode"
+import { usePassageKeyboardShortcuts } from "./hooks/use-passage-keyboard-shortcuts"
+import { usePassageScrollRestoration } from "./hooks/use-passage-scroll-restoration"
 
 interface PassageViewProps {
-  book: string;
-  chapter: number;
-  focusRange?: { startVerse: number; endVerse: number } | null;
-  forcedViewMode?: PassageViewMode;
-  focusSource?: "search";
+  book: string
+  chapter: number
+  focusRange?: { startVerse: number; endVerse: number } | null
+  forcedViewMode?: PassageViewMode
+  focusSource?: "search"
 }
 
-type PassageViewMode = "compose" | "read";
-type NoteVisibility = "all" | "noted";
-
-const READING_MODE_STORAGE_KEY = "bible-notes-passage-view-mode";
-const EDITABLE_SELECTOR =
-  'input, textarea, select, [contenteditable=""], [contenteditable="true"], [contenteditable="plaintext-only"], [role="textbox"]';
-
-function isEditableTarget(target: EventTarget | null): boolean {
-  if (!(target instanceof HTMLElement)) return false;
-  return target.isContentEditable || target.closest(EDITABLE_SELECTOR) !== null;
-}
-
-function resolveInitialViewMode(): PassageViewMode {
-  try {
-    const saved = localStorage.getItem(READING_MODE_STORAGE_KEY);
-    if (saved === "compose" || saved === "read") {
-      return saved;
-    }
-  } catch {
-    // localStorage unavailable
-  }
-  return "compose";
-}
+type PassageViewMode = "compose" | "read"
+type NoteVisibility = "all" | "noted"
 
 export function PassageView({
   book,
@@ -61,22 +43,11 @@ export function PassageView({
   forcedViewMode,
   focusSource,
 }: PassageViewProps) {
-  const { data, loading, error } = useEsvPassage(book, chapter);
-  const handledFocusRequestRef = useRef<string | null>(null);
-  const [searchModeLock, setSearchModeLock] = useState<boolean>(
-    () => focusSource === "search" && forcedViewMode === "read" && !!focusRange
-  );
-  const [viewMode, setViewModeState] = useState<PassageViewMode>(() =>
-    focusSource === "search" && forcedViewMode === "read"
-      ? "read"
-      : resolveInitialViewMode()
-  );
-  const [noteVisibility, setNoteVisibility] = useState<NoteVisibility>("all");
-  const [isScrolled, setIsScrolled] = useState(false);
-  const passageWrapperRef = useRef<HTMLDivElement>(null);
-  const savedScrollPositions = useRef(new Map<string, number>());
-  const { navigateActiveTab } = useTabs();
-  const { previous, next } = getAdjacentChapterDestinations(book, chapter);
+  const { data, loading, error } = useEsvPassage(book, chapter)
+  const [noteVisibility, setNoteVisibility] = useState<NoteVisibility>("all")
+  const viewportRef = useRef<HTMLDivElement>(null)
+  const { navigateActiveTab } = useTabs()
+  const { previous, next } = getAdjacentChapterDestinations(book, chapter)
   const {
     containerRef,
     selectedVerses,
@@ -110,61 +81,48 @@ export function PassageView({
     handleSaveNew,
     handleClickAway,
     startCreatingPassageNote,
-  } = usePassageNotesInteraction(book, chapter);
+  } = usePassageNotesInteraction(book, chapter)
 
-  const setViewMode = useCallback((next: PassageViewMode) => {
-    setSearchModeLock(false);
-    setViewModeState(next);
-    try {
-      localStorage.setItem(READING_MODE_STORAGE_KEY, next);
-    } catch {
-      // localStorage unavailable
-    }
-  }, []);
+  const { effectiveViewMode, isReadMode, editorMode, setViewMode } =
+    usePassageViewMode({
+      focusRange,
+      forcedViewMode,
+      focusSource,
+    })
 
   const hasFocusRange =
     typeof focusRange?.startVerse === "number" &&
-    typeof focusRange?.endVerse === "number";
-  const isFocusNavigation =
-    searchModeLock &&
-    focusSource === "search" &&
-    forcedViewMode === "read" &&
-    hasFocusRange;
-  const effectiveViewMode: PassageViewMode = isFocusNavigation
-    ? "read"
-    : viewMode;
-  const isReadMode = effectiveViewMode === "read";
-  const editorMode = isReadMode ? "dialog" : "inline";
+    typeof focusRange?.endVerse === "number"
 
   const noteById = useMemo(() => {
-    const map = new Map<Id<"notes">, NoteWithRef>();
+    const map = new Map<Id<"notes">, NoteWithRef>()
     for (const notes of singleVerseNotes.values()) {
       for (const note of notes) {
-        map.set(note.noteId, note);
+        map.set(note.noteId, note)
       }
     }
     for (const notes of passageNotesByAnchor.values()) {
       for (const note of notes) {
-        map.set(note.noteId, note);
+        map.set(note.noteId, note)
       }
     }
-    return map;
-  }, [singleVerseNotes, passageNotesByAnchor]);
+    return map
+  }, [passageNotesByAnchor, singleVerseNotes])
 
   const editingNote = editingNoteId
-    ? noteById.get(editingNoteId) ?? null
-    : null;
+    ? (noteById.get(editingNoteId) ?? null)
+    : null
 
-  const hasAnyNotes = noteById.size > 0;
+  const hasAnyNotes = noteById.size > 0
 
   const filteredVerses = useMemo(() => {
-    if (!data) return [];
+    if (!data) return []
 
     return data.verses.flatMap((verse) => {
-      const singleNotes = singleVerseNotes.get(verse.number) ?? [];
-      const passageNotes = passageNotesByAnchor.get(verse.number) ?? [];
+      const singleNotes = singleVerseNotes.get(verse.number) ?? []
+      const passageNotes = passageNotesByAnchor.get(verse.number) ?? []
 
-      const hasVisibleNotes = singleNotes.length > 0 || passageNotes.length > 0;
+      const hasVisibleNotes = singleNotes.length > 0 || passageNotes.length > 0
       if (
         isReadMode &&
         !hasFocusRange &&
@@ -172,7 +130,7 @@ export function PassageView({
         hasAnyNotes &&
         !hasVisibleNotes
       ) {
-        return [];
+        return []
       }
 
       return [
@@ -182,8 +140,8 @@ export function PassageView({
           singleNotes,
           passageNotes,
         },
-      ];
-    });
+      ]
+    })
   }, [
     data,
     hasAnyNotes,
@@ -192,163 +150,50 @@ export function PassageView({
     passageNotesByAnchor,
     noteVisibility,
     singleVerseNotes,
-  ]);
+  ])
 
   const shouldShowQuickCaptureDialog =
-    isReadMode && (!!creatingFor || !!editingNote);
+    isReadMode && (!!creatingFor || !!editingNote)
   const passageGridClass = isReadMode
     ? "grid-cols-[minmax(360px,1fr)_minmax(520px,1.4fr)] gap-6"
-    : "grid-cols-[minmax(0,1.1fr)_minmax(360px,440px)] gap-5";
-  const topGridClass = cn("grid", passageGridClass);
+    : "grid-cols-[minmax(0,1.1fr)_minmax(360px,440px)] gap-5"
+  const topGridClass = cn("grid", passageGridClass)
   const containerClass = isReadMode
     ? "max-w-[1400px] mx-auto px-6 pb-16"
-    : "max-w-[1320px] mx-auto px-5 pb-16";
-  const focusStartVerse = focusRange?.startVerse;
-  const focusEndVerse = focusRange?.endVerse;
+    : "max-w-[1320px] mx-auto px-5 pb-16"
+  const focusStartVerse = focusRange?.startVerse
+  const focusEndVerse = focusRange?.endVerse
   const focusRequestKey = hasFocusRange
     ? `${book}|${chapter}|${focusStartVerse}|${focusEndVerse}`
-    : null;
+    : null
   const focusLayoutKey = focusRequestKey
     ? `${focusRequestKey}|${noteById.size}`
-    : null;
+    : null
 
-  useEffect(() => {
-    if (!focusLayoutKey || typeof focusStartVerse !== "number") {
-      handledFocusRequestRef.current = null;
-      return;
-    }
-    if (!data) return;
-    if (handledFocusRequestRef.current === focusLayoutKey) return;
+  usePassageKeyboardShortcuts({
+    previous,
+    next,
+    navigateActiveTab,
+    setViewMode,
+  })
 
-    let attempts = 0;
-    const maxAttempts = 30;
-
-    const scrollToTarget = () => {
-      const viewport = passageWrapperRef.current?.querySelector<HTMLElement>(
-        "[data-slot='scroll-area-viewport']"
-      );
-      const selector = `[data-verse-number="${focusStartVerse}"]`;
-      const target =
-        containerRef.current?.querySelector<HTMLElement>(selector) ??
-        document.querySelector<HTMLElement>(selector);
-      if (!target || !viewport) return false;
-
-      const viewportRect = viewport.getBoundingClientRect();
-      const targetRect = target.getBoundingClientRect();
-      const nextScrollTop = Math.max(
-        targetRect.top - viewportRect.top + viewport.scrollTop - viewport.clientHeight / 2 + targetRect.height / 2,
-        0
-      );
-
-      viewport.scrollTo({ top: nextScrollTop, behavior: "smooth" });
-      handledFocusRequestRef.current = focusLayoutKey;
-      return true;
-    };
-
-    if (!scrollToTarget()) {
-      const intervalId = window.setInterval(() => {
-        attempts += 1;
-        if (scrollToTarget() || attempts >= maxAttempts) {
-          window.clearInterval(intervalId);
-        }
-      }, 100);
-      return () => {
-        window.clearInterval(intervalId);
-      };
-    }
-  }, [
+  const { isScrolled } = usePassageScrollRestoration({
     book,
     chapter,
-    containerRef,
-    data,
-    focusLayoutKey,
     focusStartVerse,
-    noteById.size,
-  ]);
-
-  useEffect(() => {
-    function handleKeyDown(e: KeyboardEvent) {
-      if (!e.altKey) return;
-      if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
-      if (isEditableTarget(e.target)) return;
-
-      e.preventDefault();
-      if (e.key === "ArrowLeft" && previous) {
-        navigateActiveTab(previous.passageId, previous.label);
-      } else if (e.key === "ArrowRight" && next) {
-        navigateActiveTab(next.passageId, next.label);
-      }
-    }
-
-    document.addEventListener("keydown", handleKeyDown);
-    return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [previous, next, navigateActiveTab]);
-
-  useEffect(() => {
-    function handleModeShortcuts(e: KeyboardEvent) {
-      if (e.defaultPrevented) return;
-      if (e.repeat) return;
-      if (e.metaKey || e.ctrlKey || e.altKey) return;
-      if (isEditableTarget(e.target)) return;
-
-      const key = e.key.toLowerCase();
-      if (key === "r") {
-        e.preventDefault();
-        setViewMode("read");
-      } else if (key === "c") {
-        e.preventDefault();
-        setViewMode("compose");
-      }
-    }
-
-    document.addEventListener("keydown", handleModeShortcuts);
-    return () => document.removeEventListener("keydown", handleModeShortcuts);
-  }, [setViewMode]);
-
-  // Save scroll position before navigating away from the current passage
-  useEffect(() => {
-    const key = `${book}-${chapter}`;
-    const wrapper = passageWrapperRef.current;
-    const scrollPositions = savedScrollPositions.current;
-    return () => {
-      const viewport = wrapper?.querySelector<HTMLElement>(
-        "[data-slot='scroll-area-viewport']"
-      );
-      if (viewport) {
-        scrollPositions.set(key, viewport.scrollTop);
-      }
-    };
-  }, [book, chapter]);
-
-  // Restore saved scroll position when returning to a passage, or jump to top for new navigation
-  useEffect(() => {
-    if (focusRequestKey) return;
-    const viewport = passageWrapperRef.current?.querySelector<HTMLElement>(
-      "[data-slot='scroll-area-viewport']"
-    );
-    if (!viewport) return;
-    const saved = savedScrollPositions.current.get(`${book}-${chapter}`) ?? 0;
-    viewport.scrollTop = saved;
-    setIsScrolled(saved > 0);
-  }, [book, chapter, focusRequestKey]);
-
-  useEffect(() => {
-    const viewport = passageWrapperRef.current?.querySelector<HTMLElement>(
-      "[data-slot='scroll-area-viewport']"
-    );
-    if (!viewport) return;
-    const onScroll = () => setIsScrolled(viewport.scrollTop > 0);
-    viewport.addEventListener("scroll", onScroll, { passive: true });
-    return () => viewport.removeEventListener("scroll", onScroll);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [!!data]);
+    focusRequestKey,
+    focusLayoutKey,
+    hasData: !!data,
+    containerRef,
+    viewportRef,
+  })
 
   if (loading) {
     return (
       <div className="flex items-center justify-center h-full">
         <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
       </div>
-    );
+    )
   }
 
   if (error) {
@@ -356,26 +201,23 @@ export function PassageView({
       <div className="flex flex-col items-center justify-center h-full gap-2 text-destructive">
         <p className="text-sm">{error}</p>
       </div>
-    );
+    )
   }
 
-  if (!data) return null;
+  if (!data) return null
 
-  const passageKey = `${book}-${chapter}`;
+  const passageKey = `${book}-${chapter}`
 
   const headerInnerClass = isReadMode
     ? "max-w-[1400px] mx-auto px-6"
-    : "max-w-[1320px] mx-auto px-5";
+    : "max-w-[1320px] mx-auto px-5"
 
   return (
-    <div
-      ref={passageWrapperRef}
-      className="h-full flex flex-col overflow-hidden"
-    >
+    <div className="h-full flex flex-col overflow-hidden">
       <div
         className={cn(
           "shrink-0 bg-background transition-shadow duration-200",
-          isScrolled && "shadow-sm"
+          isScrolled && "shadow-sm",
         )}
       >
         <div className={cn("grid", passageGridClass, headerInnerClass)}>
@@ -449,7 +291,10 @@ export function PassageView({
         </div>
       </div>
 
-      <ScrollArea className="flex-1 min-h-0 overflow-hidden">
+      <ScrollArea
+        className="flex-1 min-h-0 overflow-hidden"
+        viewportRef={viewportRef}
+      >
         <motion.div
           key={passageKey}
           initial={{ opacity: 0, y: 8 }}
@@ -571,5 +416,5 @@ export function PassageView({
         </motion.div>
       </ScrollArea>
     </div>
-  );
+  )
 }

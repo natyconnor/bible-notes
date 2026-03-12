@@ -35,15 +35,23 @@ function StarterTagsSettingsPage() {
   const setupStatus = useQuery(api.userSettings.getStarterTagsSetupStatus)
   const addMany = useMutation(api.tags.addMany)
   const removeMany = useMutation(api.tags.removeMany)
-  const removeCustomTagAndDetach = useMutation(api.tags.removeCustomTagAndDetach)
+  const removeCustomTagAndDetach = useMutation(
+    api.tags.removeCustomTagAndDetach,
+  )
   const completeSetup = useMutation(api.userSettings.completeStarterTagsSetup)
-  const setCategoryColor = useMutation(api.userSettings.setStarterTagCategoryColor)
+  const setCategoryColor = useMutation(
+    api.userSettings.setStarterTagCategoryColor,
+  )
   const seedDevChapterNotes = useMutation(api.seed.seedDevChapterNotes)
 
   const [busyAction, setBusyAction] = useState<string | null>(null)
-  const [draftCategoryColors, setDraftCategoryColors] = useState<Record<string, string>>({})
+  const [draftCategoryColors, setDraftCategoryColors] = useState<
+    Record<string, string>
+  >({})
   const [customTagInput, setCustomTagInput] = useState("")
-  const [deleteTagCandidate, setDeleteTagCandidate] = useState<string | null>(null)
+  const [deleteTagCandidate, setDeleteTagCandidate] = useState<string | null>(
+    null,
+  )
   const [seedResult, setSeedResult] = useState<{
     seed: number
     selectedChapters: number
@@ -52,7 +60,11 @@ function StarterTagsSettingsPage() {
     verseRefsCreated: number
     linksCreated: number
     testamentDistribution: { ot: number; nt: number }
-    cleanup: { notesDeleted: number; linksDeleted: number; verseRefsDeleted: number }
+    cleanup: {
+      notesDeleted: number
+      linksDeleted: number
+      verseRefsDeleted: number
+    }
     usedTags: string[]
   } | null>(null)
 
@@ -63,7 +75,7 @@ function StarterTagsSettingsPage() {
 
   const customTags = useMemo(
     () => (catalog ?? []).filter((entry) => entry.source === "custom"),
-    [catalog]
+    [catalog],
   )
 
   const parsedCustomTagInput = useMemo(() => {
@@ -106,7 +118,7 @@ function StarterTagsSettingsPage() {
       ...DEFAULT_STARTER_TAG_CATEGORY_COLORS,
       ...(setupStatus?.categoryColors ?? {}),
     }),
-    [setupStatus?.categoryColors]
+    [setupStatus?.categoryColors],
   )
 
   useEffect(() => {
@@ -165,14 +177,16 @@ function StarterTagsSettingsPage() {
     setBusyAction("complete")
     try {
       await completeSetup({})
-      navigate({ to: "/" })
+      void navigate({ to: "/" })
     } finally {
       setBusyAction(null)
     }
   }
 
   const handleSaveCategoryColor = async (categoryId: string) => {
-    const color = draftCategoryColors[categoryId] ?? DEFAULT_STARTER_TAG_CATEGORY_COLORS[categoryId]
+    const color =
+      draftCategoryColors[categoryId] ??
+      DEFAULT_STARTER_TAG_CATEGORY_COLORS[categoryId]
     setBusyAction(`save-color:${categoryId}`)
     try {
       await setCategoryColor({ categoryId, color })
@@ -244,17 +258,21 @@ function StarterTagsSettingsPage() {
       <div className="mx-auto max-w-5xl px-4 py-8 space-y-6">
         <div className="space-y-2">
           <div className="flex items-center justify-between gap-3">
-            <h1 className="text-2xl font-semibold tracking-tight">Tag settings</h1>
+            <h1 className="text-2xl font-semibold tracking-tight">
+              Tag settings
+            </h1>
             <Badge variant="outline" className="text-xs">
               Taxonomy v{STARTER_TAGS_VERSION}
             </Badge>
           </div>
           <p className="text-sm text-muted-foreground">
-            Manage your full tag catalog: custom tags, starter sets, and starter category colors.
+            Manage your full tag catalog: custom tags, starter sets, and starter
+            category colors.
           </p>
           {firstTimeSetup && (
             <p className="text-sm text-foreground">
-              Complete this quick setup before continuing. You can always update starter tags later.
+              Complete this quick setup before continuing. You can always update
+              starter tags later.
             </p>
           )}
         </div>
@@ -283,9 +301,14 @@ function StarterTagsSettingsPage() {
             <Button
               size="sm"
               onClick={() => void handleAddCustomTags()}
-              disabled={busyAction !== null || parsedCustomTagInput.tagsToAdd.length === 0}
+              disabled={
+                busyAction !== null ||
+                parsedCustomTagInput.tagsToAdd.length === 0
+              }
             >
-              {busyAction === "add-custom" && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+              {busyAction === "add-custom" && (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              )}
               Add custom tag
             </Button>
           </div>
@@ -293,12 +316,14 @@ function StarterTagsSettingsPage() {
             <div className="space-y-1">
               {parsedCustomTagInput.duplicateTagsInInput.length > 0 && (
                 <p className="text-xs text-amber-600 dark:text-amber-400">
-                  Duplicate in input: {parsedCustomTagInput.duplicateTagsInInput.join(", ")}
+                  Duplicate in input:{" "}
+                  {parsedCustomTagInput.duplicateTagsInInput.join(", ")}
                 </p>
               )}
               {parsedCustomTagInput.duplicateTagsInCatalog.length > 0 && (
                 <p className="text-xs text-amber-600 dark:text-amber-400">
-                  Already exists: {parsedCustomTagInput.duplicateTagsInCatalog.join(", ")}
+                  Already exists:{" "}
+                  {parsedCustomTagInput.duplicateTagsInCatalog.join(", ")}
                 </p>
               )}
               {parsedCustomTagInput.tagsToAdd.length > 0 && (
@@ -307,7 +332,9 @@ function StarterTagsSettingsPage() {
                 </p>
               )}
               {parsedCustomTagInput.tagsToAdd.length === 0 && (
-                <p className="text-xs text-muted-foreground">No new tags to add.</p>
+                <p className="text-xs text-muted-foreground">
+                  No new tags to add.
+                </p>
               )}
             </div>
           )}
@@ -347,7 +374,8 @@ function StarterTagsSettingsPage() {
                   Dev note seed
                 </h2>
                 <p className="text-xs text-muted-foreground">
-                  Replace your current notes with generated chapter-linked test data (50 chapters, 10 heavy).
+                  Replace your current notes with generated chapter-linked test
+                  data (50 chapters, 10 heavy).
                 </p>
               </div>
               <Button
@@ -356,7 +384,9 @@ function StarterTagsSettingsPage() {
                 onClick={() => void handleRunDevSeed()}
                 disabled={busyAction !== null}
               >
-                {busyAction === "seed-dev-notes" && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+                {busyAction === "seed-dev-notes" && (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                )}
                 Generate dev test notes
               </Button>
             </div>
@@ -368,34 +398,51 @@ function StarterTagsSettingsPage() {
                 </p>
                 <div className="grid gap-1 sm:grid-cols-2">
                   <p>
-                    Notes created: <span className="font-semibold">{seedResult.notesCreated}</span>
+                    Notes created:{" "}
+                    <span className="font-semibold">
+                      {seedResult.notesCreated}
+                    </span>
                   </p>
                   <p>
-                    Verse refs created: <span className="font-semibold">{seedResult.verseRefsCreated}</span>
+                    Verse refs created:{" "}
+                    <span className="font-semibold">
+                      {seedResult.verseRefsCreated}
+                    </span>
                   </p>
                   <p>
-                    Links created: <span className="font-semibold">{seedResult.linksCreated}</span>
+                    Links created:{" "}
+                    <span className="font-semibold">
+                      {seedResult.linksCreated}
+                    </span>
                   </p>
                   <p>
                     Chapters:{" "}
                     <span className="font-semibold">
-                      {seedResult.selectedChapters} ({seedResult.testamentDistribution.ot} OT /{" "}
+                      {seedResult.selectedChapters} (
+                      {seedResult.testamentDistribution.ot} OT /{" "}
                       {seedResult.testamentDistribution.nt} NT)
                     </span>
                   </p>
                   <p>
-                    Heavy chapters: <span className="font-semibold">{seedResult.heavyChapters}</span>
+                    Heavy chapters:{" "}
+                    <span className="font-semibold">
+                      {seedResult.heavyChapters}
+                    </span>
                   </p>
                   <p>
                     Cleanup removed:{" "}
                     <span className="font-semibold">
-                      {seedResult.cleanup.notesDeleted} notes, {seedResult.cleanup.linksDeleted} links,{" "}
+                      {seedResult.cleanup.notesDeleted} notes,{" "}
+                      {seedResult.cleanup.linksDeleted} links,{" "}
                       {seedResult.cleanup.verseRefsDeleted} verse refs
                     </span>
                   </p>
                 </div>
                 <p className="text-muted-foreground">
-                  Starter tags used: <span className="font-medium">{seedResult.usedTags.length}</span>
+                  Starter tags used:{" "}
+                  <span className="font-medium">
+                    {seedResult.usedTags.length}
+                  </span>
                 </p>
               </div>
             )}
@@ -406,14 +453,17 @@ function StarterTagsSettingsPage() {
           <div className="flex flex-wrap items-center justify-between gap-3">
             <p className="text-sm">
               Selected starter tags:{" "}
-              <span className="font-semibold">{selectedStarterCount}</span> / {ALL_STARTER_TAGS.length}
+              <span className="font-semibold">{selectedStarterCount}</span> /{" "}
+              {ALL_STARTER_TAGS.length}
             </p>
             <Button
               size="sm"
               onClick={handleAddAll}
               disabled={busyAction !== null}
             >
-              {busyAction === "add-all" && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+              {busyAction === "add-all" && (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              )}
               Add all starter tags
             </Button>
           </div>
@@ -421,15 +471,19 @@ function StarterTagsSettingsPage() {
 
         <div className="space-y-4">
           {STARTER_TAG_CATEGORIES.map((category) => {
-            const categorySelectedCount = category.tags.filter((tag) => catalogByTag.has(tag)).length
+            const categorySelectedCount = category.tags.filter((tag) =>
+              catalogByTag.has(tag),
+            ).length
             const addCategoryActionId = `add-category:${category.id}`
             const saveCategoryColorActionId = `save-color:${category.id}`
             const persistedCategoryColor =
-              categoryColors[category.id] ?? DEFAULT_STARTER_TAG_CATEGORY_COLORS[category.id]
+              categoryColors[category.id] ??
+              DEFAULT_STARTER_TAG_CATEGORY_COLORS[category.id]
             const draftCategoryColor =
               draftCategoryColors[category.id] ?? persistedCategoryColor
             const isColorDirty =
-              draftCategoryColor.toLowerCase() !== persistedCategoryColor.toLowerCase()
+              draftCategoryColor.toLowerCase() !==
+              persistedCategoryColor.toLowerCase()
 
             return (
               <section
@@ -448,7 +502,9 @@ function StarterTagsSettingsPage() {
                     size="xs"
                     variant="outline"
                     disabled={busyAction !== null}
-                    onClick={() => void handleAddCategory(category.id, category.tags)}
+                    onClick={() =>
+                      void handleAddCategory(category.id, category.tags)
+                    }
                   >
                     {busyAction === addCategoryActionId && (
                       <Loader2 className="h-3 w-3 animate-spin" />
@@ -458,8 +514,14 @@ function StarterTagsSettingsPage() {
                 </div>
 
                 <div className="flex flex-wrap items-center gap-2 rounded-md border bg-background p-2">
-                  <div className="h-4 w-4 rounded-sm border" style={{ backgroundColor: draftCategoryColor }} />
-                  <label htmlFor={`category-color-${category.id}`} className="text-xs text-muted-foreground">
+                  <div
+                    className="h-4 w-4 rounded-sm border"
+                    style={{ backgroundColor: draftCategoryColor }}
+                  />
+                  <label
+                    htmlFor={`category-color-${category.id}`}
+                    className="text-xs text-muted-foreground"
+                  >
                     Category color
                   </label>
                   <input
@@ -476,7 +538,9 @@ function StarterTagsSettingsPage() {
                     }}
                     className="h-7 w-10 cursor-pointer rounded border bg-transparent p-0.5"
                   />
-                  <code className="text-xs text-muted-foreground">{draftCategoryColor}</code>
+                  <code className="text-xs text-muted-foreground">
+                    {draftCategoryColor}
+                  </code>
                   <Button
                     size="xs"
                     variant="outline"
@@ -522,9 +586,13 @@ function StarterTagsSettingsPage() {
                             ? "border-primary/30 bg-primary/10 text-foreground"
                             : "border-border bg-background text-muted-foreground hover:bg-accent hover:text-foreground",
                           isCustom && "cursor-not-allowed opacity-70",
-                          busyAction === toggleActionId && "opacity-80"
+                          busyAction === toggleActionId && "opacity-80",
                         )}
-                        title={isCustom ? "Already in your catalog from custom usage" : undefined}
+                        title={
+                          isCustom
+                            ? "Already in your catalog from custom usage"
+                            : undefined
+                        }
                       >
                         {busyAction === toggleActionId ? (
                           <Loader2 className="h-3 w-3 animate-spin" />
@@ -533,10 +601,14 @@ function StarterTagsSettingsPage() {
                         )}
                         {tag}
                         {isCustom && (
-                          <span className="text-[10px] text-muted-foreground">custom</span>
+                          <span className="text-[10px] text-muted-foreground">
+                            custom
+                          </span>
                         )}
                         {isStarter && (
-                          <span className="text-[10px] text-muted-foreground">starter</span>
+                          <span className="text-[10px] text-muted-foreground">
+                            starter
+                          </span>
                         )}
                       </button>
                     )
@@ -556,7 +628,9 @@ function StarterTagsSettingsPage() {
             Continue without changes
           </Button>
           <Button onClick={handleComplete} disabled={busyAction !== null}>
-            {busyAction === "complete" && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+            {busyAction === "complete" && (
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            )}
             Save and continue
           </Button>
         </div>
@@ -592,9 +666,10 @@ function StarterTagsSettingsPage() {
               onClick={() => void handleConfirmDeleteCustomTag()}
               disabled={deleteTagCandidate === null || busyAction !== null}
             >
-              {deleteTagCandidate && busyAction === `delete-custom:${deleteTagCandidate}` && (
-                <Loader2 className="h-3.5 w-3.5 animate-spin" />
-              )}
+              {deleteTagCandidate &&
+                busyAction === `delete-custom:${deleteTagCandidate}` && (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                )}
               Delete tag
             </Button>
           </DialogFooter>

@@ -1,0 +1,4 @@
+dist
+coverage
+convex/_generated
+src/routeTree.gen.ts

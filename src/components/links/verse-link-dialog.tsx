@@ -81,14 +81,20 @@ export function VerseLinkDialog({
                 setError(null)
               }}
               onKeyDown={(e) => {
-                if (e.key === "Enter") handleCreate()
+                if (e.key === "Enter") {
+                  void handleCreate()
+                }
               }}
               autoFocus
             />
             {error && <p className="text-xs text-destructive">{error}</p>}
           </div>
           <div className="flex justify-end gap-2">
-            <TooltipButton variant="ghost" onClick={() => onOpenChange(false)} tooltip="Cancel">
+            <TooltipButton
+              variant="ghost"
+              onClick={() => onOpenChange(false)}
+              tooltip="Cancel"
+            >
               Cancel
             </TooltipButton>
             <TooltipButton onClick={handleCreate} tooltip="Create verse link">
