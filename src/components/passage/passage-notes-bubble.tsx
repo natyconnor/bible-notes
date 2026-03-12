@@ -21,6 +21,11 @@ import { NoteEditor } from "@/components/notes/note-editor";
 
 type PassageNote = NoteWithRef;
 
+interface CurrentChapter {
+  book: string;
+  chapter: number;
+}
+
 interface PassageNotesBubbleProps {
   notes: PassageNote[];
   isOpen: boolean;
@@ -28,6 +33,7 @@ interface PassageNotesBubbleProps {
   viewMode?: "compose" | "read";
   isPill?: boolean;
   compact?: boolean;
+  currentChapter?: CurrentChapter;
   editingNoteId?: Id<"notes"> | null;
   onSaveEdit?: (body: NoteBody, tags: string[]) => void | Promise<void>;
   onCancelEdit?: () => void;
@@ -47,6 +53,7 @@ export const PassageNotesBubble = memo(function PassageNotesBubble({
   viewMode = "compose",
   isPill = false,
   compact = false,
+  currentChapter,
   editingNoteId = null,
   onSaveEdit,
   onCancelEdit,
@@ -229,6 +236,7 @@ export const PassageNotesBubble = memo(function PassageNotesBubble({
                     initialBody={note.body}
                     initialTags={note.tags}
                     variant="passage"
+                    currentChapter={currentChapter}
                     onSave={onSaveEdit!}
                     onCancel={onCancelEdit!}
                   />
@@ -236,6 +244,7 @@ export const PassageNotesBubble = memo(function PassageNotesBubble({
               ) : (
                 <ExpandedPassageNote
                   note={note}
+                  currentChapter={currentChapter}
                   density={isReadMode ? "reading" : "default"}
                   onEdit={() => onEdit(note.noteId)}
                   onDelete={() => onDelete(note.noteId)}
@@ -284,11 +293,13 @@ function PassageNotesPill({
 
 function ExpandedPassageNote({
   note,
+  currentChapter,
   density = "default",
   onEdit,
   onDelete,
 }: {
   note: PassageNote;
+  currentChapter?: { book: string; chapter: number };
   density?: "default" | "reading";
   onEdit: () => void;
   onDelete: () => void;
@@ -307,6 +318,7 @@ function ExpandedPassageNote({
           content={note.content}
           body={note.body}
           density={density}
+          currentChapter={currentChapter}
           className={isReading ? "flex-1 text-foreground" : "flex-1"}
         />
         <NoteCardActions

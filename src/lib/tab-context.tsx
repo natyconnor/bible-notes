@@ -1,5 +1,5 @@
-import { useState, useCallback, startTransition, type ReactNode } from "react"
-import { useNavigate } from "@tanstack/react-router"
+import { useState, useCallback, useEffect, startTransition, type ReactNode } from "react"
+import { useLocation, useNavigate } from "@tanstack/react-router"
 
 import type { Tab } from "./tab-types"
 import {
@@ -9,18 +9,45 @@ import {
   saveTabs,
 } from "./tab-context-internal"
 
+function getPassageIdFromPathname(pathname: string): string | null {
+  const match = pathname.match(/^\/passage\/([^/]+)$/)
+  return match ? decodeURIComponent(match[1]) : null
+}
+
+function updateTabHistory(history: string[], tabId: string): string[] {
+  if (history[history.length - 1] === tabId) return history
+  return [...history.filter((id) => id !== tabId), tabId]
+}
+
 function TabProvider({ children }: { children: ReactNode }) {
   const [tabs, setTabs] = useState<Tab[]>(loadTabs)
-  const [activeTabId, setActiveTabId] = useState<string | null>(
-    () => loadTabs()[0]?.id ?? null
-  )
+  const location = useLocation()
+  const initialPassageId = getPassageIdFromPathname(location.pathname)
+  const initialActiveTabId =
+    (initialPassageId
+      ? tabs.find((tab) => tab.passageId === initialPassageId)?.id
+      : null) ??
+    tabs[0]?.id ??
+    null
+  const [activeTabId, setActiveTabId] = useState<string | null>(initialActiveTabId)
   const [searchModeActive, setSearchModeActiveState] = useState(false)
   // Most recently used tab ids, newest at the end
-  const [tabHistory, setTabHistory] = useState<string[]>(() => {
-    const initial = loadTabs()[0]?.id
-    return initial ? [initial] : []
-  })
+  const [tabHistory, setTabHistory] = useState<string[]>(() =>
+    initialActiveTabId ? [initialActiveTabId] : []
+  )
   const navigate = useNavigate()
+
+  useEffect(() => {
+    const currentPassageId = getPassageIdFromPathname(location.pathname)
+    if (!currentPassageId) return
+
+    const matchingTab = tabs.find((tab) => tab.passageId === currentPassageId)
+    if (!matchingTab) return
+
+    setSearchModeActiveState(false)
+    setActiveTabId((current) => (current === matchingTab.id ? current : matchingTab.id))
+    setTabHistory((history) => updateTabHistory(history, matchingTab.id))
+  }, [location.pathname, tabs])
 
   const setSearchModeActive = useCallback((active: boolean) => {
     setSearchModeActiveState(active)
@@ -35,7 +62,7 @@ function TabProvider({ children }: { children: ReactNode }) {
       const existing = tabs.find((t) => t.passageId === passageId)
       if (existing) {
         setActiveTabId(existing.id)
-        setTabHistory((h) => [...h.filter((id) => id !== existing.id), existing.id])
+        setTabHistory((history) => updateTabHistory(history, existing.id))
         startTransition(() => {
           navigate({ to: "/passage/$passageId", params: { passageId }, search })
         })
@@ -46,7 +73,7 @@ function TabProvider({ children }: { children: ReactNode }) {
       saveTabs(newTabs)
       setTabs(newTabs)
       setActiveTabId(newTab.id)
-      setTabHistory((h) => [...h, newTab.id])
+      setTabHistory((history) => updateTabHistory(history, newTab.id))
       startTransition(() => {
         navigate({ to: "/passage/$passageId", params: { passageId }, search })
       })
@@ -129,7 +156,7 @@ function TabProvider({ children }: { children: ReactNode }) {
       if (!tab) return
       setSearchModeActiveState(false)
       setActiveTabId(tabId)
-      setTabHistory((h) => [...h.filter((id) => id !== tabId), tabId])
+      setTabHistory((history) => updateTabHistory(history, tabId))
       startTransition(() => {
         navigate({
           to: "/passage/$passageId",

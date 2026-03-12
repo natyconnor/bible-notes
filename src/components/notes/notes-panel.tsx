@@ -208,6 +208,7 @@ export function NotesPanel({
                   tags={note.tags}
                   verseRef={note.verseRef}
                   isExpanded={isExpanded || notes.length === 1}
+                  currentChapter={{ book, chapter }}
                   onExpand={() => setExpandedVerseKey(key)}
                   onEdit={() => setEditingNoteId(note.noteId)}
                   onDelete={() => handleDelete(note.noteId)}

@@ -12,11 +12,17 @@ import type { NoteWithRef } from "@/components/notes/model/note-model"
 
 const layoutTransition = { duration: 0.24, ease: [0.22, 1, 0.36, 1] as const }
 
+export interface CurrentChapter {
+  book: string
+  chapter: number
+}
+
 export interface VerseRowWithNotesProps {
   verseNumber: number
   text: string
   viewMode?: "compose" | "read"
   editorMode?: "inline" | "dialog"
+  currentChapter?: CurrentChapter
 
   selectedVerses: Set<number>
   isInSelectionRange: boolean
@@ -60,6 +66,7 @@ export const VerseRowWithNotes = memo(function VerseRowWithNotes({
   text,
   viewMode = "compose",
   editorMode = "inline",
+  currentChapter,
   selectedVerses,
   isInSelectionRange,
   isPassageSelection,
@@ -153,6 +160,7 @@ export const VerseRowWithNotes = memo(function VerseRowWithNotes({
           viewMode={viewMode}
           isPill={showPassageAsPill}
           compact={showPassageCompact}
+          currentChapter={currentChapter}
           editingNoteId={shouldShowInlineEditors ? editingNoteId : null}
           onSaveEdit={shouldShowInlineEditors ? onSaveEdit : undefined}
           onCancelEdit={shouldShowInlineEditors ? onCancelEditing : undefined}
@@ -233,6 +241,7 @@ export const VerseRowWithNotes = memo(function VerseRowWithNotes({
               isOpen={isVerseOpen}
               viewMode={viewMode}
               isPill={showVerseAsPill}
+              currentChapter={currentChapter}
               editingNoteId={shouldShowInlineEditors ? editingNoteId : null}
               onSaveEdit={shouldShowInlineEditors ? onSaveEdit : undefined}
               onCancelEdit={shouldShowInlineEditors ? onCancelEditing : undefined}

@@ -12,7 +12,6 @@ import { useEsvPassage } from "@/hooks/use-esv-passage";
 import { ChapterHeader } from "@/components/bible/chapter-header";
 import { ChapterPager } from "@/components/bible/chapter-pager";
 import { CopyrightNotice } from "@/components/bible/copyright-notice";
-import { GospelParallelBanner } from "@/components/links/gospel-parallel-banner";
 import { VerseRowWithNotes } from "./view/verse-row-with-notes";
 import { usePassageNotesInteraction } from "./hooks/use-passage-notes-interaction";
 import { NoteEditor } from "@/components/notes/note-editor";
@@ -123,11 +122,14 @@ export function PassageView({
     }
   }, []);
 
+  const hasFocusRange =
+    typeof focusRange?.startVerse === "number" &&
+    typeof focusRange?.endVerse === "number";
   const isFocusNavigation =
     searchModeLock &&
     focusSource === "search" &&
     forcedViewMode === "read" &&
-    !!focusRange;
+    hasFocusRange;
   const effectiveViewMode: PassageViewMode = isFocusNavigation
     ? "read"
     : viewMode;
@@ -165,7 +167,7 @@ export function PassageView({
       const hasVisibleNotes = singleNotes.length > 0 || passageNotes.length > 0;
       if (
         isReadMode &&
-        !isFocusNavigation &&
+        !hasFocusRange &&
         noteVisibility === "noted" &&
         hasAnyNotes &&
         !hasVisibleNotes
@@ -185,7 +187,7 @@ export function PassageView({
   }, [
     data,
     hasAnyNotes,
-    isFocusNavigation,
+    hasFocusRange,
     isReadMode,
     passageNotesByAnchor,
     noteVisibility,
@@ -203,32 +205,43 @@ export function PassageView({
     : "max-w-[1320px] mx-auto px-5 pb-16";
   const focusStartVerse = focusRange?.startVerse;
   const focusEndVerse = focusRange?.endVerse;
-  const focusRequestKey =
-    isFocusNavigation &&
-    typeof focusStartVerse === "number" &&
-    typeof focusEndVerse === "number"
-      ? `${book}|${chapter}|${focusStartVerse}|${focusEndVerse}`
-      : null;
+  const focusRequestKey = hasFocusRange
+    ? `${book}|${chapter}|${focusStartVerse}|${focusEndVerse}`
+    : null;
+  const focusLayoutKey = focusRequestKey
+    ? `${focusRequestKey}|${noteById.size}`
+    : null;
 
   useEffect(() => {
-    if (!focusRequestKey) {
+    if (!focusLayoutKey || typeof focusStartVerse !== "number") {
       handledFocusRequestRef.current = null;
       return;
     }
-    if (!data || effectiveViewMode !== "read") return;
-    if (handledFocusRequestRef.current === focusRequestKey) return;
+    if (!data) return;
+    if (handledFocusRequestRef.current === focusLayoutKey) return;
 
     let attempts = 0;
     const maxAttempts = 30;
 
     const scrollToTarget = () => {
+      const viewport = passageWrapperRef.current?.querySelector<HTMLElement>(
+        "[data-slot='scroll-area-viewport']"
+      );
       const selector = `[data-verse-number="${focusStartVerse}"]`;
       const target =
         containerRef.current?.querySelector<HTMLElement>(selector) ??
         document.querySelector<HTMLElement>(selector);
-      if (!target) return false;
-      target.scrollIntoView({ behavior: "smooth", block: "center" });
-      handledFocusRequestRef.current = focusRequestKey;
+      if (!target || !viewport) return false;
+
+      const viewportRect = viewport.getBoundingClientRect();
+      const targetRect = target.getBoundingClientRect();
+      const nextScrollTop = Math.max(
+        targetRect.top - viewportRect.top + viewport.scrollTop - viewport.clientHeight / 2 + targetRect.height / 2,
+        0
+      );
+
+      viewport.scrollTo({ top: nextScrollTop, behavior: "smooth" });
+      handledFocusRequestRef.current = focusLayoutKey;
       return true;
     };
 
@@ -248,9 +261,9 @@ export function PassageView({
     chapter,
     containerRef,
     data,
-    effectiveViewMode,
-    focusRequestKey,
+    focusLayoutKey,
     focusStartVerse,
+    noteById.size,
   ]);
 
   useEffect(() => {
@@ -309,6 +322,7 @@ export function PassageView({
 
   // Restore saved scroll position when returning to a passage, or jump to top for new navigation
   useEffect(() => {
+    if (focusRequestKey) return;
     const viewport = passageWrapperRef.current?.querySelector<HTMLElement>(
       "[data-slot='scroll-area-viewport']"
     );
@@ -316,7 +330,7 @@ export function PassageView({
     const saved = savedScrollPositions.current.get(`${book}-${chapter}`) ?? 0;
     viewport.scrollTop = saved;
     setIsScrolled(saved > 0);
-  }, [book, chapter]);
+  }, [book, chapter, focusRequestKey]);
 
   useEffect(() => {
     const viewport = passageWrapperRef.current?.querySelector<HTMLElement>(
@@ -446,13 +460,6 @@ export function PassageView({
           onMouseUp={handleMouseUp}
           onMouseLeave={handleMouseUp}
         >
-          <div className={topGridClass}>
-            <div>
-              <GospelParallelBanner book={book} chapter={chapter} />
-            </div>
-            <div />
-          </div>
-
           <div>
             <AnimatePresence initial={false}>
               {filteredVerses.map((verse) => (
@@ -469,6 +476,7 @@ export function PassageView({
                     text={verse.text}
                     viewMode={effectiveViewMode}
                     editorMode={editorMode}
+                    currentChapter={{ book, chapter }}
                     selectedVerses={selectedVerses}
                     isInSelectionRange={isInSelection(verse.verseNumber)}
                     isPassageSelection={isPassageSelection}
@@ -483,7 +491,7 @@ export function PassageView({
                     creatingFor={creatingFor}
                     editingNoteId={editingNoteId}
                     isFocusTarget={
-                      focusSource === "search" && focusRange
+                      hasFocusRange
                         ? verse.verseNumber >= focusRange.startVerse &&
                           verse.verseNumber <= focusRange.endVerse
                         : false

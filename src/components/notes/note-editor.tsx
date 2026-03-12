@@ -17,6 +17,11 @@ import {
 import { InlineVerseEditor } from "@/components/notes/editor/inline-verse-editor"
 import { api } from "../../../convex/_generated/api"
 
+interface CurrentChapter {
+  book: string
+  chapter: number
+}
+
 interface NoteEditorProps {
   verseRef: VerseRef
   initialContent?: string
@@ -24,6 +29,7 @@ interface NoteEditorProps {
   initialTags?: string[]
   variant?: "default" | "passage"
   presentation?: "card" | "dialog"
+  currentChapter?: CurrentChapter
   onSave: (body: NoteBody, tags: string[]) => void | Promise<void>
   onCancel: () => void
 }
@@ -35,6 +41,7 @@ export function NoteEditor({
   initialTags = [],
   variant = "default",
   presentation = "card",
+  currentChapter,
   onSave,
   onCancel,
 }: NoteEditorProps) {
@@ -144,6 +151,7 @@ export function NoteEditor({
       <InlineVerseEditor
         initialBody={initialEditorBody}
         verseRef={verseRef}
+        currentChapter={currentChapter ?? { book: verseRef.book, chapter: verseRef.chapter }}
         onChange={handleEditorChange}
         className={cn(isDialogPresentation ? "min-h-[180px]" : "min-h-[96px]")}
       />

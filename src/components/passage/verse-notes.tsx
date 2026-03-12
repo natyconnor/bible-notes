@@ -28,11 +28,17 @@ const fadeInOut = {
 
 export type VerseNote = NoteWithRef;
 
+interface CurrentChapter {
+  book: string;
+  chapter: number;
+}
+
 interface VerseNotesProps {
   notes: VerseNote[];
   isOpen: boolean;
   viewMode?: "compose" | "read";
   isPill?: boolean;
+  currentChapter?: CurrentChapter;
   editingNoteId?: Id<"notes"> | null;
   onSaveEdit?: (body: NoteBody, tags: string[]) => void | Promise<void>;
   onCancelEdit?: () => void;
@@ -50,6 +56,7 @@ export const VerseNotes = memo(function VerseNotes({
   isOpen,
   viewMode = "compose",
   isPill = false,
+  currentChapter,
   editingNoteId = null,
   onSaveEdit,
   onCancelEdit,
@@ -83,6 +90,7 @@ export const VerseNotes = memo(function VerseNotes({
           <motion.div key="collapsed-single" {...fadeInOut}>
             <CollapsedBubble
               note={notes[0]}
+              currentChapter={currentChapter}
               onClick={onOpen}
               onEdit={() => onEdit(notes[0].noteId)}
               onMouseEnter={onMouseEnter}
@@ -155,6 +163,7 @@ export const VerseNotes = memo(function VerseNotes({
                     initialContent={note.content}
                     initialBody={note.body}
                     initialTags={note.tags}
+                    currentChapter={currentChapter}
                     onSave={onSaveEdit!}
                     onCancel={onCancelEdit!}
                   />
@@ -162,6 +171,7 @@ export const VerseNotes = memo(function VerseNotes({
               ) : (
                 <ExpandedBubble
                   note={note}
+                  currentChapter={currentChapter}
                   density={isReadMode ? "reading" : "default"}
                   onEdit={() => onEdit(note.noteId)}
                   onDelete={() => onDelete(note.noteId)}
@@ -177,12 +187,14 @@ export const VerseNotes = memo(function VerseNotes({
 
 function CollapsedBubble({
   note,
+  currentChapter,
   onClick,
   onEdit,
   onMouseEnter,
   onMouseLeave,
 }: {
   note: VerseNote;
+  currentChapter?: { book: string; chapter: number };
   onClick: () => void;
   onEdit: () => void;
   onMouseEnter?: () => void;
@@ -200,6 +212,7 @@ function CollapsedBubble({
         content={note.content}
         body={note.body}
         truncateAt={100}
+        currentChapter={currentChapter}
         className="text-muted-foreground line-clamp-2"
       />
       <NoteTagList tags={note.tags} className="mt-1" />
@@ -270,11 +283,13 @@ function VerseNotesPill({
 
 function ExpandedBubble({
   note,
+  currentChapter,
   density = "default",
   onEdit,
   onDelete,
 }: {
   note: VerseNote;
+  currentChapter?: { book: string; chapter: number };
   density?: "default" | "reading";
   onEdit: () => void;
   onDelete: () => void;
@@ -293,6 +308,7 @@ function ExpandedBubble({
           content={note.content}
           body={note.body}
           density={density}
+          currentChapter={currentChapter}
           className={isReading ? "flex-1 text-foreground" : "flex-1"}
         />
         <NoteCardActions onEdit={onEdit} onDelete={onDelete} />

@@ -6,7 +6,11 @@ import { cn } from "@/lib/utils"
 import type { NoteBody } from "@/lib/note-inline-content"
 import type { VerseRef } from "@/lib/verse-ref-utils"
 import { formatVerseRef, isPassageNote } from "@/lib/verse-ref-utils"
-import { NoteTagList, NoteContent } from "./view/note-card-primitives"
+import {
+  NoteTagList,
+  NoteContent,
+  type CurrentChapter,
+} from "./view/note-card-primitives"
 
 interface NoteBubbleProps {
   noteId: string
@@ -15,6 +19,7 @@ interface NoteBubbleProps {
   tags: string[]
   verseRef: VerseRef
   isExpanded: boolean
+  currentChapter?: CurrentChapter
   onExpand: () => void
   onEdit: () => void
   onDelete: () => void
@@ -26,6 +31,7 @@ export const NoteBubble = memo(function NoteBubble({
   tags,
   verseRef,
   isExpanded,
+  currentChapter,
   onExpand,
   onEdit,
   onDelete,
@@ -109,6 +115,7 @@ export const NoteBubble = memo(function NoteBubble({
         content={content}
         body={body}
         truncateAt={isExpanded ? undefined : 150}
+        currentChapter={currentChapter}
         className="text-sm"
       />
 

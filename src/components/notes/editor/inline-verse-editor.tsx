@@ -26,10 +26,17 @@ import {
 import { getVerseRefBoundsErrorMessage } from "@/lib/verse-ref-validation";
 import { useDebouncedEsvReferenceValidation } from "@/hooks/use-esv-reference";
 import { VerseRefPreviewCard } from "@/components/verse-ref/verse-ref-hover-preview";
+import { useVerseLinkNavigation } from "@/hooks/use-verse-link-navigation";
+
+interface CurrentChapter {
+  book: string;
+  chapter: number;
+}
 
 interface InlineVerseEditorProps {
   initialBody: NoteBody;
   verseRef: VerseRef;
+  currentChapter?: CurrentChapter;
   placeholder?: string;
   className?: string;
   onChange: (body: NoteBody) => void;
@@ -464,11 +471,13 @@ function insertPlainTextAtCursor(root: HTMLElement, text: string) {
 export function InlineVerseEditor({
   initialBody,
   verseRef,
+  currentChapter,
   placeholder = "Write your note...",
   className,
   onChange,
 }: InlineVerseEditorProps) {
   const wrapperRef = useRef<HTMLDivElement>(null);
+  const navigateToVerse = useVerseLinkNavigation(currentChapter);
   const editorRef = useRef<HTMLDivElement>(null);
   const [isFocused, setIsFocused] = useState(false);
   const [isEmpty, setIsEmpty] = useState(
@@ -788,12 +797,41 @@ export function InlineVerseEditor({
           const removeButton = target.closest<HTMLElement>(
             "[data-note-pill-remove='true']"
           );
-          if (!removeButton) return;
-          event.preventDefault();
-          event.stopPropagation();
-          removeButton.closest("[data-note-verse-pill='true']")?.remove();
-          clearHoverPreview();
-          emitChange();
+          if (removeButton) {
+            event.preventDefault();
+            event.stopPropagation();
+            removeButton.closest("[data-note-verse-pill='true']")?.remove();
+            clearHoverPreview();
+            emitChange();
+            return;
+          }
+          const pill = target.closest<HTMLElement>(
+            "[data-note-verse-pill='true']"
+          );
+          if (pill && currentChapter) {
+            const book = pill.dataset.book;
+            const chapter = Number.parseInt(pill.dataset.chapter ?? "", 10);
+            const startVerse = Number.parseInt(
+              pill.dataset.startVerse ?? "",
+              10
+            );
+            const endVerse = Number.parseInt(pill.dataset.endVerse ?? "", 10);
+            if (
+              book &&
+              !Number.isNaN(chapter) &&
+              !Number.isNaN(startVerse) &&
+              !Number.isNaN(endVerse)
+            ) {
+              event.preventDefault();
+              event.stopPropagation();
+              navigateToVerse({
+                book,
+                chapter,
+                startVerse,
+                endVerse,
+              });
+            }
+          }
         }}
         onMouseOver={(event) => {
           const target = event.target as HTMLElement;

@@ -3,7 +3,7 @@
  * No Convex queries — everything is hardcoded sample data.
  */
 
-import { BookOpen, Plus, X, ChevronLeft, ChevronRight, Search } from "lucide-react"
+import { Plus, X, ChevronLeft, ChevronRight, Search } from "lucide-react"
 
 export function MockUI() {
   return (
@@ -36,25 +36,6 @@ export function MockUI() {
             <button className="h-8 w-8 flex items-center justify-center rounded text-[--muted-foreground] hover:bg-[--muted]">
               <ChevronRight className="h-4 w-4" />
             </button>
-          </div>
-
-          {/* Gospel parallels banner */}
-          <div className="border border-[--border] rounded-lg bg-[--muted]/30 px-3 py-2 mb-3">
-            <div className="flex items-center gap-2 text-sm font-medium text-[--muted-foreground]">
-              <BookOpen className="h-4 w-4 shrink-0 text-[--primary]" />
-              <span>Synoptic Parallels (3)</span>
-            </div>
-            <div className="mt-2 text-sm text-[--muted-foreground] flex flex-wrap gap-1">
-              <span>John the Baptist:</span>
-              {["Matthew 3:1-6", "Mark 1:2-6", "Luke 3:1-6"].map((ref) => (
-                <span
-                  key={ref}
-                  className="inline-flex items-center px-2 py-0.5 rounded-md border border-[--border] text-xs cursor-pointer hover:bg-[--primary] hover:text-[--primary-foreground] transition-colors"
-                >
-                  {ref}
-                </span>
-              ))}
-            </div>
           </div>
 
           {/* Verses */}

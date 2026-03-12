@@ -11,6 +11,9 @@ import {
   type NoteBody,
 } from "@/lib/note-inline-content"
 import { VerseLinkPill } from "@/components/verse-ref/verse-link-pill"
+import type { CurrentChapter } from "@/hooks/use-verse-link-navigation"
+
+export type { CurrentChapter }
 
 export interface NoteCardActionsProps {
   onEdit: () => void
@@ -88,6 +91,7 @@ export interface NoteContentProps {
   body?: NoteBody | null
   truncateAt?: number
   density?: "default" | "reading"
+  currentChapter?: CurrentChapter
   className?: string
 }
 
@@ -96,6 +100,7 @@ export function NoteContent({
   body,
   truncateAt,
   density = "default",
+  currentChapter,
   className,
 }: NoteContentProps) {
   const densityClass = density === "reading" ? "text-base leading-7" : "leading-relaxed"
@@ -127,6 +132,7 @@ export function NoteContent({
               key={`ref-${index}`}
               refValue={segment.ref}
               label={segment.label}
+              currentChapter={currentChapter}
               className="mx-0.5"
             />
           )
