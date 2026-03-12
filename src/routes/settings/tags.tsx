@@ -22,7 +22,6 @@ import { ImportExportSection } from "@/components/settings/import-export-section
 import {
   ALL_STARTER_TAGS,
   DEFAULT_STARTER_TAG_CATEGORY_COLORS,
-  STARTER_TAGS_VERSION,
   STARTER_TAG_CATEGORIES,
 } from "@/lib/starter-tags"
 
@@ -266,9 +265,6 @@ export function SettingsPage() {
             <h1 className="text-2xl font-semibold tracking-tight">
               General settings
             </h1>
-            <Badge variant="outline" className="text-xs">
-              Taxonomy v{STARTER_TAGS_VERSION}
-            </Badge>
           </div>
           <p className="text-sm text-muted-foreground">
             Manage import/export, your full tag catalog, starter sets, and

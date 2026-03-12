@@ -12,7 +12,6 @@ import {
   Loader2,
   Upload,
   Download,
-  AlertCircle,
   CheckCircle2,
   FileArchive,
   ChevronDown,
@@ -55,8 +54,6 @@ import type {
 
 const IMPORT_BATCH_SIZE = 100
 const EXPORT_ENABLED = false
-const EXPORT_DISABLED_REASON =
-  "Export is implemented but intentionally disabled until the project license for bulk Bible text export is finalized."
 
 function hasFileDragPayload(event: DragEvent<HTMLElement>): boolean {
   return Array.from(event.dataTransfer.types).includes("Files")
@@ -343,7 +340,8 @@ export function ImportExportSection() {
           })),
         })
         const batchDuplicateCount =
-          "duplicateCount" in result && typeof result.duplicateCount === "number"
+          "duplicateCount" in result &&
+          typeof result.duplicateCount === "number"
             ? result.duplicateCount
             : 0
 
@@ -462,6 +460,15 @@ export function ImportExportSection() {
           <InlineCode>.zip</InlineCode>, and prepare workbook exports for the
           same format.
         </CardDescription>
+        <div className="rounded-md border bg-muted/15 p-3 text-xs text-muted-foreground">
+          <p className="flex items-start gap-2">
+            <FileArchive className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+            <span>
+              Import expects one book per file, 1 chapter per tab, and 1 verse
+              per row.
+            </span>
+          </p>
+        </div>
       </CardHeader>
       <CardContent className="space-y-6">
         <div className="grid gap-6 lg:grid-cols-2">
@@ -696,79 +703,70 @@ export function ImportExportSection() {
             )}
           </section>
 
-          <section className="space-y-3 rounded-lg border bg-background p-4">
-            <div className="space-y-1">
-              <h2 className="text-sm font-semibold">Export notes</h2>
-              <p className="text-xs text-muted-foreground">
-                Generate one workbook per Bible book in a single zip archive.
-              </p>
-            </div>
+          {EXPORT_ENABLED ? (
+            <section className="space-y-3 rounded-lg border bg-background p-4">
+              <div className="space-y-1">
+                <h2 className="text-sm font-semibold">Export notes</h2>
+                <p className="text-xs text-muted-foreground">
+                  Generate one workbook per Bible book in a single zip archive.
+                </p>
+              </div>
 
-            <div className="flex flex-wrap gap-2">
-              <Button
-                size="sm"
-                variant={
-                  exportScope === "booksWithNotes" ? "default" : "outline"
-                }
-                onClick={() => setExportScope("booksWithNotes")}
-                disabled={!EXPORT_ENABLED || exportProgress !== null}
-              >
-                Books with notes
-              </Button>
-              <Button
-                size="sm"
-                variant={exportScope === "allBooks" ? "default" : "outline"}
-                onClick={() => setExportScope("allBooks")}
-                disabled={!EXPORT_ENABLED || exportProgress !== null}
-              >
-                All 66 books
-              </Button>
-            </div>
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  size="sm"
+                  variant={
+                    exportScope === "booksWithNotes" ? "default" : "outline"
+                  }
+                  onClick={() => setExportScope("booksWithNotes")}
+                  disabled={exportProgress !== null}
+                >
+                  Books with notes
+                </Button>
+                <Button
+                  size="sm"
+                  variant={exportScope === "allBooks" ? "default" : "outline"}
+                  onClick={() => setExportScope("allBooks")}
+                  disabled={exportProgress !== null}
+                >
+                  All 66 books
+                </Button>
+              </div>
 
-            <div className="rounded-md border border-dashed bg-muted/20 p-3 text-sm text-muted-foreground">
-              <p className="flex items-start gap-2">
-                <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
-                <span>{EXPORT_DISABLED_REASON}</span>
-              </p>
-            </div>
-
-            {exportError && (
-              <p className="text-sm text-destructive">{exportError}</p>
-            )}
-
-            {exportProgress && (
-              <p className="text-xs text-muted-foreground">
-                Preparing {exportProgress.currentBook} (
-                {exportProgress.completedBooks} of {exportProgress.totalBooks}{" "}
-                completed)...
-              </p>
-            )}
-
-            <Button
-              size="sm"
-              onClick={() => {
-                void handleExport()
-              }}
-              disabled={!EXPORT_ENABLED || exportProgress !== null}
-            >
-              {exportProgress ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Download className="h-4 w-4" />
+              {exportError && (
+                <p className="text-sm text-destructive">{exportError}</p>
               )}
-              Export workbooks
-            </Button>
-          </section>
-        </div>
 
-        <div className="rounded-md border bg-muted/15 p-3 text-xs text-muted-foreground">
-          <p className="flex items-start gap-2">
-            <FileArchive className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-            <span>
-              Import expects one book per file, 1 chapter per tab, and 1 verse
-              per row.
-            </span>
-          </p>
+              {exportProgress && (
+                <p className="text-xs text-muted-foreground">
+                  Preparing {exportProgress.currentBook} (
+                  {exportProgress.completedBooks} of {exportProgress.totalBooks}{" "}
+                  completed)...
+                </p>
+              )}
+
+              <Button
+                size="sm"
+                onClick={() => {
+                  void handleExport()
+                }}
+                disabled={exportProgress !== null}
+              >
+                {exportProgress ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Download className="h-4 w-4" />
+                )}
+                Export workbooks
+              </Button>
+            </section>
+          ) : (
+            <section className="flex flex-col items-center justify-center rounded-lg border bg-background p-4 text-center">
+              <p className="text-sm text-muted-foreground">
+                Export support is coming soon.
+              </p>
+            </section>
+          )}
         </div>
       </CardContent>
     </Card>
