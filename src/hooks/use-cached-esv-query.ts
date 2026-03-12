@@ -35,7 +35,7 @@ export function useCachedEsvQuery(query: string | null) {
     void fetchPassage({ query })
       .then((raw) => {
         if (requestVersion !== requestVersionRef.current) return
-        const parsed = parseEsvResponse(raw as Record<string, unknown>)
+        const parsed = parseEsvResponse(raw)
         setCachedPassage(query, parsed)
         setAsyncState({
           query,

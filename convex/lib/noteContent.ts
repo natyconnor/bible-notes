@@ -30,6 +30,35 @@ export const noteBodyValue = v.object({
 export type VerseRefInput = Infer<typeof verseRefValue>
 export type NoteBodyInput = Infer<typeof noteBodyValue>
 
+export function createPlainTextNoteBody(text: string): NoteBodyInput {
+  if (text.length === 0) {
+    return {
+      version: 1,
+      segments: [],
+    }
+  }
+
+  const lines = text.split("\n")
+  const segments: Infer<typeof noteBodySegmentValue>[] = []
+  for (let index = 0; index < lines.length; index += 1) {
+    if (lines[index].length > 0) {
+      segments.push({
+        type: "text",
+        text: lines[index],
+      })
+    }
+
+    if (index < lines.length - 1) {
+      segments.push({ type: "lineBreak" })
+    }
+  }
+
+  return {
+    version: 1,
+    segments,
+  }
+}
+
 export function noteBodyToPlainText(body: NoteBodyInput): string {
   return body.segments
     .map((segment) => {

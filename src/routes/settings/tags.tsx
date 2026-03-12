@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router"
+import { createFileRoute, Navigate, useNavigate } from "@tanstack/react-router"
 import { useEffect, useMemo, useState } from "react"
 import { useQuery } from "convex-helpers/react/cache"
 import { useMutation } from "convex/react"
@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/dialog"
 import { cn } from "@/lib/utils"
 import { normalizeTag } from "@/lib/tag-utils"
+import { ImportExportSection } from "@/components/settings/import-export-section"
 import {
   ALL_STARTER_TAGS,
   DEFAULT_STARTER_TAG_CATEGORY_COLORS,
@@ -26,10 +27,14 @@ import {
 } from "@/lib/starter-tags"
 
 export const Route = createFileRoute("/settings/tags")({
-  component: StarterTagsSettingsPage,
+  component: LegacyTagSettingsRedirect,
 })
 
-function StarterTagsSettingsPage() {
+function LegacyTagSettingsRedirect() {
+  return <Navigate to="/settings" replace />
+}
+
+export function SettingsPage() {
   const navigate = useNavigate()
   const catalog = useQuery(api.tags.listCatalog)
   const setupStatus = useQuery(api.userSettings.getStarterTagsSetupStatus)
@@ -255,19 +260,19 @@ function StarterTagsSettingsPage() {
 
   return (
     <div className="h-full overflow-auto">
-      <div className="mx-auto max-w-5xl px-4 py-8 space-y-6">
+      <div className="mx-auto max-w-6xl px-4 py-8 space-y-6">
         <div className="space-y-2">
           <div className="flex items-center justify-between gap-3">
             <h1 className="text-2xl font-semibold tracking-tight">
-              Tag settings
+              General settings
             </h1>
             <Badge variant="outline" className="text-xs">
               Taxonomy v{STARTER_TAGS_VERSION}
             </Badge>
           </div>
           <p className="text-sm text-muted-foreground">
-            Manage your full tag catalog: custom tags, starter sets, and starter
-            category colors.
+            Manage import/export, your full tag catalog, starter sets, and
+            starter category colors.
           </p>
           {firstTimeSetup && (
             <p className="text-sm text-foreground">
@@ -276,6 +281,8 @@ function StarterTagsSettingsPage() {
             </p>
           )}
         </div>
+
+        <ImportExportSection />
 
         <section className="rounded-lg border bg-card p-4 space-y-3">
           <div className="flex items-center justify-between gap-3">

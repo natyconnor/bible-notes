@@ -15,7 +15,7 @@ function RootComponent() {
   const { isAuthenticated, isLoading } = useConvexAuth()
   const location = useLocation()
   const isLoginRoute = location.pathname === "/login"
-  const isStarterTagsRoute = location.pathname.startsWith("/settings/tags")
+  const isSettingsRoute = location.pathname.startsWith("/settings")
   const starterTagsSetupStatus = useQuery(
     api.userSettings.getStarterTagsSetupStatus,
     isAuthenticated ? {} : "skip"
@@ -44,10 +44,10 @@ function RootComponent() {
   if (
     isAuthenticated &&
     !isLoginRoute &&
-    !isStarterTagsRoute &&
+    !isSettingsRoute &&
     starterTagsSetupStatus?.needsStarterTagsSetup
   ) {
-    return <Navigate to="/settings/tags" replace />
+    return <Navigate to="/settings" replace />
   }
 
   return (

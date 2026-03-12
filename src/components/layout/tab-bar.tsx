@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { AnimatePresence } from "framer-motion";
 import { useTabs } from "@/lib/use-tabs";
 import { TabItem } from "./tab-item";
-import { LogOut, Search, TableOfContents, Tags } from "lucide-react";
+import { LogOut, Search, Settings, TableOfContents } from "lucide-react";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { SearchDialog } from "@/components/notes/search-dialog";
 import { ThemeDropdown } from "./theme-dropdown";
@@ -19,7 +19,7 @@ export function TabBar() {
   const location = useLocation();
   const [passageNavigatorOpen, setPassageNavigatorOpen] = useState(false);
   const isSearchRoute = location.pathname === "/search";
-  const isTagSettingsRoute = location.pathname === "/settings/tags";
+  const isSettingsRoute = location.pathname.startsWith("/settings");
   const savedSearchState = readSearchWorkspaceState();
   const searchLinkState = {
     q: savedSearchState.params.q,
@@ -49,7 +49,7 @@ export function TabBar() {
               <TabItem
                 key={tab.id}
                 tab={tab}
-                isActive={!isSearchRoute && !isTagSettingsRoute && tab.id === activeTabId}
+                isActive={!isSearchRoute && !isSettingsRoute && tab.id === activeTabId}
                 onActivate={() => setActiveTab(tab.id)}
                 onClose={() => closeTab(tab.id)}
               />
@@ -96,14 +96,14 @@ export function TabBar() {
           size="icon"
           className={cn(
             "h-8 w-8",
-            isTagSettingsRoute &&
+            isSettingsRoute &&
               "h-10 w-10 rounded-none border-b-2 border-b-primary bg-background text-foreground"
           )}
-          tooltip="Starter tags settings"
-          aria-label="Starter tags settings"
+          tooltip="Open settings"
+          aria-label="Open settings"
         >
-          <Link to="/settings/tags">
-            <Tags className="h-4 w-4" />
+          <Link to="/settings">
+            <Settings className="h-4 w-4" />
           </Link>
         </TooltipButton>
         <ThemeDropdown />
