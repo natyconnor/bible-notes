@@ -1,44 +1,59 @@
-import { useEffect, useState } from "react";
-import { AnimatePresence } from "framer-motion";
-import { useTabs } from "@/lib/use-tabs";
-import { TabItem } from "./tab-item";
-import { LogOut, Search, Settings, TableOfContents } from "lucide-react";
-import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
-import { SearchDialog } from "@/components/notes/search-dialog";
-import { ThemeDropdown } from "./theme-dropdown";
-import { PassageNavigator } from "@/components/bible/passage-navigator";
-import { useAuthActions } from "@convex-dev/auth/react";
-import { TooltipButton } from "@/components/ui/tooltip-button";
-import { Link, useLocation } from "@tanstack/react-router";
-import { readSearchWorkspaceState } from "@/lib/search-workspace-state";
-import { cn } from "@/lib/utils";
+import { useEffect, useState } from "react"
+import { AnimatePresence } from "framer-motion"
+import { useTabs } from "@/lib/use-tabs"
+import { TabItem } from "./tab-item"
+import { LogOut, Search, Settings, TableOfContents } from "lucide-react"
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area"
+import { SearchDialog } from "@/components/notes/search-dialog"
+import { ThemeDropdown } from "./theme-dropdown"
+import { PassageNavigator } from "@/components/bible/passage-navigator"
+import { useAuthActions } from "@convex-dev/auth/react"
+import { TooltipButton } from "@/components/ui/tooltip-button"
+import { Link, useLocation, useNavigate } from "@tanstack/react-router"
+import { readSearchWorkspaceState } from "@/lib/search-workspace-state"
+import { cn } from "@/lib/utils"
+import { formatCommandOrControlShortcut } from "@/lib/keyboard-shortcuts"
 
 export function TabBar() {
-  const { tabs, activeTabId, setActiveTab, closeTab } = useTabs();
-  const { signOut } = useAuthActions();
-  const location = useLocation();
-  const [passageNavigatorOpen, setPassageNavigatorOpen] = useState(false);
-  const isSearchRoute = location.pathname === "/search";
-  const isSettingsRoute = location.pathname.startsWith("/settings");
-  const savedSearchState = readSearchWorkspaceState();
+  const { tabs, activeTabId, setActiveTab, closeTab } = useTabs()
+  const { signOut } = useAuthActions()
+  const location = useLocation()
+  const navigate = useNavigate()
+  const [passageNavigatorOpen, setPassageNavigatorOpen] = useState(false)
+  const isSearchRoute = location.pathname === "/search"
+  const isSettingsRoute = location.pathname.startsWith("/settings")
+  const savedSearchState = readSearchWorkspaceState()
+  const searchShortcutLabel = formatCommandOrControlShortcut("K")
+  const passageShortcutLabel = formatCommandOrControlShortcut("G")
+  const settingsShortcutLabel = formatCommandOrControlShortcut(",")
   const searchLinkState = {
     q: savedSearchState.params.q,
     tags: savedSearchState.params.tags,
     mode: savedSearchState.params.mode,
     noteId: savedSearchState.params.noteId,
-  };
+  }
 
   useEffect(() => {
     function handleKeyDown(event: KeyboardEvent) {
-      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "g") {
-        event.preventDefault();
-        setPassageNavigatorOpen((open) => !open);
+      if (!(event.metaKey || event.ctrlKey) || event.altKey || event.shiftKey) {
+        return
+      }
+
+      if (event.key.toLowerCase() === "g") {
+        event.preventDefault()
+        setPassageNavigatorOpen((open) => !open)
+        return
+      }
+
+      if (event.key === ",") {
+        event.preventDefault()
+        void navigate({ to: "/settings" })
       }
     }
 
-    document.addEventListener("keydown", handleKeyDown);
-    return () => document.removeEventListener("keydown", handleKeyDown);
-  }, []);
+    document.addEventListener("keydown", handleKeyDown)
+    return () => document.removeEventListener("keydown", handleKeyDown)
+  }, [navigate])
 
   return (
     <div className="flex items-center border-b bg-muted/30 h-10 shrink-0">
@@ -49,7 +64,9 @@ export function TabBar() {
               <TabItem
                 key={tab.id}
                 tab={tab}
-                isActive={!isSearchRoute && !isSettingsRoute && tab.id === activeTabId}
+                isActive={
+                  !isSearchRoute && !isSettingsRoute && tab.id === activeTabId
+                }
                 onActivate={() => setActiveTab(tab.id)}
                 onClose={() => closeTab(tab.id)}
               />
@@ -66,9 +83,9 @@ export function TabBar() {
           className={cn(
             "h-8 w-8",
             isSearchRoute &&
-              "h-10 w-10 rounded-none border-b-2 border-b-primary bg-background text-foreground"
+              "h-10 w-10 rounded-none border-b-2 border-b-primary bg-background text-foreground",
           )}
-          tooltip="Open search workspace"
+          tooltip={`Open search workspace (${searchShortcutLabel})`}
           aria-label="Open search workspace"
           data-tour-id="app-search-button"
         >
@@ -84,7 +101,7 @@ export function TabBar() {
               variant="ghost"
               size="icon"
               className="h-8 w-8"
-              tooltip="Go to passage"
+              tooltip={`Go to passage (${passageShortcutLabel})`}
               aria-label="Go to passage"
               data-tour-id="app-book-selector"
             >
@@ -99,9 +116,9 @@ export function TabBar() {
           className={cn(
             "h-8 w-8",
             isSettingsRoute &&
-              "h-10 w-10 rounded-none border-b-2 border-b-primary bg-background text-foreground"
+              "h-10 w-10 rounded-none border-b-2 border-b-primary bg-background text-foreground",
           )}
-          tooltip="Open settings"
+          tooltip={`Open settings (${settingsShortcutLabel})`}
           aria-label="Open settings"
           data-tour-id="app-settings-button"
         >
@@ -123,5 +140,5 @@ export function TabBar() {
       </div>
       <SearchDialog showTrigger={false} />
     </div>
-  );
+  )
 }

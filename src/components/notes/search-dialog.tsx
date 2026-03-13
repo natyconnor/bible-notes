@@ -1,58 +1,60 @@
-import { useState, useEffect, useCallback, useMemo, useRef } from "react";
-import { motion } from "framer-motion";
-import { useQuery } from "convex-helpers/react/cache";
-import { useMutation } from "convex/react";
-import { useNavigate } from "@tanstack/react-router";
-import { api } from "../../../convex/_generated/api";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react"
+import { motion } from "framer-motion"
+import { useQuery } from "convex-helpers/react/cache"
+import { useMutation } from "convex/react"
+import { useNavigate } from "@tanstack/react-router"
+import { api } from "../../../convex/_generated/api"
+import { Dialog, DialogContent } from "@/components/ui/dialog"
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Search } from "lucide-react";
-import { useTabs } from "@/lib/use-tabs";
-import { useStarterTagBadgeStyle } from "@/lib/tag-color-styles";
-import { normalizeTags, type TagMatchMode } from "@/lib/tag-utils";
-import { toPassageId } from "@/lib/verse-ref-utils";
-import { HighlightedText } from "@/components/search/highlighted-text";
-import { TagFilterControl } from "@/components/search/tag-filter-control";
+} from "@/components/ui/tooltip"
+import { Input } from "@/components/ui/input"
+import { Badge } from "@/components/ui/badge"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { Search } from "lucide-react"
+import { useTabs } from "@/lib/use-tabs"
+import { useStarterTagBadgeStyle } from "@/lib/tag-color-styles"
+import { normalizeTags, type TagMatchMode } from "@/lib/tag-utils"
+import { toPassageId } from "@/lib/verse-ref-utils"
+import { HighlightedText } from "@/components/search/highlighted-text"
+import { TagFilterControl } from "@/components/search/tag-filter-control"
+import { formatCommandOrControlShortcut } from "@/lib/keyboard-shortcuts"
 
 interface SearchDialogProps {
-  showTrigger?: boolean;
+  showTrigger?: boolean
 }
 
 export function SearchDialog({ showTrigger = true }: SearchDialogProps) {
-  const navigate = useNavigate();
-  const { openTab } = useTabs();
-  const [open, setOpen] = useState(false);
-  const [query, setQuery] = useState("");
-  const [selectedTags, setSelectedTags] = useState<string[]>([]);
-  const [matchMode, setMatchMode] = useState<TagMatchMode>("any");
-  const attemptedBackfillRef = useRef(false);
-  const backfillCatalog = useMutation(api.tags.backfillCatalogFromNotes);
-  const resolveTagStyle = useStarterTagBadgeStyle();
+  const navigate = useNavigate()
+  const { openTab } = useTabs()
+  const [open, setOpen] = useState(false)
+  const [query, setQuery] = useState("")
+  const [selectedTags, setSelectedTags] = useState<string[]>([])
+  const [matchMode, setMatchMode] = useState<TagMatchMode>("any")
+  const attemptedBackfillRef = useRef(false)
+  const backfillCatalog = useMutation(api.tags.backfillCatalogFromNotes)
+  const resolveTagStyle = useStarterTagBadgeStyle()
+  const searchShortcutLabel = formatCommandOrControlShortcut("K")
 
   // Keyboard shortcut
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
       if ((e.metaKey || e.ctrlKey) && e.key === "k") {
-        e.preventDefault();
-        setOpen((o) => !o);
+        e.preventDefault()
+        setOpen((o) => !o)
       }
     }
-    document.addEventListener("keydown", handleKeyDown);
-    return () => document.removeEventListener("keydown", handleKeyDown);
-  }, []);
+    document.addEventListener("keydown", handleKeyDown)
+    return () => document.removeEventListener("keydown", handleKeyDown)
+  }, [])
 
-  const catalog = useQuery(api.tags.listCatalog);
-  const normalizedQuery = query.trim();
-  const hasTextQuery = normalizedQuery.length >= 2;
-  const hasTagFilters = selectedTags.length > 0;
-  const shouldSearch = hasTextQuery || hasTagFilters;
+  const catalog = useQuery(api.tags.listCatalog)
+  const normalizedQuery = query.trim()
+  const hasTextQuery = normalizedQuery.length >= 2
+  const hasTagFilters = selectedTags.length > 0
+  const shouldSearch = hasTextQuery || hasTagFilters
 
   const searchResults = useQuery(
     api.notes.searchWorkspace,
@@ -63,34 +65,34 @@ export function SearchDialog({ showTrigger = true }: SearchDialogProps) {
           matchMode,
           limit: 50,
         }
-      : "skip"
-  );
+      : "skip",
+  )
 
   const availableTags = useMemo(
     () => catalog?.map((entry) => entry.tag) ?? [],
-    [catalog]
-  );
+    [catalog],
+  )
 
   useEffect(() => {
-    if (!open) return;
-    if (attemptedBackfillRef.current) return;
-    if (!catalog || catalog.length > 0) return;
-    attemptedBackfillRef.current = true;
-    void backfillCatalog({ noteLimit: 1000 });
-  }, [backfillCatalog, catalog, open]);
+    if (!open) return
+    if (attemptedBackfillRef.current) return
+    if (!catalog || catalog.length > 0) return
+    attemptedBackfillRef.current = true
+    void backfillCatalog({ noteLimit: 1000 })
+  }, [backfillCatalog, catalog, open])
 
   const toggleTag = useCallback((tag: string) => {
     setSelectedTags((prev) =>
       prev.includes(tag)
         ? prev.filter((current) => current !== tag)
-        : [...prev, tag]
-    );
-  }, []);
+        : [...prev, tag],
+    )
+  }, [])
 
   const openAdvancedSearch = useCallback(
     (noteId?: string) => {
-      const nextQuery = query.trim();
-      const nextTags = normalizeTags(selectedTags);
+      const nextQuery = query.trim()
+      const nextTags = normalizeTags(selectedTags)
       void navigate({
         to: "/search",
         search: {
@@ -99,39 +101,39 @@ export function SearchDialog({ showTrigger = true }: SearchDialogProps) {
           mode: matchMode,
           noteId,
         },
-      });
-      setOpen(false);
+      })
+      setOpen(false)
     },
-    [matchMode, navigate, query, selectedTags]
-  );
+    [matchMode, navigate, query, selectedTags],
+  )
 
   const jumpToSearchResultVerse = useCallback(
     (
       noteId: string,
       primaryRef: {
-        book: string;
-        chapter: number;
-        startVerse: number;
-        endVerse: number;
-      } | null
+        book: string
+        chapter: number
+        startVerse: number
+        endVerse: number
+      } | null,
     ) => {
       if (!primaryRef) {
-        openAdvancedSearch(noteId);
-        return;
+        openAdvancedSearch(noteId)
+        return
       }
 
-      const passageId = toPassageId(primaryRef.book, primaryRef.chapter);
-      const label = `${primaryRef.book} ${primaryRef.chapter}`;
+      const passageId = toPassageId(primaryRef.book, primaryRef.chapter)
+      const label = `${primaryRef.book} ${primaryRef.chapter}`
       openTab(passageId, label, {
         source: "search",
         mode: "read",
         startVerse: primaryRef.startVerse,
         endVerse: primaryRef.endVerse,
-      });
-      setOpen(false);
+      })
+      setOpen(false)
     },
-    [openAdvancedSearch, openTab]
-  );
+    [openAdvancedSearch, openTab],
+  )
 
   return (
     <>
@@ -143,7 +145,7 @@ export function SearchDialog({ showTrigger = true }: SearchDialogProps) {
           <Search className="h-3.5 w-3.5" />
           <span>Search notes...</span>
           <kbd className="ml-auto text-xs bg-muted px-1.5 py-0.5 rounded">
-            {navigator.platform.includes("Mac") ? "\u2318" : "Ctrl"}K
+            {searchShortcutLabel}
           </kbd>
         </button>
       ) : null}
@@ -158,8 +160,8 @@ export function SearchDialog({ showTrigger = true }: SearchDialogProps) {
               onChange={(e) => setQuery(e.target.value)}
               onKeyDown={(event) => {
                 if (event.key === "Enter") {
-                  event.preventDefault();
-                  openAdvancedSearch();
+                  event.preventDefault()
+                  openAdvancedSearch()
                 }
               }}
               className="border-0 focus-visible:ring-0 shadow-none"
@@ -244,7 +246,7 @@ export function SearchDialog({ showTrigger = true }: SearchDialogProps) {
                       onClick={() =>
                         jumpToSearchResultVerse(
                           String(note.noteId),
-                          note.primaryRef
+                          note.primaryRef,
                         )
                       }
                     >
@@ -285,5 +287,5 @@ export function SearchDialog({ showTrigger = true }: SearchDialogProps) {
         </DialogContent>
       </Dialog>
     </>
-  );
+  )
 }
