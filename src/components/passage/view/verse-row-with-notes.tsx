@@ -32,9 +32,8 @@ export interface VerseRowWithNotesProps {
   passageNotes: NoteWithRef[]
   passageAnchor: number | undefined
 
-  hoveredVerse: number | null
-  hoveredPassageBubble: number | null
-  hoveredSingleBubble: number | null
+  isPassageRangeActive: boolean
+  isNoteBubbleHovered: boolean
 
   openVerseKey: number | null
   openPassageKey: number | null
@@ -76,9 +75,8 @@ export const VerseRowWithNotes = memo(function VerseRowWithNotes({
   singleNotes,
   passageNotes,
   passageAnchor,
-  hoveredVerse,
-  hoveredPassageBubble,
-  hoveredSingleBubble,
+  isPassageRangeActive,
+  isNoteBubbleHovered,
   openVerseKey,
   openPassageKey,
   creatingFor,
@@ -111,13 +109,6 @@ export const VerseRowWithNotes = memo(function VerseRowWithNotes({
 
   const isPassageAnchor = passageNotes.length > 0
   const isInPassageRange = passageAnchor !== undefined && !isPassageAnchor
-
-  const isPassageRangeActive =
-    passageAnchor !== undefined &&
-    (hoveredVerse === passageAnchor || hoveredPassageBubble === passageAnchor)
-
-  const isNoteBubbleHovered =
-    hoveredSingleBubble === verseNumber || hoveredPassageBubble === verseNumber
 
   const isVerseOpen = openVerseKey === verseNumber
   const isPassageOpen = openPassageKey === verseNumber

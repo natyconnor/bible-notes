@@ -1,46 +1,46 @@
-import { memo } from "react";
-import { Plus } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { memo } from "react"
+import { Plus } from "lucide-react"
+import { cn } from "@/lib/utils"
 
 export interface VerseSelectionState {
-  isSelected: boolean;
-  isInSelectionRange: boolean;
-  isPassageSelection: boolean;
+  isSelected: boolean
+  isInSelectionRange: boolean
+  isPassageSelection: boolean
 }
 
 export interface VerseNoteIndicatorState {
-  hasOwnNote: boolean;
-  isPassageAnchor: boolean;
-  isInPassageRange: boolean;
+  hasOwnNote: boolean
+  isPassageAnchor: boolean
+  isInPassageRange: boolean
 }
 
 export interface VerseHoverState {
-  isPassageRangeActive: boolean;
-  isNoteBubbleHovered: boolean;
+  isPassageRangeActive: boolean
+  isNoteBubbleHovered: boolean
 }
 
 export interface VerseFocusState {
-  isTarget: boolean;
+  isTarget: boolean
 }
 
 export interface VerseInteractionHandlers {
-  onAddNote: (verseNumber: number) => void;
-  onMouseDown: (verseNumber: number) => void;
-  onMouseEnter: (verseNumber: number) => void;
-  onMouseLeave: () => void;
+  onAddNote: (verseNumber: number) => void
+  onMouseDown: (verseNumber: number) => void
+  onMouseEnter: (verseNumber: number) => void
+  onMouseLeave: () => void
 }
 
 interface VerseRowLeftProps {
-  verseNumber: number;
-  text: string;
-  selection: VerseSelectionState;
-  noteIndicator: VerseNoteIndicatorState;
-  hover: VerseHoverState;
-  focus?: VerseFocusState;
-  forceAddButtonVisible?: boolean;
-  addNoteTourId?: string;
-  rowTourId?: string;
-  handlers: VerseInteractionHandlers;
+  verseNumber: number
+  text: string
+  selection: VerseSelectionState
+  noteIndicator: VerseNoteIndicatorState
+  hover: VerseHoverState
+  focus?: VerseFocusState
+  forceAddButtonVisible?: boolean
+  addNoteTourId?: string
+  rowTourId?: string
+  handlers: VerseInteractionHandlers
 }
 
 export const VerseRowLeft = memo(function VerseRowLeft({
@@ -55,12 +55,12 @@ export const VerseRowLeft = memo(function VerseRowLeft({
   rowTourId,
   handlers,
 }: VerseRowLeftProps) {
-  const { isSelected, isInSelectionRange, isPassageSelection } = selection;
-  const { hasOwnNote, isPassageAnchor, isInPassageRange } = noteIndicator;
-  const { isPassageRangeActive, isNoteBubbleHovered } = hover;
-  const isFocusTarget = focus?.isTarget ?? false;
-  const shouldFlipTooltipBelow = verseNumber <= 2;
-  const { onAddNote, onMouseDown, onMouseEnter, onMouseLeave } = handlers;
+  const { isSelected, isInSelectionRange, isPassageSelection } = selection
+  const { hasOwnNote, isPassageAnchor, isInPassageRange } = noteIndicator
+  const { isPassageRangeActive, isNoteBubbleHovered } = hover
+  const isFocusTarget = focus?.isTarget ?? false
+  const shouldFlipTooltipBelow = verseNumber <= 2
+  const { onAddNote, onMouseDown, onMouseEnter, onMouseLeave } = handlers
   return (
     <div
       data-verse-number={verseNumber}
@@ -92,11 +92,11 @@ export const VerseRowLeft = memo(function VerseRowLeft({
           !isInSelectionRange &&
           !isNoteBubbleHovered &&
           "bg-amber-50/60 dark:bg-amber-800/20",
-        !isSelected && !isInSelectionRange && "hover:bg-muted"
+        !isSelected && !isInSelectionRange && "hover:bg-muted",
       )}
       onMouseDown={(e) => {
-        e.preventDefault();
-        onMouseDown(verseNumber);
+        e.preventDefault()
+        onMouseDown(verseNumber)
       }}
       onMouseEnter={() => onMouseEnter(verseNumber)}
       onMouseLeave={onMouseLeave}
@@ -124,14 +124,16 @@ export const VerseRowLeft = memo(function VerseRowLeft({
       <div
         className={cn(
           "group/addbtn relative shrink-0 ml-3 self-stretch flex items-center justify-center min-w-8 transition-opacity",
-          forceAddButtonVisible ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+          forceAddButtonVisible
+            ? "opacity-100"
+            : "opacity-0 group-hover:opacity-100",
         )}
       >
         <button
           className="w-full h-full flex items-center justify-center px-2 rounded hover:bg-primary/10"
           onClick={(e) => {
-            e.stopPropagation();
-            onAddNote(verseNumber);
+            e.stopPropagation()
+            onAddNote(verseNumber)
           }}
           {...(addNoteTourId ? { "data-tour-id": addNoteTourId } : {})}
         >
@@ -140,12 +142,12 @@ export const VerseRowLeft = memo(function VerseRowLeft({
         <span
           className={cn(
             "pointer-events-none absolute left-1/2 -translate-x-1/2 px-3 py-1.5 text-xs rounded-md bg-foreground text-background whitespace-nowrap opacity-0 group-hover/addbtn:opacity-100 transition-opacity z-50",
-            shouldFlipTooltipBelow ? "top-full mt-1.5" : "bottom-full mb-1.5"
+            shouldFlipTooltipBelow ? "top-full mt-1.5" : "bottom-full mb-1.5",
           )}
         >
           Add note
         </span>
       </div>
     </div>
-  );
-});
+  )
+})

@@ -323,7 +323,16 @@ export function PassageView({
         >
           <div>
             <AnimatePresence initial={false}>
-              {filteredVerses.map((verse) => (
+              {filteredVerses.map((verse) => {
+                const passageAnchor = verseToPassageAnchor.get(verse.verseNumber)
+                const isPassageRangeActive =
+                  passageAnchor !== undefined &&
+                  (hoveredVerse === passageAnchor || hoveredPassageBubble === passageAnchor)
+                const isNoteBubbleHovered =
+                  hoveredSingleBubble === verse.verseNumber ||
+                  hoveredPassageBubble === verse.verseNumber
+
+                return (
                 <motion.div
                   key={verse.verseNumber}
                   initial={{ height: 0, opacity: 0 }}
@@ -343,10 +352,9 @@ export function PassageView({
                     isPassageSelection={isPassageSelection}
                     singleNotes={verse.singleNotes}
                     passageNotes={verse.passageNotes}
-                    passageAnchor={verseToPassageAnchor.get(verse.verseNumber)}
-                    hoveredVerse={hoveredVerse}
-                    hoveredPassageBubble={hoveredPassageBubble}
-                    hoveredSingleBubble={hoveredSingleBubble}
+                    passageAnchor={passageAnchor}
+                    isPassageRangeActive={isPassageRangeActive}
+                    isNoteBubbleHovered={isNoteBubbleHovered}
                     openVerseKey={openVerseKey}
                     openPassageKey={openPassageKey}
                     creatingFor={creatingFor}
@@ -379,7 +387,8 @@ export function PassageView({
                   rowTourId={verse.verseNumber === 1 ? "passage-verse-1" : undefined}
                 />
               </motion.div>
-            ))}
+                )
+              })}
             </AnimatePresence>
 
             <div className={topGridClass}>
