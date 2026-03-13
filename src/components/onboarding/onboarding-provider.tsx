@@ -75,15 +75,13 @@ const MAIN_TOUR_STEPS: TourStep[] = [
   {
     id: "search-button",
     title: "Search your notes",
-    description:
-      `Open search whenever you want to find notes by text or tags. Use ${modKey}K for a quick search.`,
+    description: `Open search whenever you want to find notes by text or tags. Use ${modKey}K for a quick search.`,
     targetIds: ["app-search-button"],
   },
   {
     id: "passage-selector",
     title: "Jump to another passage",
-    description:
-      `Use the passage selector to move quickly to any passage. Or use ${modKey}G`,
+    description: `Use the passage selector to move quickly to any passage. Or use ${modKey}G`,
     targetIds: ["app-book-selector"],
   },
   {
@@ -296,8 +294,7 @@ export function OnboardingProvider({
       // Scroll the first target into view once it appears (e.g. after page navigation)
       if (!hasScrolled && rect) {
         hasScrolled = true
-        const inViewport =
-          rect.top >= 0 && rect.bottom <= window.innerHeight
+        const inViewport = rect.top >= 0 && rect.bottom <= window.innerHeight
         if (!inViewport) {
           elements[0].scrollIntoView({ behavior: "smooth", block: "start" })
         }
@@ -495,17 +492,17 @@ export function OnboardingProvider({
       {children}
       {activeTour && activeStep ? (
         <>
-          <div className="pointer-events-auto fixed inset-0 z-[140] bg-transparent" />
+          <div className="pointer-events-auto fixed inset-0 z-140 bg-transparent" />
           {spotlightStyle ? (
             <div
-              className="pointer-events-none fixed z-[141] rounded-xl border-2 border-sky-400/90 bg-transparent transition-all duration-200"
+              className="pointer-events-none fixed z-141 rounded-xl border-2 border-sky-400/90 bg-transparent transition-all duration-200"
               style={spotlightStyle}
             />
           ) : (
-            <div className="pointer-events-auto fixed inset-0 z-[141] bg-slate-950/55" />
+            <div className="pointer-events-auto fixed inset-0 z-141 bg-slate-950/55" />
           )}
           <section
-            className="fixed z-[142] rounded-xl border bg-card p-4 shadow-2xl"
+            className="fixed z-142 rounded-xl border bg-card p-4 shadow-2xl"
             style={getCardPosition(targetRect)}
           >
             <div className="space-y-3">
