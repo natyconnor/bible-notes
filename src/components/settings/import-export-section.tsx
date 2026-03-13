@@ -452,7 +452,7 @@ export function ImportExportSection() {
   }
 
   return (
-    <Card>
+    <Card data-tour-id="settings-import-section">
       <CardHeader>
         <CardTitle>Import / Export</CardTitle>
         <CardDescription>

@@ -449,6 +449,7 @@ export function PassageView({
                   onStartCreatingPassageNote={startCreatingPassageNote}
                   forceAddButtonVisible={forceAddButtonVisible && verse.verseNumber === 1}
                   addNoteTourId={verse.verseNumber === 1 ? "passage-add-note" : undefined}
+                  rowTourId={verse.verseNumber === 1 ? "passage-verse-1" : undefined}
                 />
               </motion.div>
             ))}

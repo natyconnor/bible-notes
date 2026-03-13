@@ -13,6 +13,7 @@ import { Link, useLocation, useNavigate } from "@tanstack/react-router"
 import { readSearchWorkspaceState } from "@/lib/search-workspace-state"
 import { cn } from "@/lib/utils"
 import { formatCommandOrControlShortcut } from "@/lib/keyboard-shortcuts"
+import { useOptionalOnboarding } from "@/components/onboarding/onboarding-context"
 
 export function TabBar() {
   const { tabs, activeTabId, setActiveTab, closeTab } = useTabs()
@@ -23,6 +24,8 @@ export function TabBar() {
   const isSearchRoute = location.pathname === "/search"
   const isSettingsRoute = location.pathname.startsWith("/settings")
   const savedSearchState = readSearchWorkspaceState()
+  const onboarding = useOptionalOnboarding()
+  const isToolbarStep = onboarding?.isStepActive("main", "toolbar") ?? false
   const searchShortcutLabel = formatCommandOrControlShortcut("K")
   const passageShortcutLabel = formatCommandOrControlShortcut("G")
   const settingsShortcutLabel = formatCommandOrControlShortcut(",")
@@ -75,7 +78,7 @@ export function TabBar() {
         </div>
         <ScrollBar orientation="horizontal" />
       </ScrollArea>
-      <div className="flex items-center gap-1 mx-1 shrink-0">
+      <div className="flex items-center gap-1 mx-1 shrink-0" data-tour-id="app-toolbar">
         <TooltipButton
           asChild
           variant="ghost"
@@ -109,23 +112,28 @@ export function TabBar() {
             </TooltipButton>
           }
         />
-        <TooltipButton
-          asChild
-          variant="ghost"
-          size="icon"
-          className={cn(
-            "h-8 w-8",
-            isSettingsRoute &&
-              "h-10 w-10 rounded-none border-b-2 border-b-primary bg-background text-foreground",
+        <div className="relative">
+          <TooltipButton
+            asChild
+            variant="ghost"
+            size="icon"
+            className={cn(
+              "h-8 w-8",
+              isSettingsRoute &&
+                "h-10 w-10 rounded-none border-b-2 border-b-primary bg-background text-foreground",
+            )}
+            tooltip={`Open settings (${settingsShortcutLabel})`}
+            aria-label="Open settings"
+            data-tour-id="app-settings-button"
+          >
+            <Link to="/settings">
+              <Settings className="h-4 w-4" />
+            </Link>
+          </TooltipButton>
+          {isToolbarStep && (
+            <span className="pointer-events-none absolute -inset-1 animate-pulse rounded-full ring-2 ring-sky-400" />
           )}
-          tooltip={`Open settings (${settingsShortcutLabel})`}
-          aria-label="Open settings"
-          data-tour-id="app-settings-button"
-        >
-          <Link to="/settings">
-            <Settings className="h-4 w-4" />
-          </Link>
-        </TooltipButton>
+        </div>
         <ThemeDropdown />
         <TooltipButton
           variant="ghost"

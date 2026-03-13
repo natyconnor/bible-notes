@@ -61,6 +61,7 @@ export interface VerseRowWithNotesProps {
   onStartCreatingPassageNote: (verseRef: VerseRef) => void
   forceAddButtonVisible?: boolean
   addNoteTourId?: string
+  rowTourId?: string
 }
 
 export const VerseRowWithNotes = memo(function VerseRowWithNotes({
@@ -102,6 +103,7 @@ export const VerseRowWithNotes = memo(function VerseRowWithNotes({
   onStartCreatingPassageNote,
   forceAddButtonVisible = false,
   addNoteTourId,
+  rowTourId,
 }: VerseRowWithNotesProps) {
   const isReadMode = viewMode === "read"
   const useDialogEditors = editorMode === "dialog"
@@ -221,6 +223,7 @@ export const VerseRowWithNotes = memo(function VerseRowWithNotes({
           }}
           forceAddButtonVisible={forceAddButtonVisible}
           addNoteTourId={addNoteTourId}
+          rowTourId={rowTourId}
           handlers={{
             onAddNote,
             onMouseDown,

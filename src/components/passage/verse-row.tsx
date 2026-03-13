@@ -39,6 +39,7 @@ interface VerseRowLeftProps {
   focus?: VerseFocusState;
   forceAddButtonVisible?: boolean;
   addNoteTourId?: string;
+  rowTourId?: string;
   handlers: VerseInteractionHandlers;
 }
 
@@ -51,6 +52,7 @@ export const VerseRowLeft = memo(function VerseRowLeft({
   focus,
   forceAddButtonVisible = false,
   addNoteTourId,
+  rowTourId,
   handlers,
 }: VerseRowLeftProps) {
   const { isSelected, isInSelectionRange, isPassageSelection } = selection;
@@ -62,6 +64,7 @@ export const VerseRowLeft = memo(function VerseRowLeft({
   return (
     <div
       data-verse-number={verseNumber}
+      {...(rowTourId ? { "data-tour-id": rowTourId } : {})}
       className={cn(
         "group relative flex gap-2 py-2 px-3 min-h-10 rounded-sm transition-colors select-none cursor-pointer",
         isSelected &&

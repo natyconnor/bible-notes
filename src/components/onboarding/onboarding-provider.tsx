@@ -41,8 +41,9 @@ const MAIN_TOUR_STEPS: TourStep[] = [
     id: "add-note",
     title: "Add notes",
     description:
-      "Use the add button beside a verse to start a note for that verse. You can have multiple notes per verse, or even select multiple verses",
-    targetIds: ["passage-add-note"],
+      "Use the + button beside a verse to start a note. You can have multiple notes per verse, or even select multiple verses.",
+    targetIds: ["passage-verse-1"],
+    cardAnchorIds: ["passage-add-note"],
   },
   {
     id: "note-body",
@@ -52,18 +53,18 @@ const MAIN_TOUR_STEPS: TourStep[] = [
     targetIds: ["note-editor-body"],
   },
   {
-    id: "note-tags",
-    title: "Tag your notes",
-    description:
-      "Tags help organize themes and make notes easier to search later.",
-    targetIds: ["note-editor-tags"],
-  },
-  {
     id: "inline-links",
     title: "Create verse links",
     description:
       "Use @ to type a verse reference like John 3:16 to insert a clickable verse link.",
     targetIds: ["note-editor-link-demo"],
+  },
+  {
+    id: "note-tags",
+    title: "Tag your notes",
+    description:
+      "Tags help organize themes and make notes easier to search later.",
+    targetIds: ["note-editor-tags"],
   },
   {
     id: "reading-mode",
@@ -73,23 +74,17 @@ const MAIN_TOUR_STEPS: TourStep[] = [
     targetIds: ["passage-view-mode-toggle"],
   },
   {
-    id: "search-button",
-    title: "Search your notes",
-    description: `Open search whenever you want to find notes by text or tags. Use ${modKey}K for a quick search.`,
-    targetIds: ["app-search-button"],
+    id: "toolbar",
+    title: "Explore the toolbar",
+    description: `Use the toolbar to search notes (${modKey}K), jump to a passage (${modKey}G), or open settings (${modKey},). We'll head to Settings next to finish setup.`,
+    targetIds: ["app-toolbar"],
   },
   {
-    id: "passage-selector",
-    title: "Jump to another passage",
-    description: `Use the passage selector to move quickly to any passage. Or use ${modKey}G`,
-    targetIds: ["app-book-selector"],
-  },
-  {
-    id: "settings-button",
-    title: "Open settings",
+    id: "import-notes",
+    title: "Import your notes",
     description:
-      "Settings is where you can import notes, and manage your tag catalog. Let's head there now.",
-    targetIds: ["app-settings-button"],
+      "If you've been keeping notes in Excel spreadsheets, you can import them here so nothing is lost.",
+    targetIds: ["settings-import-section"],
   },
   {
     id: "starter-tags",
@@ -261,6 +256,7 @@ export function OnboardingProvider({
     Partial<Record<OnboardingTourName, true>>
   >({})
   const [targetRect, setTargetRect] = useState<DOMRect | null>(null)
+  const [cardAnchorRect, setCardAnchorRect] = useState<DOMRect | null>(null)
   const finishingTourRef = useRef<OnboardingTourName | null>(null)
 
   const isMainComplete =
@@ -281,6 +277,7 @@ export function OnboardingProvider({
   useEffect(() => {
     if (!activeStep) {
       setTargetRect(null)
+      setCardAnchorRect(null)
       return
     }
 
@@ -291,7 +288,13 @@ export function OnboardingProvider({
       const rect = getUnionRect(elements)
       setTargetRect(rect)
 
-      // Scroll the first target into view once it appears (e.g. after page navigation)
+      if (activeStep.cardAnchorIds) {
+        const anchorElements = getTargetElements(activeStep.cardAnchorIds)
+        setCardAnchorRect(getUnionRect(anchorElements))
+      } else {
+        setCardAnchorRect(null)
+      }
+
       if (!hasScrolled && rect) {
         hasScrolled = true
         const inViewport = rect.top >= 0 && rect.bottom <= window.innerHeight
@@ -442,7 +445,7 @@ export function OnboardingProvider({
     const nextStep = activeSteps[nextIndex]
     setStepIndex(nextIndex)
 
-    if (activeTour === "main" && nextStep.id === "starter-tags") {
+    if (activeTour === "main" && nextStep.id === "import-notes") {
       void navigate({ to: "/settings" })
     }
   }
@@ -453,7 +456,7 @@ export function OnboardingProvider({
     const nextIndex = Math.max(stepIndex - 1, 0)
     setStepIndex(nextIndex)
 
-    if (activeTour === "main" && nextIndex <= 4 && !isPassageRoute) {
+    if (activeTour === "main" && nextIndex <= 5 && !isPassageRoute) {
       setPendingTour("main")
       void navigate({
         to: "/passage/$passageId",
@@ -503,7 +506,7 @@ export function OnboardingProvider({
           )}
           <section
             className="fixed z-142 rounded-xl border bg-card p-4 shadow-2xl"
-            style={getCardPosition(targetRect)}
+            style={getCardPosition(cardAnchorRect ?? targetRect)}
           >
             <div className="space-y-3">
               <div className="space-y-1">

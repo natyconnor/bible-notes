@@ -7,6 +7,8 @@ export interface OnboardingStep {
   title: string
   description: string
   targetIds: string[]
+  /** When set, the info card anchors to these elements instead of the spotlight rect. */
+  cardAnchorIds?: string[]
 }
 
 export interface OnboardingContextValue {
