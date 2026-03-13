@@ -38,6 +38,8 @@ export default defineSchema({
   userSettings: defineTable({
     userId: v.id("users"),
     starterTagsSetupCompletedAt: v.optional(v.number()),
+    mainOnboardingCompletedAt: v.optional(v.number()),
+    advancedSearchOnboardingCompletedAt: v.optional(v.number()),
     starterTagCategoryColors: v.optional(v.record(v.string(), v.string())),
     createdAt: v.number(),
     updatedAt: v.number(),

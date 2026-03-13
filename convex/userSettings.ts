@@ -3,6 +3,7 @@ import { v } from "convex/values"
 import type { Id } from "./_generated/dataModel"
 import type { MutationCtx } from "./_generated/server"
 import { getCurrentUserId, getCurrentUserIdOrNull } from "./lib/auth"
+import { resolveOnboardingStatus } from "./lib/onboarding"
 
 const HEX_COLOR_PATTERN = /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/
 
@@ -25,20 +26,21 @@ async function getOrCreateUserSettings(
   return await ctx.db.get(settingsId)
 }
 
-export const getStarterTagsSetupStatus = query({
+const onboardingStatusValue = v.object({
+  needsStarterTagsSetup: v.boolean(),
+  starterTagsSetupCompletedAt: v.optional(v.number()),
+  mainOnboardingCompletedAt: v.optional(v.number()),
+  advancedSearchOnboardingCompletedAt: v.optional(v.number()),
+  categoryColors: v.record(v.string(), v.string()),
+})
+
+export const getOnboardingStatus = query({
   args: {},
-  returns: v.object({
-    needsStarterTagsSetup: v.boolean(),
-    completedAt: v.optional(v.number()),
-    categoryColors: v.record(v.string(), v.string()),
-  }),
+  returns: onboardingStatusValue,
   handler: async (ctx) => {
     const userId = await getCurrentUserIdOrNull(ctx)
     if (!userId) {
-      return {
-        needsStarterTagsSetup: false,
-        categoryColors: {},
-      }
+      return resolveOnboardingStatus(null)
     }
 
     const settings = await ctx.db
@@ -46,12 +48,7 @@ export const getStarterTagsSetupStatus = query({
       .withIndex("by_userId", (q) => q.eq("userId", userId))
       .first()
 
-    const completedAt = settings?.starterTagsSetupCompletedAt
-    return {
-      needsStarterTagsSetup: completedAt === undefined,
-      completedAt,
-      categoryColors: settings?.starterTagCategoryColors ?? {},
-    }
+    return resolveOnboardingStatus(settings)
   },
 })
 
@@ -71,6 +68,56 @@ export const completeStarterTagsSetup = mutation({
 
     await ctx.db.patch(settings._id, {
       starterTagsSetupCompletedAt: now,
+      updatedAt: now,
+    })
+
+    return {
+      completedAt: now,
+    }
+  },
+})
+
+export const completeMainOnboarding = mutation({
+  args: {},
+  returns: v.object({
+    completedAt: v.number(),
+  }),
+  handler: async (ctx) => {
+    const userId = await getCurrentUserId(ctx)
+    const now = Date.now()
+    const settings = await getOrCreateUserSettings(ctx, userId, now)
+
+    if (!settings) {
+      throw new Error("Unable to initialize user settings")
+    }
+
+    await ctx.db.patch(settings._id, {
+      mainOnboardingCompletedAt: now,
+      updatedAt: now,
+    })
+
+    return {
+      completedAt: now,
+    }
+  },
+})
+
+export const completeAdvancedSearchOnboarding = mutation({
+  args: {},
+  returns: v.object({
+    completedAt: v.number(),
+  }),
+  handler: async (ctx) => {
+    const userId = await getCurrentUserId(ctx)
+    const now = Date.now()
+    const settings = await getOrCreateUserSettings(ctx, userId, now)
+
+    if (!settings) {
+      throw new Error("Unable to initialize user settings")
+    }
+
+    await ctx.db.patch(settings._id, {
+      advancedSearchOnboardingCompletedAt: now,
       updatedAt: now,
     })
 

@@ -70,6 +70,7 @@ export function TabBar() {
           )}
           tooltip="Open search workspace"
           aria-label="Open search workspace"
+          data-tour-id="app-search-button"
         >
           <Link to="/search" search={searchLinkState}>
             <Search className="h-4 w-4" />
@@ -85,6 +86,7 @@ export function TabBar() {
               className="h-8 w-8"
               tooltip="Go to passage"
               aria-label="Go to passage"
+              data-tour-id="app-book-selector"
             >
               <TableOfContents className="h-4 w-4" />
             </TooltipButton>
@@ -101,6 +103,7 @@ export function TabBar() {
           )}
           tooltip="Open settings"
           aria-label="Open settings"
+          data-tour-id="app-settings-button"
         >
           <Link to="/settings">
             <Settings className="h-4 w-4" />

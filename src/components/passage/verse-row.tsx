@@ -37,6 +37,8 @@ interface VerseRowLeftProps {
   noteIndicator: VerseNoteIndicatorState;
   hover: VerseHoverState;
   focus?: VerseFocusState;
+  forceAddButtonVisible?: boolean;
+  addNoteTourId?: string;
   handlers: VerseInteractionHandlers;
 }
 
@@ -47,6 +49,8 @@ export const VerseRowLeft = memo(function VerseRowLeft({
   noteIndicator,
   hover,
   focus,
+  forceAddButtonVisible = false,
+  addNoteTourId,
   handlers,
 }: VerseRowLeftProps) {
   const { isSelected, isInSelectionRange, isPassageSelection } = selection;
@@ -114,13 +118,19 @@ export const VerseRowLeft = memo(function VerseRowLeft({
       <span className="font-serif text-base leading-relaxed flex-1 min-w-0 whitespace-pre-wrap">
         {text}
       </span>
-      <div className="group/addbtn relative shrink-0 ml-3 self-stretch flex items-center justify-center min-w-8 opacity-0 group-hover:opacity-100 transition-opacity">
+      <div
+        className={cn(
+          "group/addbtn relative shrink-0 ml-3 self-stretch flex items-center justify-center min-w-8 transition-opacity",
+          forceAddButtonVisible ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+        )}
+      >
         <button
           className="w-full h-full flex items-center justify-center px-2 rounded hover:bg-primary/10"
           onClick={(e) => {
             e.stopPropagation();
             onAddNote(verseNumber);
           }}
+          {...(addNoteTourId ? { "data-tour-id": addNoteTourId } : {})}
         >
           <Plus className="h-4 w-4 text-primary" />
         </button>

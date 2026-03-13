@@ -1,7 +1,6 @@
 import { createFileRoute, Navigate, useNavigate } from "@tanstack/react-router"
 import { useEffect, useMemo, useState } from "react"
-import { useQuery } from "convex-helpers/react/cache"
-import { useMutation } from "convex/react"
+import { useQuery, useMutation } from "convex/react"
 import { Check, FlaskConical, Loader2, Trash2 } from "lucide-react"
 
 import { api } from "../../../convex/_generated/api"
@@ -19,11 +18,13 @@ import {
 import { cn } from "@/lib/utils"
 import { normalizeTag } from "@/lib/tag-utils"
 import { ImportExportSection } from "@/components/settings/import-export-section"
+import { useOnboarding } from "@/components/onboarding/onboarding-context"
 import {
   ALL_STARTER_TAGS,
   DEFAULT_STARTER_TAG_CATEGORY_COLORS,
   STARTER_TAG_CATEGORIES,
 } from "@/lib/starter-tags"
+import type { OnboardingStatus } from "../../../convex/lib/onboarding"
 
 export const Route = createFileRoute("/settings/tags")({
   component: LegacyTagSettingsRedirect,
@@ -36,7 +37,9 @@ function LegacyTagSettingsRedirect() {
 export function SettingsPage() {
   const navigate = useNavigate()
   const catalog = useQuery(api.tags.listCatalog)
-  const setupStatus = useQuery(api.userSettings.getStarterTagsSetupStatus)
+  const setupStatus: OnboardingStatus | undefined = useQuery(
+    api.userSettings.getOnboardingStatus,
+  )
   const addMany = useMutation(api.tags.addMany)
   const removeMany = useMutation(api.tags.removeMany)
   const removeCustomTagAndDetach = useMutation(
@@ -47,6 +50,7 @@ export function SettingsPage() {
     api.userSettings.setStarterTagCategoryColor,
   )
   const seedDevChapterNotes = useMutation(api.seed.seedDevChapterNotes)
+  const { startTour } = useOnboarding()
 
   const [busyAction, setBusyAction] = useState<string | null>(null)
   const [draftCategoryColors, setDraftCategoryColors] = useState<
@@ -452,7 +456,10 @@ export function SettingsPage() {
           </section>
         )}
 
-        <div className="rounded-lg border bg-card p-4">
+        <div
+          className="rounded-lg border bg-card p-4"
+          data-tour-id="settings-starter-tags-section"
+        >
           <div className="flex flex-wrap items-center justify-between gap-3">
             <p className="text-sm">
               Selected starter tags:{" "}
@@ -463,6 +470,7 @@ export function SettingsPage() {
               size="sm"
               onClick={handleAddAll}
               disabled={busyAction !== null}
+              data-tour-id="settings-add-all-starter-tags"
             >
               {busyAction === "add-all" && (
                 <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -472,7 +480,10 @@ export function SettingsPage() {
           </div>
         </div>
 
-        <div className="space-y-4">
+        <div
+          className="space-y-4"
+          data-tour-id="settings-starter-tag-categories"
+        >
           {STARTER_TAG_CATEGORIES.map((category) => {
             const categorySelectedCount = category.tags.filter((tag) =>
               catalogByTag.has(tag),
@@ -637,6 +648,33 @@ export function SettingsPage() {
             Save and continue
           </Button>
         </div>
+
+        <section className="rounded-lg border bg-card p-4 space-y-3">
+          <div className="space-y-1">
+            <h2 className="text-sm font-semibold">Tutorials</h2>
+            <p className="text-xs text-muted-foreground">
+              Replay the guided tours any time.
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => startTour("main")}
+              disabled={busyAction !== null}
+            >
+              Replay main tour
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => startTour("search")}
+              disabled={busyAction !== null}
+            >
+              Replay advanced search tour
+            </Button>
+          </div>
+        </section>
       </div>
 
       <Dialog

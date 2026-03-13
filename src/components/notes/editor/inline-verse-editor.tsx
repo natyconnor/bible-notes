@@ -27,6 +27,7 @@ import { getVerseRefBoundsErrorMessage } from "@/lib/verse-ref-validation";
 import { useDebouncedEsvReferenceValidation } from "@/hooks/use-esv-reference";
 import { VerseRefPreviewCard } from "@/components/verse-ref/verse-ref-hover-preview";
 import { useVerseLinkNavigation } from "@/hooks/use-verse-link-navigation";
+import { useTypedText } from "@/components/onboarding/use-typed-text";
 
 interface CurrentChapter {
   book: string;
@@ -39,6 +40,10 @@ interface InlineVerseEditorProps {
   currentChapter?: CurrentChapter;
   placeholder?: string;
   className?: string;
+  tourId?: string;
+  tutorialPreviewText?: string;
+  tutorialAnimateText?: boolean;
+  tutorialPreviewQuery?: string;
   onChange: (body: NoteBody) => void;
 }
 
@@ -526,6 +531,10 @@ export function InlineVerseEditor({
   currentChapter,
   placeholder = "Write your note...",
   className,
+  tourId,
+  tutorialPreviewText,
+  tutorialAnimateText = false,
+  tutorialPreviewQuery,
   onChange,
 }: InlineVerseEditorProps) {
   const wrapperRef = useRef<HTMLDivElement>(null);
@@ -542,6 +551,38 @@ export function InlineVerseEditor({
     null
   );
   const activeQueryMatchRef = useRef<ActiveQueryMatch | null>(null);
+  const showTutorialText = !!tutorialPreviewText;
+  const isTutorialLinkStep =
+    !!tutorialPreviewText && !!tutorialPreviewQuery && !tutorialAnimateText;
+  const effectiveQuery =
+    isQueryActive || !tutorialPreviewQuery ? activeQuery : tutorialPreviewQuery;
+  const trimmedEffectiveQuery = effectiveQuery.trim();
+  const {
+    visibleText: animatedTutorialText,
+    isComplete: isTutorialTextComplete,
+  } = useTypedText({
+    active: showTutorialText && tutorialAnimateText,
+    text: tutorialPreviewText ?? "",
+    charIntervalMs: 18,
+    startDelayMs: 120,
+    loop: true,
+    pauseAtEndMs: 1400,
+  });
+  const {
+    visibleText: animatedTutorialQuery,
+    isComplete: isTutorialQueryComplete,
+  } = useTypedText({
+    active: isTutorialLinkStep,
+    text: tutorialPreviewQuery ? `@${tutorialPreviewQuery}` : "",
+    charIntervalMs: 52,
+    startDelayMs: 260,
+    loop: true,
+    pauseAtEndMs: 1800,
+  });
+  const [isTutorialLinkInserted, setIsTutorialLinkInserted] = useState(false);
+  const showTutorialQueryPreview =
+    !isQueryActive && isTutorialLinkStep && isTutorialQueryComplete && !isTutorialLinkInserted;
+  const showSuggestionPopover = isQueryActive || showTutorialQueryPreview;
 
   const parserDefaults = useMemo(
     () => ({
@@ -551,18 +592,17 @@ export function InlineVerseEditor({
     [verseRef.book, verseRef.chapter]
   );
 
-  const trimmedActiveQuery = activeQuery.trim();
   const starterSuggestions = useMemo(
     () => buildStarterSuggestions(verseRef.book),
     [verseRef.book]
   );
   const parsedRef = useMemo(
-    () => parseVerseRef(activeQuery, parserDefaults),
-    [activeQuery, parserDefaults]
+    () => parseVerseRef(effectiveQuery, parserDefaults),
+    [effectiveQuery, parserDefaults]
   );
   const draft = useMemo(
-    () => readReferenceDraft(activeQuery, parserDefaults),
-    [activeQuery, parserDefaults]
+    () => readReferenceDraft(effectiveQuery, parserDefaults),
+    [effectiveQuery, parserDefaults]
   );
   const localValidationMessage = useMemo(
     () => (parsedRef ? getVerseRefBoundsErrorMessage(parsedRef) : null),
@@ -578,22 +618,22 @@ export function InlineVerseEditor({
 
   const hasStructuredReferenceInput = useMemo(() => {
     if (draft) return true;
-    if (!activeQuery.endsWith(" ")) return false;
-    return resolveCanonicalBookName(trimmedActiveQuery) !== null;
-  }, [activeQuery, draft, trimmedActiveQuery]);
+    if (!effectiveQuery.endsWith(" ")) return false;
+    return resolveCanonicalBookName(trimmedEffectiveQuery) !== null;
+  }, [draft, effectiveQuery, trimmedEffectiveQuery]);
 
   const bookSuggestions = useMemo(() => {
-    if (!trimmedActiveQuery) return starterSuggestions;
+    if (!trimmedEffectiveQuery) return starterSuggestions;
     if (hasStructuredReferenceInput) return [];
-    return buildVerseSuggestions(activeQuery, parserDefaults)
+    return buildVerseSuggestions(effectiveQuery, parserDefaults)
       .filter((item): item is VerseSuggestionItem => item.kind === "book")
       .slice(0, 6);
   }, [
-    activeQuery,
+    effectiveQuery,
     hasStructuredReferenceInput,
     parserDefaults,
     starterSuggestions,
-    trimmedActiveQuery,
+    trimmedEffectiveQuery,
   ]);
 
   const referenceSuggestion = useMemo(() => {
@@ -625,7 +665,7 @@ export function InlineVerseEditor({
       : Math.min(highlightedIndex, actionableSuggestions.length - 1);
 
   const queryStatus = useMemo<QueryStatusState>(() => {
-    if (!trimmedActiveQuery) {
+    if (!trimmedEffectiveQuery) {
       return {
         tone: "info",
         label: "Type a verse like John 3:16.",
@@ -686,8 +726,8 @@ export function InlineVerseEditor({
     }
 
     const bookOnlyMatch =
-      activeQuery.endsWith(" ") && !draft
-        ? resolveCanonicalBookName(trimmedActiveQuery)
+      effectiveQuery.endsWith(" ") && !draft
+        ? resolveCanonicalBookName(trimmedEffectiveQuery)
         : null;
     if (bookOnlyMatch) {
       return {
@@ -716,13 +756,13 @@ export function InlineVerseEditor({
         "Verse link suggestions will stay open while you type the reference.",
     };
   }, [
-    activeQuery,
     bookSuggestions.length,
     draft,
     draftChapterErrorMessage,
+    effectiveQuery,
     localValidationMessage,
     parsedRef,
-    trimmedActiveQuery,
+    trimmedEffectiveQuery,
     validation.data,
     validation.status,
   ]);
@@ -810,11 +850,73 @@ export function InlineVerseEditor({
     onChange(readBodyFromEditor(editorRef.current));
   }, [initialBody, onChange]);
 
+  useEffect(() => {
+    if (!showTutorialText && !tutorialPreviewQuery) return;
+    const editor = editorRef.current;
+    if (!editor) return;
+    editor.focus();
+  }, [showTutorialText, tutorialPreviewQuery]);
+
+  useEffect(() => {
+    let timeoutId: number | null = null
+
+    if (!isTutorialLinkStep) {
+      timeoutId = window.setTimeout(() => {
+        setIsTutorialLinkInserted(false);
+      }, 0);
+      return;
+    }
+    if (!isTutorialQueryComplete) {
+      timeoutId = window.setTimeout(() => {
+        setIsTutorialLinkInserted(false);
+      }, 0);
+      return;
+    }
+
+    timeoutId = window.setTimeout(() => {
+      setIsTutorialLinkInserted(true);
+    }, 650);
+
+    return () => {
+      if (timeoutId !== null) {
+        window.clearTimeout(timeoutId);
+      }
+    };
+  }, [isTutorialLinkStep, isTutorialQueryComplete]);
+
+  const displayedTutorialText =
+    showTutorialText && tutorialAnimateText
+      ? animatedTutorialText
+      : (tutorialPreviewText ?? "");
+  const shouldShowTutorialCursor =
+    (showTutorialText && tutorialAnimateText && !isTutorialTextComplete) ||
+    (isTutorialLinkStep && !isTutorialLinkInserted);
+
   return (
     <div ref={wrapperRef} className={cn("relative", className)}>
-      {!isFocused && isEmpty ? (
+      {!isFocused && isEmpty && !showTutorialText ? (
         <div className="pointer-events-none absolute left-3 top-2.5 text-sm text-muted-foreground">
           {placeholder}
+        </div>
+      ) : null}
+      {showTutorialText ? (
+        <div className="pointer-events-none absolute inset-x-3 top-2.5 z-10 whitespace-pre-wrap text-sm leading-relaxed text-foreground">
+          {displayedTutorialText}
+          {isTutorialLinkStep ? (
+            <>
+              {"\n"}
+              {isTutorialLinkInserted ? (
+                <span className={EDITOR_PILL_CLASSNAME}>{tutorialPreviewQuery}</span>
+              ) : (
+                <span className="font-mono text-sky-700 dark:text-sky-300">
+                  {animatedTutorialQuery}
+                </span>
+              )}
+            </>
+          ) : null}
+          {shouldShowTutorialCursor ? (
+            <span className="ml-0.5 inline-block h-[1.05em] w-px translate-y-0.5 animate-pulse bg-foreground/70 align-bottom" />
+          ) : null}
         </div>
       ) : null}
       <div
@@ -827,6 +929,7 @@ export function InlineVerseEditor({
           "min-h-[96px] rounded-md border bg-background px-3 py-2.5 text-sm leading-relaxed outline-hidden whitespace-pre-wrap",
           "focus:border-ring focus:ring-ring/50 focus:ring-[3px]"
         )}
+        {...(tourId ? { "data-tour-id": tourId } : {})}
         onFocus={() => setIsFocused(true)}
         onBlur={() => {
           setTimeout(() => {
@@ -983,88 +1086,95 @@ export function InlineVerseEditor({
         }}
       />
 
-      {isQueryActive && (
-        <div className="absolute left-0 right-0 top-full z-50 mt-1 rounded-md border bg-popover p-1 shadow-lg">
-          <div
-            className={cn(
-              "mb-1 rounded-sm px-2 py-2 text-left",
-              queryStatus.tone === "error" &&
-                "bg-destructive/10 text-destructive",
-              queryStatus.tone === "success" &&
-                "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300",
-              queryStatus.tone === "loading" &&
-                "bg-sky-500/10 text-sky-700 dark:text-sky-300",
-              queryStatus.tone === "info" && "bg-muted/70 text-foreground"
-            )}
-          >
-            <div className="flex items-start gap-2">
-              {queryStatus.tone === "loading" ? (
-                <Loader2 className="mt-0.5 h-3.5 w-3.5 shrink-0 animate-spin" />
-              ) : queryStatus.tone === "success" ? (
-                <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-              ) : queryStatus.tone === "error" ? (
-                <AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-              ) : (
-                <BookOpen className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-              )}
-              <div className="min-w-0">
-                <div className="text-sm font-medium">{queryStatus.label}</div>
-                {queryStatus.showSpinner ? (
-                  <div className="mt-1 flex items-center">
-                    <Loader2
-                      className="h-3 w-3 animate-spin opacity-70"
-                      aria-label="Loading verse preview"
-                    />
-                  </div>
-                ) : queryStatus.previewText ? (
-                  <div className="mt-1 truncate text-xs opacity-80">
-                    {queryStatus.previewText}
-                  </div>
-                ) : queryStatus.description ? (
-                  <div className="text-xs opacity-80">
-                    {queryStatus.description}
-                  </div>
-                ) : null}
+      {showSuggestionPopover && (
+        <div className="absolute left-0 right-0 top-full z-50 mt-1">
+          <div className="rounded-md border bg-popover p-1 shadow-lg">
+            {showTutorialQueryPreview ? (
+              <div className="mb-1 rounded-sm border border-sky-400/30 bg-sky-500/10 px-2 py-1 text-[11px] font-medium text-sky-700 dark:text-sky-300">
+                Preview of the verse-link suggestion for what you typed above.
               </div>
-            </div>
-          </div>
-
-          {actionableSuggestions.length > 0 ? (
-            actionableSuggestions.map((suggestion, index) => (
-              <button
-                key={suggestion.key}
-                type="button"
-                className={cn(
-                  "flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-left text-sm transition-colors hover:bg-accent/60",
-                  index === activeHighlightedIndex &&
-                    "bg-accent text-accent-foreground"
-                )}
-                onMouseDown={(event) => {
-                  event.preventDefault();
-                  setHighlightedIndex(index);
-                  handleSelectSuggestion(suggestion);
-                }}
-              >
-                {suggestion.kind === "reference" ? (
-                  <Link2 className="h-3.5 w-3.5 text-sky-600 dark:text-sky-400" />
+            ) : null}
+            <div
+              className={cn(
+                "mb-1 rounded-sm px-2 py-2 text-left",
+                queryStatus.tone === "error" &&
+                  "bg-destructive/10 text-destructive",
+                queryStatus.tone === "success" &&
+                  "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300",
+                queryStatus.tone === "loading" &&
+                  "bg-sky-500/10 text-sky-700 dark:text-sky-300",
+                queryStatus.tone === "info" && "bg-muted/70 text-foreground"
+              )}
+            >
+              <div className="flex items-start gap-2">
+                {queryStatus.tone === "loading" ? (
+                  <Loader2 className="mt-0.5 h-3.5 w-3.5 shrink-0 animate-spin" />
+                ) : queryStatus.tone === "success" ? (
+                  <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                ) : queryStatus.tone === "error" ? (
+                  <AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
                 ) : (
-                  <BookOpen className="h-3.5 w-3.5 text-muted-foreground" />
+                  <BookOpen className="mt-0.5 h-3.5 w-3.5 shrink-0" />
                 )}
                 <div className="min-w-0">
-                  <div className="truncate font-medium">{suggestion.label}</div>
-                  {suggestion.description ? (
-                    <div className="text-xs text-muted-foreground">
-                      {suggestion.description}
+                  <div className="text-sm font-medium">{queryStatus.label}</div>
+                  {queryStatus.showSpinner ? (
+                    <div className="mt-1 flex items-center">
+                      <Loader2
+                        className="h-3 w-3 animate-spin opacity-70"
+                        aria-label="Loading verse preview"
+                      />
+                    </div>
+                  ) : queryStatus.previewText ? (
+                    <div className="mt-1 truncate text-xs opacity-80">
+                      {queryStatus.previewText}
+                    </div>
+                  ) : queryStatus.description ? (
+                    <div className="text-xs opacity-80">
+                      {queryStatus.description}
                     </div>
                   ) : null}
                 </div>
-              </button>
-            ))
-          ) : (
-            <div className="px-2 py-1 text-xs text-muted-foreground">
-              No selectable verse link yet.
+              </div>
             </div>
-          )}
+
+            {actionableSuggestions.length > 0 ? (
+              actionableSuggestions.map((suggestion, index) => (
+                <button
+                  key={suggestion.key}
+                  type="button"
+                  className={cn(
+                    "flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-left text-sm transition-colors hover:bg-accent/60",
+                    index === activeHighlightedIndex &&
+                      "bg-accent text-accent-foreground"
+                  )}
+                  onMouseDown={(event) => {
+                    event.preventDefault();
+                    setHighlightedIndex(index);
+                    handleSelectSuggestion(suggestion);
+                  }}
+                >
+                  {suggestion.kind === "reference" ? (
+                    <Link2 className="h-3.5 w-3.5 text-sky-600 dark:text-sky-400" />
+                  ) : (
+                    <BookOpen className="h-3.5 w-3.5 text-muted-foreground" />
+                  )}
+                  <div className="min-w-0">
+                    <div className="truncate font-medium">{suggestion.label}</div>
+                    {suggestion.description ? (
+                      <div className="text-xs text-muted-foreground">
+                        {suggestion.description}
+                      </div>
+                    ) : null}
+                  </div>
+                </button>
+              ))
+            ) : (
+              <div className="px-2 py-1 text-xs text-muted-foreground">
+                No selectable verse link yet.
+              </div>
+            )}
+          </div>
         </div>
       )}
 

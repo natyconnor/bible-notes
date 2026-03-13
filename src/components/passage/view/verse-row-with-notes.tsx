@@ -59,6 +59,8 @@ export interface VerseRowWithNotesProps {
   onSaveNew: (body: NoteBody, tags: string[]) => Promise<void>
   onClickAway: () => void
   onStartCreatingPassageNote: (verseRef: VerseRef) => void
+  forceAddButtonVisible?: boolean
+  addNoteTourId?: string
 }
 
 export const VerseRowWithNotes = memo(function VerseRowWithNotes({
@@ -98,6 +100,8 @@ export const VerseRowWithNotes = memo(function VerseRowWithNotes({
   onSaveNew,
   onClickAway,
   onStartCreatingPassageNote,
+  forceAddButtonVisible = false,
+  addNoteTourId,
 }: VerseRowWithNotesProps) {
   const isReadMode = viewMode === "read"
   const useDialogEditors = editorMode === "dialog"
@@ -215,6 +219,8 @@ export const VerseRowWithNotes = memo(function VerseRowWithNotes({
           focus={{
             isTarget: isFocusTarget,
           }}
+          forceAddButtonVisible={forceAddButtonVisible}
+          addNoteTourId={addNoteTourId}
           handlers={{
             onAddNote,
             onMouseDown,

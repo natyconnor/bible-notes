@@ -5,6 +5,8 @@ import { TabProvider } from "@/lib/tab-context"
 import { ThemeProvider } from "@/lib/theme-provider"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { AppShell } from "@/components/layout/app-shell"
+import { OnboardingProvider } from "@/components/onboarding/onboarding-provider"
+import { readActiveOnboardingTour } from "@/components/onboarding/onboarding-session"
 import { api } from "../../convex/_generated/api"
 
 export const Route = createRootRoute({
@@ -16,10 +18,11 @@ function RootComponent() {
   const location = useLocation()
   const isLoginRoute = location.pathname === "/login"
   const isSettingsRoute = location.pathname.startsWith("/settings")
-  const starterTagsSetupStatus = useQuery(
-    api.userSettings.getStarterTagsSetupStatus,
+  const onboardingStatus = useQuery(
+    api.userSettings.getOnboardingStatus,
     isAuthenticated ? {} : "skip"
   )
+  const activeOnboardingTour = readActiveOnboardingTour()
 
   if (isLoading) {
     return (
@@ -33,7 +36,7 @@ function RootComponent() {
     return <Navigate to="/login" replace />
   }
 
-  if (isAuthenticated && !isLoginRoute && starterTagsSetupStatus === undefined) {
+  if (isAuthenticated && !isLoginRoute && onboardingStatus === undefined) {
     return (
       <div className="flex h-screen items-center justify-center">
         <div className="text-muted-foreground">Loading...</div>
@@ -45,9 +48,16 @@ function RootComponent() {
     isAuthenticated &&
     !isLoginRoute &&
     !isSettingsRoute &&
-    starterTagsSetupStatus?.needsStarterTagsSetup
+    onboardingStatus?.needsStarterTagsSetup &&
+    onboardingStatus.mainOnboardingCompletedAt !== undefined &&
+    activeOnboardingTour !== "main"
   ) {
     return <Navigate to="/settings" replace />
+  }
+
+  const resolvedOnboardingStatus = onboardingStatus ?? {
+    needsStarterTagsSetup: false,
+    categoryColors: {},
   }
 
   return (
@@ -57,9 +67,11 @@ function RootComponent() {
           <Outlet />
         ) : (
           <TooltipProvider>
-            <AppShell>
-              <Outlet />
-            </AppShell>
+            <OnboardingProvider onboardingStatus={resolvedOnboardingStatus}>
+              <AppShell>
+                <Outlet />
+              </AppShell>
+            </OnboardingProvider>
           </TooltipProvider>
         )}
       </TabProvider>

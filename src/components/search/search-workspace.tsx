@@ -20,6 +20,7 @@ import { cn } from "@/lib/utils"
 import { type TagMatchMode } from "@/lib/tag-utils"
 import { useSearchWorkspaceRouting } from "./hooks/use-search-workspace-routing"
 import { useSearchWorkspacePersistence } from "./hooks/use-search-workspace-persistence"
+import { useOnboarding } from "@/components/onboarding/onboarding-context"
 
 export interface SearchWorkspaceRouteState {
   q?: string
@@ -73,7 +74,32 @@ interface ScriptureContextPaneProps {
   onSelectNote: (noteId: string) => void
   onJumpToRef: (ref: SearchVerseRef) => void
   resolveTagStyle: (tag: string) => CSSProperties | undefined
+  isTutorialDemo?: boolean
+  markTourTargets?: boolean
 }
+
+const SEARCH_TUTORIAL_DEMO_QUERY = "beloved"
+const SEARCH_TUTORIAL_DEMO_TAGS = ["love", "faith"]
+const SEARCH_TUTORIAL_DEMO_NOTE_ID = "tutorial-demo-note"
+const SEARCH_TUTORIAL_DEMO_GROUPS: SearchResultGroup[] = [
+  {
+    key: "tutorial-john-3",
+    ref: {
+      book: "John",
+      chapter: 3,
+      startVerse: 16,
+      endVerse: 18,
+    },
+    notes: [
+      {
+        noteId: SEARCH_TUTORIAL_DEMO_NOTE_ID,
+        content:
+          "Believing in the Son is not abstract here. The note connects love, faith, and life together.",
+        tags: SEARCH_TUTORIAL_DEMO_TAGS,
+      },
+    ],
+  },
+]
 
 function SearchResultGroupRow({
   group,
@@ -82,25 +108,39 @@ function SearchResultGroupRow({
   onSelectNote,
   onJumpToRef,
   resolveTagStyle,
+  isTutorialDemo = false,
+  markTourTargets = false,
 }: ScriptureContextPaneProps) {
   const ref = group.ref
   const { data, loading, error, query } = useEsvReference(ref)
 
   return (
     <div className="grid gap-3 rounded-md border bg-card p-3 lg:grid-cols-[minmax(340px,1fr)_minmax(360px,1.1fr)]">
-      <div className="space-y-2 rounded-sm border bg-background p-2">
+      <div
+        className="space-y-2 rounded-sm border bg-background p-2"
+        {...(markTourTargets ? { "data-tour-id": "search-demo-scripture-context" } : {})}
+      >
         <div className="flex items-center justify-between gap-2">
           <h3 className="text-sm font-semibold">
             {ref ? toVerseRefLabel(ref) : "Unlinked notes"}
           </h3>
           {ref && (
             <div className="flex gap-1">
-              <Button size="xs" onClick={() => onJumpToRef(ref)}>
+              <Button
+                size="xs"
+                onClick={() => onJumpToRef(ref)}
+                {...(markTourTargets ? { "data-tour-id": "search-demo-go-to-verse" } : {})}
+              >
                 Go to verse
               </Button>
             </div>
           )}
         </div>
+        {isTutorialDemo ? (
+          <Badge variant="outline" className="text-[10px]">
+            Tutorial demo
+          </Badge>
+        ) : null}
 
         {query && (
           <p className="text-xs text-muted-foreground">
@@ -161,7 +201,13 @@ function SearchResultGroupRow({
                   : "border-transparent hover:bg-muted",
               )}
               onClick={() => onSelectNote(note.noteId)}
+              {...(markTourTargets ? { "data-tour-id": "search-demo-result" } : {})}
             >
+              {isTutorialDemo ? (
+                <Badge variant="outline" className="mb-2 text-[10px]">
+                  Tutorial demo
+                </Badge>
+              ) : null}
               <p className="text-sm leading-relaxed">
                 <HighlightedText text={note.content} query={normalizedQuery} />
               </p>
@@ -187,6 +233,7 @@ function SearchResultGroupRow({
 
 export function SearchWorkspace({ search }: SearchWorkspaceProps) {
   const { openTab } = useTabs()
+  const { isTourActive } = useOnboarding()
   const resolveTagStyle = useStarterTagBadgeStyle()
   const resultsViewportRef = useRef<HTMLDivElement | null>(null)
   const {
@@ -250,6 +297,27 @@ export function SearchWorkspace({ search }: SearchWorkspaceProps) {
       return toRefKey(a.ref).localeCompare(toRefKey(b.ref))
     })
   }, [searchResults])
+  const isSearchTourActive = isTourActive("search")
+  const useTutorialDemoResults =
+    isSearchTourActive && groupedResults.length === 0
+  const effectiveQuery = useTutorialDemoResults ? SEARCH_TUTORIAL_DEMO_QUERY : query
+  const effectiveMatchMode = useTutorialDemoResults ? "any" : matchMode
+  const effectiveSelectedTags = useTutorialDemoResults
+    ? SEARCH_TUTORIAL_DEMO_TAGS
+    : selectedTags
+  const effectiveSelectedNoteId = useTutorialDemoResults
+    ? SEARCH_TUTORIAL_DEMO_NOTE_ID
+    : selectedNoteId
+  const effectiveNormalizedQuery = useTutorialDemoResults
+    ? SEARCH_TUTORIAL_DEMO_QUERY
+    : normalizedQuery
+  const effectiveShouldSearch = useTutorialDemoResults || shouldSearch
+  const effectiveGroups = useTutorialDemoResults
+    ? SEARCH_TUTORIAL_DEMO_GROUPS
+    : groupedResults
+  const effectiveResultCount = useTutorialDemoResults
+    ? SEARCH_TUTORIAL_DEMO_GROUPS.reduce((count, group) => count + group.notes.length, 0)
+    : (searchResults?.length ?? 0)
 
   const jumpToReference = useCallback(
     (ref: SearchVerseRef) => {
@@ -270,10 +338,19 @@ export function SearchWorkspace({ search }: SearchWorkspaceProps) {
 
   useSearchWorkspacePersistence({
     search,
-    shouldSearch,
+    shouldSearch: effectiveShouldSearch,
     searchResultsReady: searchResults !== undefined,
     viewportRef: resultsViewportRef,
+    disabled: useTutorialDemoResults,
   })
+
+  const handleSelectNote = useCallback(
+    (noteId: string) => {
+      if (useTutorialDemoResults) return
+      selectNote(noteId)
+    },
+    [selectNote, useTutorialDemoResults],
+  )
 
   return (
     <div className="h-full overflow-hidden">
@@ -287,7 +364,7 @@ export function SearchWorkspace({ search }: SearchWorkspaceProps) {
               <div className="flex items-center justify-between">
                 <h2 className="text-sm font-semibold">Matching Notes</h2>
                 <span className="text-xs text-muted-foreground">
-                  {searchResults?.length ?? 0}
+                  {effectiveResultCount}
                 </span>
               </div>
             </div>
@@ -297,11 +374,11 @@ export function SearchWorkspace({ search }: SearchWorkspaceProps) {
               className={panelScrollClass}
               viewportRef={resultsViewportRef}
             >
-              {!shouldSearch ? (
+              {!effectiveShouldSearch ? (
                 <div className="px-4 py-6 text-sm text-muted-foreground">
                   Enter at least 2 characters or choose one or more tags.
                 </div>
-              ) : groupedResults.length === 0 ? (
+              ) : effectiveGroups.length === 0 ? (
                 <div className="px-4 py-6 text-sm text-muted-foreground">
                   {searchResults === undefined
                     ? "Searching..."
@@ -309,15 +386,17 @@ export function SearchWorkspace({ search }: SearchWorkspaceProps) {
                 </div>
               ) : (
                 <div className="space-y-3 p-3">
-                  {groupedResults.map((group) => (
+                  {effectiveGroups.map((group, index) => (
                     <SearchResultGroupRow
                       key={group.key}
                       group={group}
-                      selectedNoteId={selectedNoteId}
-                      normalizedQuery={normalizedQuery}
-                      onSelectNote={selectNote}
+                      selectedNoteId={effectiveSelectedNoteId}
+                      normalizedQuery={effectiveNormalizedQuery}
+                      onSelectNote={handleSelectNote}
                       onJumpToRef={jumpToReference}
                       resolveTagStyle={resolveTagStyle}
+                      isTutorialDemo={useTutorialDemoResults}
+                      markTourTargets={isSearchTourActive && index === 0}
                     />
                   ))}
                 </div>
@@ -341,27 +420,28 @@ export function SearchWorkspace({ search }: SearchWorkspaceProps) {
               </p>
               <Input
                 placeholder="Type 2+ characters..."
-                value={query}
+                value={effectiveQuery}
                 onChange={(event) => updateQuery(event.target.value)}
                 className="h-8 text-sm"
+                data-tour-id="search-query-input"
               />
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-2" data-tour-id="search-match-mode">
               <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
                 Match Mode
               </p>
               <div className="flex gap-1">
                 <Button
                   size="xs"
-                  variant={matchMode === "any" ? "secondary" : "outline"}
+                  variant={effectiveMatchMode === "any" ? "secondary" : "outline"}
                   onClick={() => updateMatchMode("any")}
                 >
                   Any
                 </Button>
                 <Button
                   size="xs"
-                  variant={matchMode === "all" ? "secondary" : "outline"}
+                  variant={effectiveMatchMode === "all" ? "secondary" : "outline"}
                   onClick={() => updateMatchMode("all")}
                 >
                   All
@@ -371,10 +451,11 @@ export function SearchWorkspace({ search }: SearchWorkspaceProps) {
 
             <TagFilterControl
               availableTags={availableTags}
-              selectedTags={selectedTags}
+              selectedTags={effectiveSelectedTags}
               onToggleTag={toggleTag}
               onClear={clearTags}
               resolveTagStyle={resolveTagStyle}
+              tourId="search-tag-filter"
             />
           </div>
         </aside>

@@ -11,6 +11,7 @@ interface UseSearchWorkspacePersistenceOptions {
   shouldSearch: boolean
   searchResultsReady: boolean
   viewportRef: React.RefObject<HTMLDivElement | null>
+  disabled?: boolean
 }
 
 export function useSearchWorkspacePersistence({
@@ -18,19 +19,22 @@ export function useSearchWorkspacePersistence({
   shouldSearch,
   searchResultsReady,
   viewportRef,
+  disabled = false,
 }: UseSearchWorkspacePersistenceOptions) {
   const hasRestoredScrollRef = useRef(false)
 
   useEffect(() => {
+    if (disabled) return
     writeSearchWorkspaceParams({
       q: search.q,
       tags: search.tags,
       mode: search.mode,
       noteId: search.noteId,
     })
-  }, [search.mode, search.noteId, search.q, search.tags])
+  }, [disabled, search.mode, search.noteId, search.q, search.tags])
 
   useEffect(() => {
+    if (disabled) return
     const viewport = viewportRef.current
     if (!viewport) return
 
@@ -40,9 +44,10 @@ export function useSearchWorkspacePersistence({
 
     viewport.addEventListener("scroll", handleScroll, { passive: true })
     return () => viewport.removeEventListener("scroll", handleScroll)
-  }, [viewportRef])
+  }, [disabled, viewportRef])
 
   useEffect(() => {
+    if (disabled) return
     if (hasRestoredScrollRef.current) return
     if (!shouldSearch || !searchResultsReady) return
 
@@ -54,5 +59,5 @@ export function useSearchWorkspacePersistence({
       viewport.scrollTop = saved.scrollTop
     }
     hasRestoredScrollRef.current = true
-  }, [searchResultsReady, shouldSearch, viewportRef])
+  }, [disabled, searchResultsReady, shouldSearch, viewportRef])
 }

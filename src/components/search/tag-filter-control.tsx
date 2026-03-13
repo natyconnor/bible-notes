@@ -10,6 +10,7 @@ interface TagFilterControlProps {
   resolveTagStyle?: (tag: string) => CSSProperties | undefined
   /** When true, the autocomplete dropdown floats over content instead of pushing it down */
   popoverDropdown?: boolean
+  tourId?: string
 }
 
 export function TagFilterControl({
@@ -19,11 +20,12 @@ export function TagFilterControl({
   onClear,
   resolveTagStyle,
   popoverDropdown = false,
+  tourId,
 }: TagFilterControlProps) {
   const hasSelectedTags = selectedTags.length > 0
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-2" {...(tourId ? { "data-tour-id": tourId } : {})}>
       <div className="flex items-center justify-between">
         <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
           Tags

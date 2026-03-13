@@ -1,11 +1,12 @@
 "use client"
 
-import { useCallback, useMemo, useState, type CSSProperties } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react"
 import { X } from "lucide-react"
 
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
+import { useTypedText } from "@/components/onboarding/use-typed-text"
 import { normalizeTag } from "@/lib/tag-utils"
 import { cn } from "@/lib/utils"
 
@@ -24,6 +25,9 @@ interface TagPickerProps {
   showSuggestionsOnFocus?: boolean
   maxSuggestions?: number
   selectedTagBadgeClassName?: string
+  tourId?: string
+  tutorialPreviewTags?: string[]
+  tutorialAnimatePreview?: boolean
 }
 
 export function TagPicker({
@@ -39,10 +43,26 @@ export function TagPicker({
   showSuggestionsOnFocus = true,
   maxSuggestions = DEFAULT_MAX_SUGGESTIONS,
   selectedTagBadgeClassName,
+  tourId,
+  tutorialPreviewTags = [],
+  tutorialAnimatePreview = false,
 }: TagPickerProps) {
   const [input, setInput] = useState("")
   const [isFocused, setIsFocused] = useState(false)
   const [highlightedSuggestion, setHighlightedSuggestion] = useState(0)
+  const inputRef = useRef<HTMLInputElement | null>(null)
+  const previewTags = tutorialPreviewTags.filter((tag) => !selectedTags.includes(tag))
+  const tutorialTag = previewTags[0] ?? ""
+  const shouldAnimatePreviewTag = tutorialAnimatePreview && tutorialTag.length > 0
+  const { visibleText: animatedTutorialInput, isComplete: isTutorialInputComplete } =
+    useTypedText({
+      active: shouldAnimatePreviewTag,
+      text: tutorialTag,
+      charIntervalMs: 55,
+      startDelayMs: 120,
+      loop: true,
+      pauseAtEndMs: 1200,
+    })
 
   const suggestions = useMemo(() => {
     const normalizedInput = input.trim().toLowerCase()
@@ -64,7 +84,7 @@ export function TagPicker({
   const resetInput = useCallback(() => {
     setInput("")
     setHighlightedSuggestion(0)
-  }, [])
+  }, [setHighlightedSuggestion, setInput])
 
   const handleSelectSuggestion = useCallback(
     (tag: string) => {
@@ -87,10 +107,36 @@ export function TagPicker({
     [onAddTag, resetInput, selectedTags]
   )
 
+  useEffect(() => {
+    if (!shouldAnimatePreviewTag) return
+    inputRef.current?.focus()
+  }, [shouldAnimatePreviewTag])
+
+  const visiblePreviewTags = shouldAnimatePreviewTag
+    ? isTutorialInputComplete
+      ? previewTags
+      : []
+    : previewTags
+  const displayedInputValue = shouldAnimatePreviewTag
+    ? isTutorialInputComplete
+      ? ""
+      : animatedTutorialInput
+    : input
+
   return (
-    <div className="space-y-2">
-      {selectedTags.length > 0 && (
+    <div className="space-y-2" {...(tourId ? { "data-tour-id": tourId } : {})}>
+      {(selectedTags.length > 0 || visiblePreviewTags.length > 0) && (
         <div className="flex flex-wrap gap-1">
+          {visiblePreviewTags.map((tag) => (
+            <Badge
+              key={`tutorial-${tag}`}
+              variant="outline"
+              className={cn("gap-1 border-dashed", selectedTagBadgeClassName)}
+              style={resolveTagStyle?.(tag)}
+            >
+              {tag}
+            </Badge>
+          ))}
           {selectedTags.map((tag) => (
             <Badge
               key={`selected-${tag}`}
@@ -118,9 +164,11 @@ export function TagPicker({
 
       <div className={popoverDropdown ? "relative" : "space-y-2"}>
         <Input
+          ref={inputRef}
           placeholder={inputPlaceholder}
-          value={input}
+          value={displayedInputValue}
           onChange={(event) => {
+            if (shouldAnimatePreviewTag) return
             setInput(event.target.value)
             setHighlightedSuggestion(0)
           }}
@@ -129,6 +177,10 @@ export function TagPicker({
             setTimeout(() => setIsFocused(false), 120)
           }}
           onKeyDown={(event) => {
+            if (shouldAnimatePreviewTag) {
+              event.preventDefault()
+              return
+            }
             if (event.key === "ArrowDown" && suggestions.length > 0) {
               event.preventDefault()
               setHighlightedSuggestion((prev) => (prev + 1) % suggestions.length)
