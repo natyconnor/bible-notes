@@ -27,22 +27,87 @@ function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-background">
-      <div className="w-full max-w-md space-y-8 px-4">
-        <div className="text-center">
-          <h1 className="text-3xl font-bold tracking-tight text-foreground">
-            Berea
-          </h1>
-          <p className="mt-2 text-muted-foreground">
-            Sign in to access your personal study notes
-          </p>
+    <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden">
+      {/* Background image */}
+      <div
+        className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+        style={{ backgroundImage: "url(/berea-hero.png)" }}
+      />
+      {/* Dark overlay with gradient */}
+      <div className="absolute inset-0 bg-linear-to-b from-black/70 via-black/60 to-black/80" />
+
+      {/* Content */}
+      <div className="relative z-10 flex w-full max-w-2xl flex-col items-center px-6 py-12 text-center">
+        {/* App name */}
+        <h1
+          className="text-7xl tracking-[0.2em] text-white/95 sm:text-8xl"
+          style={{ fontFamily: "'Cormorant SC', serif", fontWeight: 300 }}
+        >
+          BEREA
+        </h1>
+
+        {/* Decorative divider */}
+        <div className="mt-6 flex items-center gap-4">
+          <div className="h-px w-16 bg-white/30" />
+          <div className="h-1.5 w-1.5 rotate-45 bg-white/40" />
+          <div className="h-px w-16 bg-white/30" />
         </div>
 
-        <div className="mt-8 space-y-4">
+        {/* Verse */}
+        <blockquote className="mt-8 max-w-lg">
+          <p
+            className="text-lg leading-relaxed text-white/85 sm:text-xl"
+            style={{
+              fontFamily: "'Cormorant Garamond', serif",
+              fontStyle: "italic",
+              fontWeight: 300,
+            }}
+          >
+            &ldquo;...they received the word with all eagerness, examining the
+            Scriptures daily to see if these things were so.&rdquo;
+          </p>
+          <footer
+            className="mt-3 text-sm tracking-[0.15em] text-white/50 uppercase"
+            style={{ fontFamily: "'Cormorant SC', serif", fontWeight: 400 }}
+          >
+            Acts 17:11
+          </footer>
+        </blockquote>
+
+        {/* Decorative divider */}
+        <div className="mt-8 flex items-center gap-4">
+          <div className="h-px w-12 bg-white/20" />
+          <div className="h-1 w-1 rotate-45 bg-white/30" />
+          <div className="h-px w-12 bg-white/20" />
+        </div>
+
+        {/* Description */}
+        <p
+          className="mt-8 max-w-md text-base leading-relaxed text-white/65 sm:text-lg"
+          style={{
+            fontFamily: "'Cormorant Garamond', serif",
+            fontWeight: 400,
+          }}
+        >
+          In Acts 17, Paul and Silas arrive in the small city of Berea. Luke
+          records one remarkable detail about its people: they eagerly received
+          God&rsquo;s word and examined the Scriptures daily. Berea invites
+          Christians today to continue that heritage&mdash;studying God&rsquo;s
+          word with eagerness, care, and devotion.
+        </p>
+
+        {/* Sign in */}
+        <div className="mt-12 w-full max-w-xs space-y-4">
           <button
             onClick={handleGoogleSignIn}
             disabled={isSigningIn}
-            className="flex w-full items-center justify-center gap-3 rounded-lg border border-border bg-card px-4 py-3 text-foreground shadow-sm transition-colors hover:bg-accent disabled:cursor-not-allowed disabled:opacity-50"
+            className="flex w-full items-center justify-center gap-3 rounded-md border border-white/20 bg-white/10 px-6 py-3 text-white/90 backdrop-blur-sm transition-all hover:border-white/30 hover:bg-white/15 disabled:cursor-not-allowed disabled:opacity-50"
+            style={{
+              fontFamily: "'Cormorant Garamond', serif",
+              fontWeight: 600,
+              fontSize: "1.05rem",
+              letterSpacing: "0.05em",
+            }}
           >
             <svg className="h-5 w-5" viewBox="0 0 24 24">
               <path
@@ -64,11 +129,17 @@ function LoginPage() {
             </svg>
             {isSigningIn ? "Signing in..." : "Continue with Google"}
           </button>
-        </div>
 
-        <p className="mt-8 text-center text-sm text-muted-foreground">
-          Your notes are private and synced across devices
-        </p>
+          <p
+            className="text-center text-sm text-white/35"
+            style={{
+              fontFamily: "'Cormorant Garamond', serif",
+              fontWeight: 400,
+            }}
+          >
+            Your notes are private and synced across devices
+          </p>
+        </div>
       </div>
     </div>
   )
