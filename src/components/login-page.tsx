@@ -1,20 +1,9 @@
-import { createFileRoute, Navigate } from "@tanstack/react-router";
 import { useAuthActions } from "@convex-dev/auth/react";
-import { useConvexAuth } from "convex/react";
 import { useState } from "react";
 
-export const Route = createFileRoute("/login")({
-  component: LoginPage,
-});
-
-function LoginPage() {
+export function LoginPage() {
   const { signIn } = useAuthActions();
-  const { isAuthenticated } = useConvexAuth();
   const [isSigningIn, setIsSigningIn] = useState(false);
-
-  if (isAuthenticated) {
-    return <Navigate to="/" replace />;
-  }
 
   const handleGoogleSignIn = async () => {
     setIsSigningIn(true);

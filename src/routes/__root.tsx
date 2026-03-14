@@ -12,6 +12,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { AppShell } from "@/components/layout/app-shell";
 import { TutorialProvider } from "@/components/tutorial/tutorial-provider";
 import { readActiveTutorialTour } from "@/components/tutorial/tutorial-session";
+import { LoginPage } from "@/components/login-page";
 import { api } from "../../convex/_generated/api";
 
 export const Route = createRootRoute({
@@ -21,7 +22,6 @@ export const Route = createRootRoute({
 function RootComponent() {
   const { isAuthenticated, isLoading } = useConvexAuth();
   const location = useLocation();
-  const isLoginRoute = location.pathname === "/login";
   const isSettingsRoute = location.pathname.startsWith("/settings");
   const tutorialStatus = useQuery(
     api.userSettings.getTutorialStatus,
@@ -37,11 +37,11 @@ function RootComponent() {
     );
   }
 
-  if (!isAuthenticated && location.pathname !== "/login") {
-    return <Navigate to="/login" replace />;
+  if (!isAuthenticated) {
+    return <LoginPage />;
   }
 
-  if (isAuthenticated && !isLoginRoute && tutorialStatus === undefined) {
+  if (tutorialStatus === undefined) {
     return (
       <div className="flex h-screen items-center justify-center">
         <div className="text-muted-foreground">Loading...</div>
@@ -50,8 +50,6 @@ function RootComponent() {
   }
 
   if (
-    isAuthenticated &&
-    !isLoginRoute &&
     !isSettingsRoute &&
     tutorialStatus?.needsStarterTagsSetup &&
     tutorialStatus.mainTutorialCompletedAt !== undefined &&
@@ -68,17 +66,13 @@ function RootComponent() {
   return (
     <ThemeProvider>
       <TabProvider>
-        {isLoginRoute ? (
-          <Outlet />
-        ) : (
-          <TooltipProvider>
-            <TutorialProvider tutorialStatus={resolvedTutorialStatus}>
-              <AppShell>
-                <Outlet />
-              </AppShell>
-            </TutorialProvider>
-          </TooltipProvider>
-        )}
+        <TooltipProvider>
+          <TutorialProvider tutorialStatus={resolvedTutorialStatus}>
+            <AppShell>
+              <Outlet />
+            </AppShell>
+          </TutorialProvider>
+        </TooltipProvider>
       </TabProvider>
     </ThemeProvider>
   );
