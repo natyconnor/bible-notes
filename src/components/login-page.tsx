@@ -1,9 +1,59 @@
 import { useAuthActions } from "@convex-dev/auth/react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { LoginPageAtmosphere } from "@/components/login-page-atmosphere";
+
+const PARALLAX_DAMPING = 0.04;
+
+function useMouseParallax() {
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const node = ref.current;
+    if (!node) return;
+
+    let targetX = 0;
+    let targetY = 0;
+    let currentX = 0;
+    let currentY = 0;
+    let raf: number;
+
+    const onMouseMove = (e: MouseEvent) => {
+      const { left, top, width, height } = node.getBoundingClientRect();
+      targetX = ((e.clientX - left) / width - 0.5) * 2;
+      targetY = ((e.clientY - top) / height - 0.5) * 2;
+    };
+
+    const onMouseLeave = () => {
+      targetX = 0;
+      targetY = 0;
+    };
+
+    const tick = () => {
+      currentX += (targetX - currentX) * PARALLAX_DAMPING;
+      currentY += (targetY - currentY) * PARALLAX_DAMPING;
+      node.style.setProperty("--mx", String(currentX));
+      node.style.setProperty("--my", String(currentY));
+      raf = requestAnimationFrame(tick);
+    };
+
+    node.addEventListener("mousemove", onMouseMove);
+    node.addEventListener("mouseleave", onMouseLeave);
+    raf = requestAnimationFrame(tick);
+
+    return () => {
+      node.removeEventListener("mousemove", onMouseMove);
+      node.removeEventListener("mouseleave", onMouseLeave);
+      cancelAnimationFrame(raf);
+    };
+  }, []);
+
+  return ref;
+}
 
 export function LoginPage() {
   const { signIn } = useAuthActions();
   const [isSigningIn, setIsSigningIn] = useState(false);
+  const parallaxRef = useMouseParallax();
 
   const handleGoogleSignIn = async () => {
     setIsSigningIn(true);
@@ -16,17 +66,37 @@ export function LoginPage() {
   };
 
   return (
-    <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden">
+    <div
+      ref={parallaxRef}
+      className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden"
+    >
       {/* Background image */}
       <div
         className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-        style={{ backgroundImage: "url(/berean-hero.webp)" }}
+        style={{
+          backgroundImage: "url(/berean-hero.webp)",
+          scale: "1.03",
+          translate: "calc(var(--mx, 0) * 8px) calc(var(--my, 0) * 8px)",
+        }}
       />
       {/* Dark overlay with gradient */}
-      <div className="absolute inset-0 bg-linear-to-b from-black/70 via-black/60 to-black/80" />
+      <div
+        className="absolute inset-0 bg-linear-to-b from-black/70 via-black/60 to-black/80"
+        style={{
+          scale: "1.03",
+          translate: "calc(var(--mx, 0) * 8px) calc(var(--my, 0) * 8px)",
+        }}
+      />
+
+      <LoginPageAtmosphere />
 
       {/* Content */}
-      <div className="relative z-10 flex w-full max-w-2xl flex-col items-center px-6 py-12 text-center">
+      <div
+        className="relative z-10 flex w-full max-w-2xl flex-col items-center px-6 py-12 text-center"
+        style={{
+          translate: "calc(var(--mx, 0) * -2px) calc(var(--my, 0) * -2px)",
+        }}
+      >
         {/* App name */}
         <h1
           className="text-7xl tracking-[0.2em] text-white/95 sm:text-8xl"

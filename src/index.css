@@ -114,6 +114,79 @@
   --sidebar-ring: oklch(0.556 0 0);
 }
 
+@keyframes candle-halo {
+  0%,
+  100% {
+    opacity: 0.08;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.14;
+    transform: scale(1.06);
+  }
+}
+
+.candle-halo {
+  animation: candle-halo 4s ease-in-out infinite;
+}
+
+@keyframes dust-drift {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 8px, 0) scale(0.94);
+  }
+  15% {
+    opacity: var(--dust-opacity, 0.08);
+  }
+  50% {
+    opacity: calc(var(--dust-opacity, 0.08) * 0.85);
+    transform: translate3d(var(--dust-dx, 8px), -10px, 0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(calc(var(--dust-dx, 8px) * 1.7), -22px, 0)
+      scale(1.03);
+  }
+}
+
+.dust-field {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.dust-haze {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(22px);
+  background: radial-gradient(
+    ellipse at center,
+    rgba(190, 192, 200, 0.24) 0%,
+    rgba(164, 166, 174, 0.14) 34%,
+    rgba(144, 146, 154, 0.06) 58%,
+    transparent 82%
+  );
+}
+
+.dust-particle {
+  position: absolute;
+  border-radius: 9999px;
+  background: radial-gradient(
+    circle,
+    rgba(220, 220, 226, 0.82) 0%,
+    rgba(190, 191, 198, 0.38) 48%,
+    transparent 100%
+  );
+  filter: blur(1.2px);
+  box-shadow: 0 0 4px rgba(220, 220, 226, 0.12);
+  opacity: 0;
+  animation: dust-drift var(--dust-duration, 18s) linear infinite;
+  animation-delay: var(--dust-delay, 0s);
+  will-change: transform, opacity;
+}
+
 @keyframes pulse-subtle {
   0%,
   100% {
