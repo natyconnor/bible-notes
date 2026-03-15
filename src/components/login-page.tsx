@@ -81,7 +81,7 @@ export function LoginPage() {
       />
       {/* Dark overlay with gradient */}
       <div
-        className="absolute inset-0 bg-linear-to-b from-black/70 via-black/60 to-black/80"
+        className="absolute inset-0 bg-linear-to-b from-black/60 via-black/50 to-black/90"
         style={{
           scale: "1.03",
           translate: "calc(var(--mx, 0) * 8px) calc(var(--my, 0) * 8px)",
@@ -149,8 +149,8 @@ export function LoginPage() {
               fontWeight: 400,
             }}
           >
-            In Acts 17, the people of Berea received the word with all
-            eagerness, examining the Scriptures daily. Berean invites Christians
+            In Acts 17, the people of Berea received the word with{" "}
+            <span className="italic">eagerness</span>, examining the Scriptures <span className="italic">daily</span>. <span className="font-bold">Berean</span> invites Christians
             today to embody that same spirit&mdash;studying God&rsquo;s word
             with eagerness, care, and devotion.
           </p>
