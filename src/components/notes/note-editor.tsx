@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useEffect, useMemo } from "react";
 import { useQuery } from "convex-helpers/react/cache";
 import { TooltipButton } from "@/components/ui/tooltip-button";
 import { Badge } from "@/components/ui/badge";
@@ -33,6 +33,7 @@ interface NoteEditorProps {
   currentChapter?: CurrentChapter;
   onSave: (body: NoteBody, tags: string[]) => void | Promise<void>;
   onCancel: () => void;
+  onDirtyChange?: (isDirty: boolean) => void;
 }
 
 export function NoteEditor({
@@ -45,10 +46,12 @@ export function NoteEditor({
   currentChapter,
   onSave,
   onCancel,
+  onDirtyChange,
 }: NoteEditorProps) {
   const [initialEditorBody] = useState<NoteBody>(() =>
     normalizeNoteBody(initialBody, initialContent),
   );
+  const [normalizedInitialTags] = useState(() => normalizeTags(initialTags));
   const [body, setBody] = useState<NoteBody>(initialEditorBody);
   const [tags, setTags] = useState<string[]>(() => normalizeTags(initialTags));
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -75,6 +78,22 @@ export function NoteEditor({
     setBody(nextBody);
     setSaveError(null);
   }, []);
+
+  const isNewNote = !initialContent && !initialBody;
+
+  useEffect(() => {
+    if (!onDirtyChange) return;
+    if (isNewNote) {
+      onDirtyChange(noteBodyToPlainText(body).trim().length > 0);
+    } else {
+      const bodyChanged =
+        noteBodyToPlainText(body) !== noteBodyToPlainText(initialEditorBody);
+      const tagsChanged =
+        tags.length !== normalizedInitialTags.length ||
+        tags.some((t, i) => t !== normalizedInitialTags[i]);
+      onDirtyChange(bodyChanged || tagsChanged);
+    }
+  }, [body, tags, onDirtyChange, isNewNote, initialEditorBody, normalizedInitialTags]);
 
   const handleSave = useCallback(async () => {
     const content = noteBodyToPlainText(body).trim();
@@ -104,12 +123,8 @@ export function NoteEditor({
           void handleSave();
         }
       }
-      if (e.key === "Escape") {
-        e.preventDefault();
-        onCancel();
-      }
     },
-    [body, handleSave, onCancel],
+    [body, handleSave],
   );
 
   const isPassage = variant === "passage";
@@ -226,7 +241,7 @@ export function NoteEditor({
 
       <p className="text-xs text-muted-foreground">
         {/(Mac|iPhone|iPad)/i.test(navigator.userAgent) ? "Cmd" : "Ctrl"}+Enter
-        to save &middot; Esc to cancel
+        to save
       </p>
     </div>
   );

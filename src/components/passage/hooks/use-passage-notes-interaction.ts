@@ -3,17 +3,24 @@ import type { NoteBody } from "@/lib/note-inline-content";
 import type { VerseRef } from "@/lib/verse-ref-utils";
 import type { NoteWithRef } from "@/components/notes/model/note-model";
 import { useChapterNotesData } from "./use-chapter-notes-data";
-import { usePassageNotesUiState } from "./use-passage-notes-ui-state";
+import {
+  usePassageNotesUiState,
+  type EditorSlot,
+} from "./use-passage-notes-ui-state";
 
 export interface PassageNotesInteraction {
   selectedVerses: Set<number>;
+  passageDraftVerses: Set<number>;
+  canDismissOnClickAway: boolean;
+  notifyEditorDirty: (key: string, isDirty: boolean) => void;
   hoveredVerse: number | null;
   hoveredSingleBubble: number | null;
   hoveredPassageBubble: number | null;
   openVerseKey: number | null;
   openPassageKey: number | null;
-  creatingFor: VerseRef | null;
-  editingNoteId: Id<"notes"> | null;
+  openEditors: Map<string, EditorSlot>;
+  editingNoteIds: Set<Id<"notes">>;
+  newDraftsByAnchor: Map<number, VerseRef[]>;
   isPassageSelection: boolean;
 
   singleVerseNotes: Map<number, NoteWithRef[]>;
@@ -32,19 +39,31 @@ export interface PassageNotesInteraction {
   handlePassageBubbleMouseEnter: (verseNumber: number) => void;
   handlePassageBubbleMouseLeave: () => void;
   handleAddNote: (verseNumber: number) => void;
-  handleSaveNew: (body: NoteBody, tags: string[]) => Promise<void>;
-  handleSaveEdit: (body: NoteBody, tags: string[]) => Promise<void>;
+  handleSaveNew: (
+    verseRef: VerseRef,
+    body: NoteBody,
+    tags: string[],
+  ) => Promise<void>;
+  handleSaveEdit: (
+    noteId: Id<"notes">,
+    body: NoteBody,
+    tags: string[],
+  ) => Promise<void>;
   handleDelete: (noteId: Id<"notes">) => Promise<void>;
   handleClickAway: () => void;
+  cancelEditor: (key: string) => void;
   openVerseNotes: (verseNumber: number) => void;
   openPassageNotes: (verseNumber: number) => void;
   startEditingNote: (
     noteId: Id<"notes">,
+    verseRef: VerseRef,
     verseNumber: number,
     isPassage: boolean,
   ) => void;
-  cancelEditing: () => void;
   startCreatingPassageNote: (verseRef: VerseRef) => void;
+  showDiscardConfirmation: boolean;
+  confirmDiscard: () => void;
+  cancelDiscard: () => void;
 }
 
 export function usePassageNotesInteraction(

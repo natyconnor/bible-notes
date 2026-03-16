@@ -2,7 +2,7 @@ import { useEffect, useMemo } from "react";
 import { useTutorial } from "@/components/tutorial/tutorial-context";
 import type { Id } from "../../../../convex/_generated/dataModel";
 import type { NoteWithRef } from "@/components/notes/model/note-model";
-import type { VerseRef } from "@/lib/verse-ref-utils";
+import type { EditorSlot } from "./use-passage-notes-ui-state";
 
 type PassageViewMode = "compose" | "read";
 
@@ -53,8 +53,7 @@ interface UsePassageViewTourParams {
   effectiveViewMode: PassageViewMode;
   setViewMode: (mode: PassageViewMode) => void;
   singleVerseNotes: Map<number, NoteWithRef[]>;
-  creatingFor: VerseRef | null;
-  editingNoteId: Id<"notes"> | null;
+  openEditors: Map<string, EditorSlot>;
   handleClickAway: () => void;
   handleAddNote: (verse: number) => void;
 }
@@ -70,8 +69,7 @@ export function usePassageViewTour({
   effectiveViewMode,
   setViewMode,
   singleVerseNotes,
-  creatingFor,
-  editingNoteId,
+  openEditors,
   handleClickAway,
   handleAddNote,
 }: UsePassageViewTourParams): PassageViewTourState {
@@ -101,12 +99,11 @@ export function usePassageViewTour({
   useEffect(() => {
     if (!isNoteEditorStep) return;
 
-    const isAlreadyVerseOneEditor =
-      creatingFor?.startVerse === 1 && creatingFor.endVerse === 1;
-    if (!isAlreadyVerseOneEditor || editingNoteId !== null) {
+    const hasVerseOneEditor = openEditors.has("new:1:1");
+    if (!hasVerseOneEditor || openEditors.size === 0) {
       handleAddNote(1);
     }
-  }, [creatingFor, editingNoteId, handleAddNote, isNoteEditorStep]);
+  }, [openEditors, handleAddNote, isNoteEditorStep]);
 
   useEffect(() => {
     if (!isReadingModeStep) return;

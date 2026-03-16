@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -52,6 +54,7 @@ export function PassageView({
   const {
     containerRef,
     selectedVerses,
+    passageDraftVerses,
     isInSelection,
     isPassageSelection,
     singleVerseNotes,
@@ -62,8 +65,9 @@ export function PassageView({
     hoveredSingleBubble,
     openVerseKey,
     openPassageKey,
-    creatingFor,
-    editingNoteId,
+    openEditors,
+    editingNoteIds,
+    newDraftsByAnchor,
     handleAddNote,
     handleVerseMouseDown,
     handleMouseEnter,
@@ -76,12 +80,17 @@ export function PassageView({
     openVerseNotes,
     openPassageNotes,
     startEditingNote,
-    cancelEditing,
     handleDelete,
     handleSaveEdit,
     handleSaveNew,
     handleClickAway,
+    cancelEditor,
+    notifyEditorDirty,
+    canDismissOnClickAway,
     startCreatingPassageNote,
+    showDiscardConfirmation,
+    confirmDiscard,
+    cancelDiscard,
   } = usePassageNotesInteraction(book, chapter);
 
   const { effectiveViewMode, isReadMode, editorMode, setViewMode } =
@@ -98,8 +107,7 @@ export function PassageView({
       effectiveViewMode,
       setViewMode,
       singleVerseNotes,
-      creatingFor,
-      editingNoteId,
+      openEditors,
       handleClickAway,
       handleAddNote,
     },
@@ -124,9 +132,14 @@ export function PassageView({
     return map;
   }, [displaySingleVerseNotes, passageNotesByAnchor]);
 
-  const editingNote = editingNoteId
-    ? (noteById.get(editingNoteId) ?? null)
-    : null;
+  const dialogEditingNote = useMemo(() => {
+    if (editingNoteIds.size === 0) return null;
+    for (const id of editingNoteIds) {
+      const note = noteById.get(id);
+      if (note) return note;
+    }
+    return null;
+  }, [editingNoteIds, noteById]);
 
   const hasAnyNotes = noteById.size > 0;
 
@@ -167,8 +180,14 @@ export function PassageView({
     displaySingleVerseNotes,
   ]);
 
+  const dialogDraft = useMemo(() => {
+    for (const slot of openEditors.values()) {
+      if (slot.kind === "new") return slot.verseRef;
+    }
+    return null;
+  }, [openEditors]);
   const shouldShowQuickCaptureDialog =
-    isReadMode && (!!creatingFor || !!editingNote);
+    isReadMode && (!!dialogDraft || !!dialogEditingNote);
   const passageGridClass = isReadMode
     ? "grid-cols-[minmax(360px,1fr)_minmax(520px,1.4fr)] gap-6"
     : "grid-cols-[minmax(0,1.1fr)_minmax(360px,440px)] gap-5";
@@ -354,7 +373,10 @@ export function PassageView({
                       currentChapter={{ book, chapter }}
                       selectedVerses={selectedVerses}
                       isInSelectionRange={isInSelection(verse.verseNumber)}
-                      isPassageSelection={isPassageSelection}
+                      isPassageSelection={
+                        passageDraftVerses.has(verse.verseNumber) ||
+                        isPassageSelection
+                      }
                       singleNotes={verse.singleNotes}
                       passageNotes={verse.passageNotes}
                       passageAnchor={passageAnchor}
@@ -362,8 +384,10 @@ export function PassageView({
                       isNoteBubbleHovered={isNoteBubbleHovered}
                       openVerseKey={openVerseKey}
                       openPassageKey={openPassageKey}
-                      creatingFor={creatingFor}
-                      editingNoteId={editingNoteId}
+                      draftsForThisAnchor={
+                        newDraftsByAnchor.get(verse.verseNumber) ?? []
+                      }
+                      editingNoteIds={editingNoteIds}
                       isFocusTarget={
                         hasFocusRange
                           ? verse.verseNumber >= focusRange.startVerse &&
@@ -381,10 +405,11 @@ export function PassageView({
                       onOpenVerseNotes={openVerseNotes}
                       onOpenPassageNotes={openPassageNotes}
                       onEditNote={startEditingNote}
-                      onCancelEditing={cancelEditing}
                       onDelete={handleDelete}
                       onSaveEdit={handleSaveEdit}
                       onSaveNew={handleSaveNew}
+                      onCancelEditor={cancelEditor}
+                      onEditorDirtyChange={notifyEditorDirty}
                       onClickAway={handleClickAway}
                       onStartCreatingPassageNote={startCreatingPassageNote}
                       forceAddButtonVisible={
@@ -413,43 +438,82 @@ export function PassageView({
 
           <Dialog
             open={shouldShowQuickCaptureDialog}
-            onOpenChange={(open) => !open && handleClickAway()}
+            onOpenChange={(open) => !open && canDismissOnClickAway && handleClickAway()}
           >
             <DialogContent className="sm:max-w-2xl">
               <DialogHeader>
                 <DialogTitle>
-                  {editingNote ? "Edit note" : "Add note"}
+                  {dialogEditingNote ? "Edit note" : "Add note"}
                 </DialogTitle>
               </DialogHeader>
-              {editingNote ? (
+              {dialogEditingNote ? (
                 <NoteEditor
-                  verseRef={editingNote.verseRef}
-                  initialContent={editingNote.content}
-                  initialBody={editingNote.body}
-                  initialTags={editingNote.tags}
+                  verseRef={dialogEditingNote.verseRef}
+                  initialContent={dialogEditingNote.content}
+                  initialBody={dialogEditingNote.body}
+                  initialTags={dialogEditingNote.tags}
                   presentation="dialog"
                   variant={
-                    editingNote.verseRef.startVerse ===
-                    editingNote.verseRef.endVerse
+                    dialogEditingNote.verseRef.startVerse ===
+                    dialogEditingNote.verseRef.endVerse
                       ? "default"
                       : "passage"
                   }
-                  onSave={handleSaveEdit}
+                  onSave={(body, tags) =>
+                    handleSaveEdit(dialogEditingNote.noteId, body, tags)
+                  }
                   onCancel={handleClickAway}
+                  onDirtyChange={(isDirty) =>
+                    notifyEditorDirty(
+                      `edit:${dialogEditingNote.noteId}`,
+                      isDirty,
+                    )
+                  }
                 />
-              ) : creatingFor ? (
+              ) : dialogDraft ? (
                 <NoteEditor
-                  verseRef={creatingFor}
+                  verseRef={dialogDraft}
                   presentation="dialog"
                   variant={
-                    creatingFor.startVerse === creatingFor.endVerse
+                    dialogDraft.startVerse === dialogDraft.endVerse
                       ? "default"
                       : "passage"
                   }
-                  onSave={handleSaveNew}
+                  onSave={(body, tags) => handleSaveNew(dialogDraft, body, tags)}
                   onCancel={handleClickAway}
+                  onDirtyChange={(isDirty) =>
+                    notifyEditorDirty(
+                      `new:${dialogDraft.startVerse}:${dialogDraft.endVerse}`,
+                      isDirty,
+                    )
+                  }
                 />
               ) : null}
+            </DialogContent>
+          </Dialog>
+
+          <Dialog
+            open={showDiscardConfirmation}
+            onOpenChange={(open) => {
+              if (!open) cancelDiscard();
+            }}
+          >
+            <DialogContent className="sm:max-w-md">
+              <DialogHeader>
+                <DialogTitle>Discard unsaved notes?</DialogTitle>
+                <DialogDescription>
+                  You have unsaved content in one or more note editors. Are you
+                  sure you want to discard your changes?
+                </DialogDescription>
+              </DialogHeader>
+              <DialogFooter>
+                <Button variant="outline" onClick={cancelDiscard}>
+                  Keep editing
+                </Button>
+                <Button variant="destructive" onClick={confirmDiscard}>
+                  Discard
+                </Button>
+              </DialogFooter>
             </DialogContent>
           </Dialog>
         </motion.div>

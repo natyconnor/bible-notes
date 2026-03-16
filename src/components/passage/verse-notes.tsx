@@ -39,9 +39,10 @@ interface VerseNotesProps {
   viewMode?: "compose" | "read";
   isPill?: boolean;
   currentChapter?: CurrentChapter;
-  editingNoteId?: Id<"notes"> | null;
-  onSaveEdit?: (body: NoteBody, tags: string[]) => void | Promise<void>;
-  onCancelEdit?: () => void;
+  editingNoteIds?: Set<Id<"notes">>;
+  onSaveEdit?: (noteId: Id<"notes">, body: NoteBody, tags: string[]) => void | Promise<void>;
+  onCancelEdit?: (noteId: Id<"notes">) => void;
+  onEditorDirtyChange?: (noteId: Id<"notes">, isDirty: boolean) => void;
   onOpen: () => void;
   onClose: () => void;
   onEdit: (noteId: Id<"notes">) => void;
@@ -57,9 +58,10 @@ export const VerseNotes = memo(function VerseNotes({
   viewMode = "compose",
   isPill = false,
   currentChapter,
-  editingNoteId = null,
+  editingNoteIds,
   onSaveEdit,
   onCancelEdit,
+  onEditorDirtyChange,
   onOpen,
   onClose,
   onEdit,
@@ -71,11 +73,11 @@ export const VerseNotes = memo(function VerseNotes({
   if (notes.length === 0) return null;
   const isReadMode = viewMode === "read";
   const supportsInlineEditing = !!onSaveEdit && !!onCancelEdit;
-  const editingNote =
-    supportsInlineEditing && editingNoteId
-      ? notes.find((note) => note.noteId === editingNoteId)
-      : undefined;
-  const isEditingWithinGroup = !!editingNote;
+  const hasEditsInGroup =
+    supportsInlineEditing && editingNoteIds
+      ? notes.some((note) => editingNoteIds.has(note.noteId))
+      : false;
+  const isEditingWithinGroup = hasEditsInGroup;
   const shouldShowExpanded = isOpen || isReadMode || isEditingWithinGroup;
   const layoutTransition = { duration: 0.2, ease: [0.22, 1, 0.36, 1] as const };
 
@@ -154,9 +156,8 @@ export const VerseNotes = memo(function VerseNotes({
               initial={index === 0 ? { opacity: 0, y: -4 } : undefined}
               animate={index === 0 ? { opacity: 1, y: 0 } : undefined}
             >
-              {isEditingWithinGroup &&
-              supportsInlineEditing &&
-              editingNoteId === note.noteId ? (
+              {supportsInlineEditing &&
+              editingNoteIds?.has(note.noteId) ? (
                 <div data-note-surface>
                   <NoteEditor
                     verseRef={note.verseRef}
@@ -164,8 +165,13 @@ export const VerseNotes = memo(function VerseNotes({
                     initialBody={note.body}
                     initialTags={note.tags}
                     currentChapter={currentChapter}
-                    onSave={onSaveEdit}
-                    onCancel={onCancelEdit}
+                    onSave={(body, tags) => onSaveEdit(note.noteId, body, tags)}
+                    onCancel={() => onCancelEdit(note.noteId)}
+                    onDirtyChange={
+                      onEditorDirtyChange
+                        ? (isDirty) => onEditorDirtyChange(note.noteId, isDirty)
+                        : undefined
+                    }
                   />
                 </div>
               ) : (
