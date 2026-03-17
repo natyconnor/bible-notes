@@ -27,6 +27,7 @@ import { usePassageViewMode } from "./hooks/use-passage-view-mode";
 import { usePassageKeyboardShortcuts } from "./hooks/use-passage-keyboard-shortcuts";
 import { usePassageScrollRestoration } from "./hooks/use-passage-scroll-restoration";
 import { usePassageViewTour } from "./hooks/use-passage-view-tour";
+import { NOTE_LAYOUT_TRANSITION } from "./note-animation-config";
 
 interface PassageViewProps {
   book: string;
@@ -78,7 +79,9 @@ export function PassageView({
     handlePassageBubbleMouseEnter,
     handlePassageBubbleMouseLeave,
     openVerseNotes,
+    closeVerseNotes,
     openPassageNotes,
+    closePassageNotes,
     startEditingNote,
     handleDelete,
     handleSaveEdit,
@@ -362,7 +365,7 @@ export function PassageView({
                     initial={{ height: 0, opacity: 0 }}
                     animate={{ height: "auto", opacity: 1 }}
                     exit={{ height: 0, opacity: 0 }}
-                    transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
+                    transition={NOTE_LAYOUT_TRANSITION}
                     style={{ overflow: "visible" }}
                   >
                     <VerseRowWithNotes
@@ -403,7 +406,9 @@ export function PassageView({
                       onPassageBubbleMouseEnter={handlePassageBubbleMouseEnter}
                       onPassageBubbleMouseLeave={handlePassageBubbleMouseLeave}
                       onOpenVerseNotes={openVerseNotes}
+                      onCloseVerseNotes={closeVerseNotes}
                       onOpenPassageNotes={openPassageNotes}
+                      onClosePassageNotes={closePassageNotes}
                       onEditNote={startEditingNote}
                       onDelete={handleDelete}
                       onSaveEdit={handleSaveEdit}

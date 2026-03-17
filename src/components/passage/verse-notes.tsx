@@ -18,6 +18,8 @@ import {
   HoverEditButton,
   NoteContent,
 } from "@/components/notes/view/note-card-primitives";
+import { NoteBubbleShell, type BubbleState } from "./view/note-bubble-shell";
+import { NOTE_LAYOUT_TRANSITION } from "./note-animation-config";
 
 export type VerseNote = NoteWithRef;
 
@@ -72,59 +74,40 @@ export const VerseNotes = memo(function VerseNotes({
       : false;
   const isEditingWithinGroup = hasEditsInGroup;
   const shouldShowExpanded = isOpen || isReadMode || isEditingWithinGroup;
-  const layoutTransition = { duration: 0.2, ease: [0.22, 1, 0.36, 1] as const };
-  const enterTransition = { duration: 0.12, ease: [0.22, 1, 0.36, 1] as const };
+
+  const bubbleState: BubbleState =
+    isPill && !isEditingWithinGroup
+      ? "pill"
+      : shouldShowExpanded || isReadMode
+        ? "expanded"
+        : "collapsed";
 
   return (
-    <motion.div layout transition={{ layout: layoutTransition }}>
-      {isPill && !isEditingWithinGroup ? (
-        <motion.div
-          key="pill"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={enterTransition}
-        >
-          <VerseNotesPill count={notes.length} onClick={onOpen} />
-        </motion.div>
-      ) : !shouldShowExpanded && !isReadMode ? (
+    <NoteBubbleShell
+      state={bubbleState}
+      pill={<VerseNotesPill count={notes.length} onClick={onOpen} />}
+      collapsed={
         notes.length === 1 ? (
-          <motion.div
-            key="collapsed-single"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={enterTransition}
-          >
-            <CollapsedBubble
-              note={notes[0]}
-              currentChapter={currentChapter}
-              onClick={onOpen}
-              onEdit={() => onEdit(notes[0].noteId)}
-              onMouseEnter={onMouseEnter}
-              onMouseLeave={onMouseLeave}
-            />
-          </motion.div>
+          <CollapsedBubble
+            note={notes[0]}
+            currentChapter={currentChapter}
+            onClick={onOpen}
+            onEdit={() => onEdit(notes[0].noteId)}
+            onMouseEnter={onMouseEnter}
+            onMouseLeave={onMouseLeave}
+          />
         ) : (
-          <motion.div
-            key="collapsed-stacked"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={enterTransition}
-          >
-            <StackedBubble
-              count={notes.length}
-              preview={notes[0].content}
-              onClick={onOpen}
-              onMouseEnter={onMouseEnter}
-              onMouseLeave={onMouseLeave}
-            />
-          </motion.div>
+          <StackedBubble
+            count={notes.length}
+            preview={notes[0].content}
+            onClick={onOpen}
+            onMouseEnter={onMouseEnter}
+            onMouseLeave={onMouseLeave}
+          />
         )
-      ) : (
-        <motion.div
-          key="expanded"
-          initial={{ opacity: 0, y: -4 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={enterTransition}
+      }
+      expanded={
+        <div
           data-note-surface
           className={isReadMode ? "space-y-3" : "space-y-1.5"}
           onClick={(e) => e.stopPropagation()}
@@ -159,11 +142,14 @@ export const VerseNotes = memo(function VerseNotes({
               </Tooltip>
             </div>
           )}
-          {notes.map((note) => (
+          {notes.map((note, index) => (
             <motion.div
               key={note.noteId}
               layout
-              transition={layoutTransition}
+              transition={{
+                layout: NOTE_LAYOUT_TRANSITION,
+                delay: index * 0.03,
+              }}
             >
               {supportsInlineEditing &&
               editingNoteIds?.has(note.noteId) ? (
@@ -194,9 +180,9 @@ export const VerseNotes = memo(function VerseNotes({
               )}
             </motion.div>
           ))}
-        </motion.div>
-      )}
-    </motion.div>
+        </div>
+      }
+    />
   );
 });
 

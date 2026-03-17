@@ -273,8 +273,6 @@ export function usePassageNotesUiState({
             startVerse: verseNumber,
             endVerse: verseNumber,
           });
-          setOpenVerseKey(null);
-          setOpenPassageKey(null);
         }
         return;
       }
@@ -286,8 +284,6 @@ export function usePassageNotesUiState({
         endVerse: selection.endVerse,
       });
       setIsPassageSelection(true);
-      setOpenVerseKey(null);
-      setOpenPassageKey(null);
     },
     [
       addNewDraft,
@@ -364,8 +360,6 @@ export function usePassageNotesUiState({
         endVerse: verseNumber,
       });
       setIsPassageSelection(false);
-      setOpenVerseKey(null);
-      setOpenPassageKey(null);
     },
     [addNewDraft, book, chapter],
   );
@@ -473,6 +467,10 @@ export function usePassageNotesUiState({
     setViewSelectedVerses(new Set([verseNumber]));
   }, []);
 
+  const closeVerseNotes = useCallback(() => {
+    setOpenVerseKey(null);
+  }, []);
+
   const openPassageNotes = useCallback(
     (verseNumber: number) => {
       setOpenPassageKey(verseNumber);
@@ -482,6 +480,10 @@ export function usePassageNotesUiState({
     },
     [getSelectedVersesForPassageAnchor],
   );
+
+  const closePassageNotes = useCallback(() => {
+    setOpenPassageKey(null);
+  }, []);
 
   const startEditingNote = useCallback(
     (noteId: Id<"notes">, verseRef: VerseRef, verseNumber: number, isPassage: boolean) => {
@@ -555,7 +557,9 @@ export function usePassageNotesUiState({
     handleClickAway,
     cancelEditor,
     openVerseNotes,
+    closeVerseNotes,
     openPassageNotes,
+    closePassageNotes,
     startEditingNote,
     startCreatingPassageNote,
     showDiscardConfirmation,

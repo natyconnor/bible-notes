@@ -9,8 +9,10 @@ import { cn } from "@/lib/utils";
 import type { NoteBody } from "@/lib/note-inline-content";
 import type { VerseRef } from "@/lib/verse-ref-utils";
 import type { NoteWithRef } from "@/components/notes/model/note-model";
-
-const layoutTransition = { duration: 0.24, ease: [0.22, 1, 0.36, 1] as const };
+import {
+  NOTE_LAYOUT_TRANSITION,
+  NOTE_ENTER_TRANSITION,
+} from "../note-animation-config";
 
 export interface CurrentChapter {
   book: string;
@@ -50,7 +52,9 @@ export interface VerseRowWithNotesProps {
   onPassageBubbleMouseEnter: (verseNumber: number) => void;
   onPassageBubbleMouseLeave: () => void;
   onOpenVerseNotes: (verseNumber: number) => void;
+  onCloseVerseNotes: () => void;
   onOpenPassageNotes: (verseNumber: number) => void;
+  onClosePassageNotes: () => void;
   onEditNote: (
     noteId: Id<"notes">,
     verseRef: VerseRef,
@@ -105,7 +109,9 @@ export const VerseRowWithNotes = memo(function VerseRowWithNotes({
   onPassageBubbleMouseEnter,
   onPassageBubbleMouseLeave,
   onOpenVerseNotes,
+  onCloseVerseNotes,
   onOpenPassageNotes,
+  onClosePassageNotes,
   onEditNote,
   onDelete,
   onSaveEdit,
@@ -155,7 +161,7 @@ export const VerseRowWithNotes = memo(function VerseRowWithNotes({
     passageNotes.length > 0 ? (
       <motion.div
         layout
-        transition={{ layout: layoutTransition }}
+        transition={{ layout: NOTE_LAYOUT_TRANSITION }}
         className={cn(
           useSideBySide &&
             (isPassageOpen
@@ -187,7 +193,7 @@ export const VerseRowWithNotes = memo(function VerseRowWithNotes({
               : undefined
           }
           onOpen={() => onOpenPassageNotes(verseNumber)}
-          onClose={onClickAway}
+          onClose={onClosePassageNotes}
           onEdit={(noteId: Id<"notes">) => {
             const note = passageNotes.find((n) => n.noteId === noteId);
             if (note) onEditNote(noteId, note.verseRef, verseNumber, true);
@@ -210,7 +216,7 @@ export const VerseRowWithNotes = memo(function VerseRowWithNotes({
   return (
     <motion.div
       layout="position"
-      transition={{ layout: layoutTransition }}
+      transition={{ layout: NOTE_LAYOUT_TRANSITION }}
       className={cn(
         "relative overflow-visible hover:z-10 focus-within:z-10",
         isReadMode
@@ -218,7 +224,7 @@ export const VerseRowWithNotes = memo(function VerseRowWithNotes({
           : "grid grid-cols-[minmax(0,1.1fr)_minmax(360px,440px)] gap-5 items-start",
       )}
     >
-      <motion.div layout="position" transition={{ layout: layoutTransition }}>
+      <div>
         <VerseRowLeft
           verseNumber={verseNumber}
           text={text}
@@ -249,11 +255,11 @@ export const VerseRowWithNotes = memo(function VerseRowWithNotes({
             onMouseLeave,
           }}
         />
-      </motion.div>
+      </div>
 
       <motion.div
         layout
-        transition={{ layout: layoutTransition }}
+        transition={{ layout: NOTE_LAYOUT_TRANSITION }}
         className={cn(
           "py-1",
           useSideBySide ? "flex gap-2 items-start" : "space-y-1.5",
@@ -263,7 +269,7 @@ export const VerseRowWithNotes = memo(function VerseRowWithNotes({
         {singleNotes.length > 0 ? (
           <motion.div
             layout
-            transition={{ layout: layoutTransition }}
+            transition={{ layout: NOTE_LAYOUT_TRANSITION }}
             className={cn(
               useSideBySide &&
                 (showVerseAsPill ? "shrink-0" : "flex-1 min-w-0"),
@@ -291,7 +297,7 @@ export const VerseRowWithNotes = memo(function VerseRowWithNotes({
                   : undefined
               }
               onOpen={() => onOpenVerseNotes(verseNumber)}
-              onClose={onClickAway}
+              onClose={onCloseVerseNotes}
               onEdit={(noteId) => {
                 const note = singleNotes.find((n) => n.noteId === noteId);
                 if (note) onEditNote(noteId, note.verseRef, verseNumber, false);
@@ -318,7 +324,7 @@ export const VerseRowWithNotes = memo(function VerseRowWithNotes({
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: "auto" }}
                   exit={{ opacity: 0, height: 0 }}
-                  transition={{ duration: 0.2 }}
+                  transition={NOTE_ENTER_TRANSITION}
                 >
                   <NoteEditor
                     verseRef={draft}

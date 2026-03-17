@@ -18,6 +18,8 @@ import {
   NoteContent,
 } from "@/components/notes/view/note-card-primitives";
 import { NoteEditor } from "@/components/notes/note-editor";
+import { NoteBubbleShell, type BubbleState } from "./view/note-bubble-shell";
+import { NOTE_LAYOUT_TRANSITION } from "./note-animation-config";
 
 type PassageNote = NoteWithRef;
 
@@ -77,110 +79,43 @@ export const PassageNotesBubble = memo(function PassageNotesBubble({
   const isEditingWithinGroup = hasEditsInGroup;
   const shouldShowExpanded = isOpen || isReadMode || isEditingWithinGroup;
 
-  const layoutTransition = {
-    duration: 0.24,
-    ease: [0.22, 1, 0.36, 1] as const,
-  };
   const previewLength = compact ? 34 : 100;
   const preview =
     notes[0].content.length > previewLength
       ? notes[0].content.slice(0, previewLength) + "..."
       : notes[0].content;
 
+  const bubbleState: BubbleState =
+    isPill && !shouldShowExpanded && !isReadMode
+      ? "pill"
+      : shouldShowExpanded || isReadMode
+        ? "expanded"
+        : "collapsed";
+
   return (
-    <motion.div layout transition={{ layout: layoutTransition }}>
-      {isPill && !shouldShowExpanded && !isReadMode ? (
+    <NoteBubbleShell
+      state={bubbleState}
+      pill={
         <PassageNotesPill
           count={notes.length}
           verseRefLabel={formatVerseRef(notes[0].verseRef)}
           onClick={onOpen}
           isGlowing={isGlowing}
         />
-      ) : !shouldShowExpanded && !isReadMode ? (
-        <div
-          className={cn(
-            "group relative text-sm",
-            "rounded-lg border-l-2 border text-sm transition-colors",
-            "border-l-amber-400 border-amber-200 bg-amber-50/80 dark:bg-amber-900/20 dark:border-amber-700/50 dark:border-l-amber-600/70",
-            "hover:shadow-sm hover:bg-amber-50 dark:hover:bg-amber-800/25",
-            isGlowing &&
-              "animate-pulse-subtle ring-1 ring-amber-400/50 shadow-sm shadow-amber-200/60 dark:shadow-amber-950/60",
-          )}
+      }
+      collapsed={
+        <CollapsedPassageBubble
+          notes={notes}
+          preview={preview}
+          compact={compact}
+          isGlowing={isGlowing}
+          onOpen={onOpen}
+          onEdit={onEdit}
           onMouseEnter={onMouseEnter}
           onMouseLeave={onMouseLeave}
-        >
-          <button
-            type="button"
-            data-note-trigger
-            className="w-full rounded-[inherit] text-left"
-            onClick={onOpen}
-          >
-            <div className={cn("px-3 py-2", compact && "px-2 py-1.5")}>
-              <div className="mb-1 flex items-center gap-1.5">
-                <BookOpen
-                  className={cn(
-                    "text-amber-600 dark:text-amber-400/70 shrink-0",
-                    compact ? "h-2.5 w-2.5" : "h-3 w-3",
-                  )}
-                />
-                <span
-                  className={cn(
-                    "font-semibold text-amber-700 dark:text-amber-400/70 uppercase tracking-wide truncate",
-                    compact ? "text-[8px]" : "text-[10px]",
-                  )}
-                >
-                  {formatVerseRef(notes[0].verseRef)}
-                </span>
-                {notes.length > 1 && (
-                  <Badge
-                    variant="outline"
-                    className={cn(
-                      "border-amber-300 text-amber-700 dark:border-amber-600/50 dark:text-amber-400/70 ml-auto shrink-0",
-                      compact
-                        ? "text-[8px] px-1 py-0"
-                        : "text-[10px] px-1.5 py-0",
-                    )}
-                  >
-                    {notes.length}
-                  </Badge>
-                )}
-              </div>
-              <p
-                className={cn(
-                  "text-muted-foreground leading-relaxed",
-                  compact ? "line-clamp-1 text-[10px]" : "line-clamp-2",
-                )}
-              >
-                {preview}
-              </p>
-              {!compact && notes[0].tags.length > 0 && (
-                <NoteTagList
-                  tags={notes[0].tags}
-                  variant="passage"
-                  size="xs"
-                  className="mt-1.5"
-                />
-              )}
-            </div>
-          </button>
-          {notes.length === 1 && !compact && (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <button
-                  className="absolute top-1.5 right-1.5 opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-amber-100 dark:hover:bg-amber-800/30 transition-all"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onEdit(notes[0].noteId);
-                  }}
-                >
-                  <Pencil className="h-3 w-3 text-muted-foreground" />
-                </button>
-              </TooltipTrigger>
-              <TooltipContent>Edit note</TooltipContent>
-            </Tooltip>
-          )}
-        </div>
-      ) : (
+        />
+      }
+      expanded={
         <div
           data-note-surface
           className={
@@ -232,9 +167,10 @@ export const PassageNotesBubble = memo(function PassageNotesBubble({
             <motion.div
               key={note.noteId}
               layout
-              transition={{ layout: layoutTransition }}
-              initial={index === 0 ? { opacity: 0, y: -4 } : undefined}
-              animate={index === 0 ? { opacity: 1, y: 0 } : undefined}
+              transition={{
+                layout: NOTE_LAYOUT_TRANSITION,
+                delay: index * 0.03,
+              }}
             >
               {supportsInlineEditing &&
               editingNoteIds?.has(note.noteId) ? (
@@ -267,10 +203,116 @@ export const PassageNotesBubble = memo(function PassageNotesBubble({
             </motion.div>
           ))}
         </div>
-      )}
-    </motion.div>
+      }
+    />
   );
 });
+
+function CollapsedPassageBubble({
+  notes,
+  preview,
+  compact,
+  isGlowing,
+  onOpen,
+  onEdit,
+  onMouseEnter,
+  onMouseLeave,
+}: {
+  notes: PassageNote[];
+  preview: string;
+  compact: boolean;
+  isGlowing: boolean;
+  onOpen: () => void;
+  onEdit: (noteId: Id<"notes">) => void;
+  onMouseEnter?: () => void;
+  onMouseLeave?: () => void;
+}) {
+  return (
+    <div
+      className={cn(
+        "group relative text-sm",
+        "rounded-lg border-l-2 border text-sm transition-colors",
+        "border-l-amber-400 border-amber-200 bg-amber-50/80 dark:bg-amber-900/20 dark:border-amber-700/50 dark:border-l-amber-600/70",
+        "hover:shadow-sm hover:bg-amber-50 dark:hover:bg-amber-800/25",
+        isGlowing &&
+          "animate-pulse-subtle ring-1 ring-amber-400/50 shadow-sm shadow-amber-200/60 dark:shadow-amber-950/60",
+      )}
+      onMouseEnter={onMouseEnter}
+      onMouseLeave={onMouseLeave}
+    >
+      <button
+        type="button"
+        data-note-trigger
+        className="w-full rounded-[inherit] text-left"
+        onClick={onOpen}
+      >
+        <div className={cn("px-3 py-2", compact && "px-2 py-1.5")}>
+          <div className="mb-1 flex items-center gap-1.5">
+            <BookOpen
+              className={cn(
+                "text-amber-600 dark:text-amber-400/70 shrink-0",
+                compact ? "h-2.5 w-2.5" : "h-3 w-3",
+              )}
+            />
+            <span
+              className={cn(
+                "font-semibold text-amber-700 dark:text-amber-400/70 uppercase tracking-wide truncate",
+                compact ? "text-[8px]" : "text-[10px]",
+              )}
+            >
+              {formatVerseRef(notes[0].verseRef)}
+            </span>
+            {notes.length > 1 && (
+              <Badge
+                variant="outline"
+                className={cn(
+                  "border-amber-300 text-amber-700 dark:border-amber-600/50 dark:text-amber-400/70 ml-auto shrink-0",
+                  compact
+                    ? "text-[8px] px-1 py-0"
+                    : "text-[10px] px-1.5 py-0",
+                )}
+              >
+                {notes.length}
+              </Badge>
+            )}
+          </div>
+          <p
+            className={cn(
+              "text-muted-foreground leading-relaxed",
+              compact ? "line-clamp-1 text-[10px]" : "line-clamp-2",
+            )}
+          >
+            {preview}
+          </p>
+          {!compact && notes[0].tags.length > 0 && (
+            <NoteTagList
+              tags={notes[0].tags}
+              variant="passage"
+              size="xs"
+              className="mt-1.5"
+            />
+          )}
+        </div>
+      </button>
+      {notes.length === 1 && !compact && (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button
+              className="absolute top-1.5 right-1.5 opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-amber-100 dark:hover:bg-amber-800/30 transition-all"
+              onClick={(e) => {
+                e.stopPropagation();
+                onEdit(notes[0].noteId);
+              }}
+            >
+              <Pencil className="h-3 w-3 text-muted-foreground" />
+            </button>
+          </TooltipTrigger>
+          <TooltipContent>Edit note</TooltipContent>
+        </Tooltip>
+      )}
+    </div>
+  );
+}
 
 function PassageNotesPill({
   count,

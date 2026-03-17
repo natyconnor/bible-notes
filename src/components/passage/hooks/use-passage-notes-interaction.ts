@@ -53,7 +53,9 @@ export interface PassageNotesInteraction {
   handleClickAway: () => void;
   cancelEditor: (key: string) => void;
   openVerseNotes: (verseNumber: number) => void;
+  closeVerseNotes: () => void;
   openPassageNotes: (verseNumber: number) => void;
+  closePassageNotes: () => void;
   startEditingNote: (
     noteId: Id<"notes">,
     verseRef: VerseRef,
