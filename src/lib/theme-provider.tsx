@@ -40,7 +40,8 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const root = document.documentElement;
     const vars = darkMode ? theme.darkVars : theme.vars;
-    for (const [key, value] of Object.entries(vars)) {
+    for (const key of Object.keys(vars) as Array<keyof typeof vars>) {
+      const value = vars[key];
       root.style.setProperty(key, value);
     }
     root.classList.toggle("dark", darkMode);

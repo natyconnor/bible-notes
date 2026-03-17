@@ -2,6 +2,7 @@ import { act, fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import {
   EMPTY_NOTE_BODY,
+  type NoteBody,
   noteBodyToPlainText,
 } from "@/lib/note-inline-content";
 import { InlineVerseEditor } from "./inline-verse-editor";
@@ -32,13 +33,15 @@ function placeCaretAtEnd(node: Text) {
 
 describe("InlineVerseEditor", () => {
   it("reads a browser-inserted line break between inline and block content", () => {
-    const onChange = vi.fn();
+    let latestBody: NoteBody = EMPTY_NOTE_BODY;
 
     render(
       <InlineVerseEditor
         initialBody={EMPTY_NOTE_BODY}
         verseRef={{ book: "John", chapter: 3, startVerse: 16, endVerse: 16 }}
-        onChange={onChange}
+        onChange={(body) => {
+          latestBody = body;
+        }}
       />,
     );
 
@@ -48,7 +51,6 @@ describe("InlineVerseEditor", () => {
       fireEvent.input(editor);
     });
 
-    const latestBody = onChange.mock.calls.at(-1)?.[0];
     expect(noteBodyToPlainText(latestBody)).toBe("Line one\nLine two");
   });
 

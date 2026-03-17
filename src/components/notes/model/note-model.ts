@@ -1,4 +1,8 @@
-import type { Doc, Id } from "../../../../convex/_generated/dataModel";
+import type { Id } from "../../../../convex/_generated/dataModel";
+import type {
+  ChapterNoteEntry,
+  NoteSummary,
+} from "../../../../convex/lib/publicValues";
 import type { NoteBody } from "@/lib/note-inline-content";
 import type { VerseRef } from "@/lib/verse-ref-utils";
 
@@ -11,28 +15,8 @@ export interface NoteWithRef {
   createdAt: number;
 }
 
-export function isNote(doc: unknown): doc is Doc<"notes"> {
-  return (
-    doc !== null &&
-    typeof doc === "object" &&
-    "content" in doc &&
-    "tags" in doc &&
-    "createdAt" in doc
-  );
-}
-
-export interface ChapterNoteEntry {
-  verseRef: {
-    book: string;
-    chapter: number;
-    startVerse: number;
-    endVerse: number;
-  };
-  notes: unknown[];
-}
-
 function toNoteWithRef(
-  note: Doc<"notes">,
+  note: NoteSummary,
   ref: ChapterNoteEntry["verseRef"],
 ): NoteWithRef {
   return {
@@ -61,7 +45,6 @@ export function buildNotesByVerseRange(
     const key = `${ref.startVerse}-${ref.endVerse}`;
     const existing = map.get(key) ?? [];
     for (const note of entry.notes) {
-      if (!isNote(note)) continue;
       if (!existing.some((n) => n.noteId === note._id)) {
         existing.push(toNoteWithRef(note, ref));
       }
@@ -82,7 +65,6 @@ export function buildSingleVerseNotes(
     if (ref.startVerse !== ref.endVerse) continue;
     const existing = map.get(ref.startVerse) ?? [];
     for (const note of entry.notes) {
-      if (!isNote(note)) continue;
       if (!existing.some((n) => n.noteId === note._id)) {
         existing.push(toNoteWithRef(note, ref));
       }
@@ -103,7 +85,6 @@ export function buildPassageNotesByAnchor(
     if (ref.startVerse === ref.endVerse) continue;
     const existing = map.get(ref.startVerse) ?? [];
     for (const note of entry.notes) {
-      if (!isNote(note)) continue;
       if (!existing.some((n) => n.noteId === note._id)) {
         existing.push(toNoteWithRef(note, ref));
       }

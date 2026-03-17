@@ -11,10 +11,39 @@ export interface EsvChapterData {
 
 const CACHE_PREFIX = "esv_cache_";
 
+function parseStoredJson(value: string): unknown {
+  return JSON.parse(value) as unknown;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return value !== null && typeof value === "object";
+}
+
+function asNonEmptyString(value: unknown): string | null {
+  return typeof value === "string" && value.trim().length > 0 ? value : null;
+}
+
+function isEsvVerse(value: unknown): value is EsvVerse {
+  if (!isRecord(value)) return false;
+  return typeof value.number === "number" && typeof value.text === "string";
+}
+
+export function isEsvChapterData(value: unknown): value is EsvChapterData {
+  if (!isRecord(value)) return false;
+  return (
+    typeof value.canonical === "string" &&
+    typeof value.copyright === "string" &&
+    Array.isArray(value.verses) &&
+    value.verses.every(isEsvVerse)
+  );
+}
+
 export function getCachedPassage(query: string): EsvChapterData | null {
   try {
     const cached = sessionStorage.getItem(`${CACHE_PREFIX}${query}`);
-    if (cached) return JSON.parse(cached);
+    if (!cached) return null;
+    const parsed = parseStoredJson(cached);
+    return isEsvChapterData(parsed) ? parsed : null;
   } catch {
     // ignore
   }
@@ -60,9 +89,12 @@ export function parsePassageIntoVerses(passageText: string): EsvVerse[] {
   return verses;
 }
 
-export function parseEsvResponse(raw: Record<string, unknown>): EsvChapterData {
-  const passages = raw.passages as string[] | undefined;
-  const passageText = passages?.[0] ?? "";
+export function parseEsvResponse(raw: unknown): EsvChapterData {
+  const value = isRecord(raw) ? raw : {};
+  const passages = Array.isArray(value.passages)
+    ? value.passages.filter((entry): entry is string => typeof entry === "string")
+    : [];
+  const passageText = passages[0] ?? "";
 
   const defaultCopyright =
     "Scripture quotations are from the ESV\u00AE Bible (The Holy Bible, English Standard Version\u00AE), \u00A9 2001 by Crossway, a publishing ministry of Good News Publishers. Used by permission. All rights reserved.";
@@ -78,7 +110,7 @@ export function parseEsvResponse(raw: Record<string, unknown>): EsvChapterData {
     : passageText.trim();
 
   return {
-    canonical: (raw.canonical as string) ?? "",
+    canonical: asNonEmptyString(value.canonical) ?? "",
     verses: parsePassageIntoVerses(textWithoutCopyright),
     copyright,
   };

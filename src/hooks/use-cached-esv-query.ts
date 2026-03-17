@@ -4,7 +4,6 @@ import { api } from "../../convex/_generated/api";
 import {
   type EsvChapterData,
   getCachedPassage,
-  parseEsvResponse,
   setCachedPassage,
 } from "@/lib/esv-api";
 
@@ -33,13 +32,12 @@ export function useCachedEsvQuery(query: string | null) {
     }
 
     void fetchPassage({ query })
-      .then((raw) => {
+      .then((data) => {
         if (requestVersion !== requestVersionRef.current) return;
-        const parsed = parseEsvResponse(raw);
-        setCachedPassage(query, parsed);
+        setCachedPassage(query, data);
         setAsyncState({
           query,
-          data: parsed,
+          data,
           error: null,
         });
       })

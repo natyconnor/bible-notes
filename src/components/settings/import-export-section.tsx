@@ -21,7 +21,6 @@ import {
 
 import { api } from "../../../convex/_generated/api";
 import { BIBLE_BOOKS } from "@/lib/bible-books";
-import { parseEsvResponse } from "@/lib/esv-api";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -45,7 +44,6 @@ import {
   parseImportWorkbook,
 } from "@/lib/note-transfer/import";
 import type {
-  ExportableLinkedNote,
   ExportScope,
   ImportIssue,
   ParsedImportPreview,
@@ -378,7 +376,7 @@ export function ImportExportSection() {
 
     try {
       setExportError(null);
-      const notes = exportableNotes as ExportableLinkedNote[];
+      const notes = exportableNotes;
       const books = getExportBooks(notes, exportScope);
       const grouped = groupExportNotesByBook(notes);
       const XLSX = await import("xlsx");
@@ -409,9 +407,8 @@ export function ImportExportSection() {
         for (const chapterResult of rawChapters.sort(
           (a, b) => a.chapter - b.chapter,
         )) {
-          const parsedChapter = parseEsvResponse(chapterResult.raw);
           const rows = buildChapterExportRows(
-            parsedChapter.verses,
+            chapterResult.data.verses,
             notesByChapter?.get(chapterResult.chapter),
           );
           const worksheet = XLSX.utils.aoa_to_sheet(rows);

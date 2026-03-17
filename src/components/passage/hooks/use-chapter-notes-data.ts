@@ -8,7 +8,6 @@ import {
   buildPassageNotesByAnchor,
   buildSingleVerseNotes,
   buildVerseToPassageAnchor,
-  type ChapterNoteEntry,
 } from "@/components/notes/model/note-model";
 
 interface SaveNoteRef {
@@ -29,10 +28,7 @@ export function useChapterNotesData(book: string, chapter: number) {
   const findOrCreateRef = useMutation(api.verseRefs.findOrCreate);
   const linkNote = useMutation(api.noteVerseLinks.link);
 
-  const chapterNotes = useMemo(
-    () => (chapterNotesResult ?? []) as ChapterNoteEntry[],
-    [chapterNotesResult],
-  );
+  const chapterNotes = chapterNotesResult;
 
   const singleVerseNotes = useMemo(
     () => buildSingleVerseNotes(chapterNotes),

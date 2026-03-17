@@ -1,3 +1,5 @@
+import type { ExportableLinkedNote as ConvexExportableLinkedNote } from "../../../convex/lib/publicValues";
+
 export type ExportScope = "booksWithNotes" | "allBooks";
 
 export interface ImportIssue {
@@ -32,16 +34,4 @@ export interface ParsedImportPreview {
   issues: ImportIssue[];
 }
 
-export interface ExportableLinkedNote {
-  noteId: string;
-  content: string;
-  tags: string[];
-  createdAt: number;
-  updatedAt: number;
-  verseRef: {
-    book: string;
-    chapter: number;
-    startVerse: number;
-    endVerse: number;
-  };
-}
+export type ExportableLinkedNote = ConvexExportableLinkedNote;

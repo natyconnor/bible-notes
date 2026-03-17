@@ -1,5 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { Reorder } from "framer-motion";
 import { describe, expect, it, vi } from "vitest";
 import { TabItem } from "./tab-item";
 
@@ -10,12 +11,18 @@ describe("TabItem", () => {
     const onClose = vi.fn();
 
     render(
-      <TabItem
-        tab={{ id: "john-1", passageId: "John-1", label: "John 1" }}
-        isActive={false}
-        onActivate={onActivate}
-        onClose={onClose}
-      />,
+      <Reorder.Group
+        axis="x"
+        values={[{ id: "john-1", passageId: "John-1", label: "John 1" }]}
+        onReorder={() => {}}
+      >
+        <TabItem
+          tab={{ id: "john-1", passageId: "John-1", label: "John 1" }}
+          isActive={false}
+          onActivate={onActivate}
+          onClose={onClose}
+        />
+      </Reorder.Group>,
     );
 
     await user.tab();

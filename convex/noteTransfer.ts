@@ -3,27 +3,15 @@ import { v } from "convex/values";
 
 import { getCurrentUserId, getCurrentUserIdOrNull } from "./lib/auth";
 import {
+  exportableLinkedNoteValue,
+  type ExportableLinkedNote,
+} from "./lib/publicValues";
+import {
   createPlainTextNoteBody,
   noteBodyToPlainText,
 } from "./lib/noteContent";
 import { normalizeTags, syncUserTagsFromNote } from "./lib/tags";
 import { findOrCreateVerseRefId } from "./lib/verseRefs";
-
-const verseRefSummary = v.object({
-  book: v.string(),
-  chapter: v.number(),
-  startVerse: v.number(),
-  endVerse: v.number(),
-});
-
-export const exportableLinkedNote = v.object({
-  noteId: v.id("notes"),
-  content: v.string(),
-  tags: v.array(v.string()),
-  createdAt: v.number(),
-  updatedAt: v.number(),
-  verseRef: verseRefSummary,
-});
 
 export const importedNoteInput = v.object({
   book: v.string(),
@@ -35,7 +23,7 @@ export const importedNoteInput = v.object({
 
 export const listExportableNotes = query({
   args: {},
-  returns: v.array(exportableLinkedNote),
+  returns: v.array(exportableLinkedNoteValue),
   handler: async (ctx) => {
     const userId = await getCurrentUserIdOrNull(ctx);
     if (!userId) return [];
@@ -45,19 +33,7 @@ export const listExportableNotes = query({
       .withIndex("by_userId", (q) => q.eq("userId", userId))
       .collect();
 
-    const exported: Array<{
-      noteId: (typeof links)[number]["noteId"];
-      content: string;
-      tags: string[];
-      createdAt: number;
-      updatedAt: number;
-      verseRef: {
-        book: string;
-        chapter: number;
-        startVerse: number;
-        endVerse: number;
-      };
-    }> = [];
+    const exported: ExportableLinkedNote[] = [];
 
     for (const link of links) {
       const [note, verseRef] = await Promise.all([

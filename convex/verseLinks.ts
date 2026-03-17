@@ -1,12 +1,25 @@
 import { query, mutation } from "./_generated/server";
+import type { Doc } from "./_generated/dataModel";
 import { v } from "convex/values";
 import { getCurrentUserId, getCurrentUserIdOrNull } from "./lib/auth";
+import { verseRefLinkValue, type VerseRefLink } from "./lib/publicValues";
+
+function toVerseRefLink(ref: Doc<"verseRefs">): VerseRefLink {
+  return {
+    _id: ref._id,
+    book: ref.book,
+    chapter: ref.chapter,
+    startVerse: ref.startVerse,
+    endVerse: ref.endVerse,
+  };
+}
 
 export const create = mutation({
   args: {
     verseRefId1: v.id("verseRefs"),
     verseRefId2: v.id("verseRefs"),
   },
+  returns: v.id("verseLinks"),
   handler: async (ctx, args) => {
     const userId = await getCurrentUserId(ctx);
 
@@ -34,6 +47,7 @@ export const create = mutation({
 
 export const getLinksForVerseRef = query({
   args: { verseRefId: v.id("verseRefs") },
+  returns: v.array(verseRefLinkValue),
   handler: async (ctx, args) => {
     const userId = await getCurrentUserIdOrNull(ctx);
     if (!userId) return [];
@@ -55,7 +69,9 @@ export const getLinksForVerseRef = query({
       ...asSecond.map((l) => l.verseRefId1),
     ];
     const linkedRefs = await Promise.all(linkedIds.map((id) => ctx.db.get(id)));
-    return linkedRefs.filter(Boolean);
+    return linkedRefs
+      .filter((ref): ref is Doc<"verseRefs"> => !!ref && ref.userId === userId)
+      .map(toVerseRefLink);
   },
 });
 
@@ -64,6 +80,7 @@ export const remove = mutation({
     verseRefId1: v.id("verseRefs"),
     verseRefId2: v.id("verseRefs"),
   },
+  returns: v.null(),
   handler: async (ctx, args) => {
     const userId = await getCurrentUserId(ctx);
 
@@ -79,5 +96,6 @@ export const remove = mutation({
       .collect();
     const link = links.find((l) => l.verseRefId2 === id2);
     if (link) await ctx.db.delete(link._id);
+    return null;
   },
 });

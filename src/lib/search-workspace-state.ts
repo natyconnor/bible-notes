@@ -17,6 +17,10 @@ const DEFAULT_STATE: SearchWorkspaceStoredState = {
   scrollTop: 0,
 };
 
+function parseStoredJson(value: string): unknown {
+  return JSON.parse(value) as unknown;
+}
+
 function hasWindow(): boolean {
   return (
     typeof window !== "undefined" && typeof window.localStorage !== "undefined"
@@ -65,7 +69,7 @@ export function readSearchWorkspaceState(): SearchWorkspaceStoredState {
   try {
     const saved = window.localStorage.getItem(SEARCH_WORKSPACE_STORAGE_KEY);
     if (!saved) return DEFAULT_STATE;
-    return normalizeState(JSON.parse(saved));
+    return normalizeState(parseStoredJson(saved));
   } catch {
     return DEFAULT_STATE;
   }

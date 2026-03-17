@@ -2,6 +2,15 @@ import { query, mutation } from "./_generated/server";
 import type { Doc } from "./_generated/dataModel";
 import { v } from "convex/values";
 import { getCurrentUserId, getCurrentUserIdOrNull } from "./lib/auth";
+import {
+  chapterNoteEntryValue,
+  noteSummaryValue,
+  verseRefLinkValue,
+  type ChapterNoteEntry,
+  type NoteSummary,
+  type VerseRefLink,
+  type VerseRefSummary,
+} from "./lib/publicValues";
 
 function isNote(doc: unknown): doc is Doc<"notes"> {
   return (
@@ -11,6 +20,33 @@ function isNote(doc: unknown): doc is Doc<"notes"> {
     "tags" in doc &&
     "createdAt" in doc
   );
+}
+
+function toNoteSummary(note: Doc<"notes">): NoteSummary {
+  return {
+    _id: note._id,
+    content: note.content,
+    ...(note.body ? { body: note.body } : {}),
+    tags: note.tags,
+    createdAt: note.createdAt,
+    updatedAt: note.updatedAt,
+  };
+}
+
+function toVerseRefSummary(ref: Doc<"verseRefs">): VerseRefSummary {
+  return {
+    book: ref.book,
+    chapter: ref.chapter,
+    startVerse: ref.startVerse,
+    endVerse: ref.endVerse,
+  };
+}
+
+function toVerseRefLink(ref: Doc<"verseRefs">): VerseRefLink {
+  return {
+    _id: ref._id,
+    ...toVerseRefSummary(ref),
+  };
 }
 
 export const link = mutation({
@@ -65,6 +101,7 @@ export const unlink = mutation({
 
 export const getNotesForVerseRef = query({
   args: { verseRefId: v.id("verseRefs") },
+  returns: v.array(noteSummaryValue),
   handler: async (ctx, args) => {
     const userId = await getCurrentUserIdOrNull(ctx);
     if (!userId) return [];
@@ -75,12 +112,13 @@ export const getNotesForVerseRef = query({
       )
       .collect();
     const rawNotes = await Promise.all(links.map((l) => ctx.db.get(l.noteId)));
-    return rawNotes.filter(isNote);
+    return rawNotes.filter(isNote).map(toNoteSummary);
   },
 });
 
 export const getVerseRefsForNote = query({
   args: { noteId: v.id("notes") },
+  returns: v.array(verseRefLinkValue),
   handler: async (ctx, args) => {
     const userId = await getCurrentUserIdOrNull(ctx);
     if (!userId) return [];
@@ -91,12 +129,15 @@ export const getVerseRefsForNote = query({
       )
       .collect();
     const refs = await Promise.all(links.map((l) => ctx.db.get(l.verseRefId)));
-    return refs.filter(Boolean);
+    return refs
+      .filter((ref): ref is Doc<"verseRefs"> => !!ref && ref.userId === userId)
+      .map(toVerseRefLink);
   },
 });
 
 export const getNotesForChapter = query({
   args: { book: v.string(), chapter: v.number() },
+  returns: v.array(chapterNoteEntryValue),
   handler: async (ctx, args) => {
     const userId = await getCurrentUserIdOrNull(ctx);
     if (!userId) return [];
@@ -110,10 +151,7 @@ export const getNotesForChapter = query({
       )
       .collect();
 
-    const result: Array<{
-      verseRef: (typeof verseRefs)[0];
-      notes: Doc<"notes">[];
-    }> = [];
+    const result: ChapterNoteEntry[] = [];
 
     for (const ref of verseRefs) {
       const links = await ctx.db
@@ -127,7 +165,10 @@ export const getNotesForChapter = query({
       );
       const notes = rawNotes.filter(isNote);
       if (notes.length > 0) {
-        result.push({ verseRef: ref, notes });
+        result.push({
+          verseRef: toVerseRefSummary(ref),
+          notes: notes.map(toNoteSummary),
+        });
       }
     }
 

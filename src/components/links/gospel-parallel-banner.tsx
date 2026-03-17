@@ -1,6 +1,7 @@
 import { useQuery } from "convex-helpers/react/cache";
 import { motion, AnimatePresence } from "framer-motion";
 import { api } from "../../../convex/_generated/api";
+import type { GospelParallel } from "../../../convex/lib/publicValues";
 import { Badge } from "@/components/ui/badge";
 import { useTabs } from "@/lib/use-tabs";
 import { toPassageId } from "@/lib/verse-ref-utils";
@@ -85,16 +86,7 @@ function ParallelItem({
   chapter,
   openTab,
 }: {
-  parallel: {
-    _id: string;
-    label: string;
-    passages: Array<{
-      book: string;
-      chapter: number;
-      startVerse: number;
-      endVerse: number;
-    }>;
-  };
+  parallel: GospelParallel;
   book: string;
   chapter: number;
   openTab: (id: string, label: string) => void;

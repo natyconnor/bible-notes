@@ -6,13 +6,7 @@ interface ThemePreviewPanelProps {
 }
 
 export function ThemePreviewPanel({ theme }: ThemePreviewPanelProps) {
-  const cssVars = Object.entries(theme.vars).reduce<Record<string, string>>(
-    (acc, [key, value]) => {
-      acc[key] = value;
-      return acc;
-    },
-    {},
-  );
+  const cssVars = theme.vars;
 
   return (
     <div className="flex flex-col min-w-0 flex-1">

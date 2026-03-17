@@ -46,7 +46,6 @@ export function LinkedVersesPopover({ verseRefId }: LinkedVersesPopoverProps) {
         </p>
         <div className="flex flex-wrap gap-1">
           {linkedRefs.map((ref) => {
-            if (!ref) return null;
             const label =
               ref.startVerse === ref.endVerse
                 ? `${ref.book} ${ref.chapter}:${ref.startVerse}`

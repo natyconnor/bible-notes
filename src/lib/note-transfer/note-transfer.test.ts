@@ -1,5 +1,6 @@
 import * as XLSX from "xlsx";
 import { describe, expect, it } from "vitest";
+import type { Id } from "../../../convex/_generated/dataModel";
 
 import {
   formatExportWorkbookFileName,
@@ -354,7 +355,7 @@ describe("note transfer export shaping", () => {
         1,
         [
           {
-            noteId: "n1",
+            noteId: "n1" as Id<"notes">,
             content: "First note",
             tags: ["faith"],
             createdAt: 1,
@@ -367,7 +368,7 @@ describe("note transfer export shaping", () => {
             },
           },
           {
-            noteId: "n2",
+            noteId: "n2" as Id<"notes">,
             content: "Passage note",
             tags: [],
             createdAt: 2,

@@ -12,10 +12,7 @@ import { Plus } from "lucide-react";
 import type { NoteBody } from "@/lib/note-inline-content";
 import type { VerseRef } from "@/lib/verse-ref-utils";
 import { formatVerseRef, isPassageNote } from "@/lib/verse-ref-utils";
-import {
-  buildNotesByVerseRange,
-  type ChapterNoteEntry,
-} from "./model/note-model";
+import { buildNotesByVerseRange } from "./model/note-model";
 
 interface NotesPanelProps {
   book: string;
@@ -60,8 +57,7 @@ export function NotesPanel({
   /* eslint-enable react-hooks/set-state-in-effect */
 
   const notesByVerse = useMemo(
-    () =>
-      buildNotesByVerseRange(chapterNotes as ChapterNoteEntry[] | undefined),
+    () => buildNotesByVerseRange(chapterNotes),
     [chapterNotes],
   );
 

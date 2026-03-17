@@ -13,6 +13,11 @@ import {
   noteBodyValue,
   type NoteBodyInput,
 } from "./lib/noteContent";
+import {
+  noteSummaryValue,
+  verseRefSummaryValue,
+  type NoteSummary,
+} from "./lib/publicValues";
 import { findOrCreateVerseRefId } from "./lib/verseRefs";
 import { getVerseRefBoundsErrorMessage } from "../src/lib/verse-ref-validation";
 
@@ -21,13 +26,6 @@ const MAX_SEARCH_LIMIT = 100;
 const SEARCH_WINDOW_MULTIPLIER = 4;
 const MAX_SEARCH_WINDOW = 400;
 const MAX_WORKSPACE_RESULTS = 100;
-
-const verseRefSummary = v.object({
-  book: v.string(),
-  chapter: v.number(),
-  startVerse: v.number(),
-  endVerse: v.number(),
-});
 
 const noteBodySummary = v.union(noteBodyValue, v.null());
 
@@ -38,8 +36,8 @@ const workspaceSearchResult = v.object({
   tags: v.array(v.string()),
   createdAt: v.number(),
   updatedAt: v.number(),
-  verseRefs: v.array(verseRefSummary),
-  primaryRef: v.union(verseRefSummary, v.null()),
+  verseRefs: v.array(verseRefSummaryValue),
+  primaryRef: v.union(verseRefSummaryValue, v.null()),
 });
 
 function resolveSearchLimit(limit: number | undefined): number {
@@ -76,6 +74,17 @@ function formatInlineVerseRef(ref: {
     return `${ref.book} ${ref.chapter}:${ref.startVerse}`;
   }
   return `${ref.book} ${ref.chapter}:${ref.startVerse}-${ref.endVerse}`;
+}
+
+function toNoteSummary(note: Doc<"notes">): NoteSummary {
+  return {
+    _id: note._id,
+    content: note.content,
+    ...(note.body ? { body: note.body } : {}),
+    tags: note.tags,
+    createdAt: note.createdAt,
+    updatedAt: note.updatedAt,
+  };
 }
 
 function assertValidInlineVerseRefs(body: NoteBodyInput) {
@@ -136,13 +145,14 @@ async function syncInlineVerseLinksForNote(
 
 export const getById = query({
   args: { id: v.id("notes") },
+  returns: v.union(noteSummaryValue, v.null()),
   handler: async (ctx, args) => {
     const userId = await getCurrentUserIdOrNull(ctx);
     if (!userId) return null;
     const note = await ctx.db.get(args.id);
     if (!note) return null;
     if (note.userId !== userId) return null;
-    return note;
+    return toNoteSummary(note);
   },
 });
 
@@ -153,6 +163,7 @@ export const search = query({
     matchMode: v.optional(v.union(v.literal("any"), v.literal("all"))),
     limit: v.optional(v.number()),
   },
+  returns: v.array(noteSummaryValue),
   handler: async (ctx, args) => {
     const userId = await getCurrentUserIdOrNull(ctx);
     if (!userId) return [];
@@ -186,7 +197,8 @@ export const search = query({
 
     return baseResults
       .filter((note) => matchesTagFilters(note.tags, selectedTags, matchMode))
-      .slice(0, limit);
+      .slice(0, limit)
+      .map(toNoteSummary);
   },
 });
 
@@ -276,6 +288,7 @@ export const searchWorkspace = query({
 
 export const allTags = query({
   args: {},
+  returns: v.array(v.string()),
   handler: async (ctx) => {
     const userId = await getCurrentUserIdOrNull(ctx);
     if (!userId) return [];

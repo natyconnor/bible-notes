@@ -2,10 +2,22 @@
 import { action } from "./_generated/server";
 import { v } from "convex/values";
 
+import {
+  esvChapterDataValue,
+  esvChapterResultValue,
+  type EsvChapterData,
+  type EsvChapterResult,
+} from "./lib/publicValues";
+import { parseEsvResponse } from "../src/lib/esv-api";
+
+function parseJsonBody(value: string): unknown {
+  return JSON.parse(value) as unknown;
+}
+
 async function fetchPassageText(
   apiKey: string,
   query: string,
-): Promise<Record<string, unknown>> {
+): Promise<EsvChapterData> {
   const params = new URLSearchParams({
     q: query,
     "include-verse-numbers": "true",
@@ -32,13 +44,15 @@ async function fetchPassageText(
     throw new Error(`ESV API error: ${response.status} ${response.statusText}`);
   }
 
-  return await response.json();
+  const body = await response.text();
+  return parseEsvResponse(parseJsonBody(body));
 }
 
 export const getPassageText = action({
   args: {
     query: v.string(),
   },
+  returns: esvChapterDataValue,
   handler: async (_ctx, args) => {
     const apiKey = process.env.ESV_API_KEY;
     if (!apiKey)
@@ -54,12 +68,7 @@ export const getChaptersTextBatch = action({
     book: v.string(),
     chapters: v.array(v.number()),
   },
-  returns: v.array(
-    v.object({
-      chapter: v.number(),
-      raw: v.any(),
-    }),
-  ),
+  returns: v.array(esvChapterResultValue),
   handler: async (_ctx, args) => {
     const apiKey = process.env.ESV_API_KEY;
     if (!apiKey) {
@@ -72,12 +81,12 @@ export const getChaptersTextBatch = action({
       new Set(args.chapters.map((chapter) => Math.floor(chapter))),
     ).filter((chapter) => chapter > 0);
 
-    const results = [];
+    const results: EsvChapterResult[] = [];
     for (const chapter of uniqueChapters) {
-      const raw = await fetchPassageText(apiKey, `${args.book} ${chapter}`);
+      const data = await fetchPassageText(apiKey, `${args.book} ${chapter}`);
       results.push({
         chapter,
-        raw,
+        data,
       });
     }
 

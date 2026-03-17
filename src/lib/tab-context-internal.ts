@@ -34,6 +34,10 @@ export const TabContext = createContext<TabContextValue | null>(null);
 
 export const STORAGE_KEY = "bible_tabs";
 
+function parseStoredJson(value: string): unknown {
+  return JSON.parse(value) as unknown;
+}
+
 function toTab(raw: unknown, index: number): Tab | null {
   if (!raw || typeof raw !== "object") return null;
   const entry = raw as Record<string, unknown>;
@@ -62,7 +66,7 @@ export function loadTabs(): Tab[] {
   try {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) {
-      const parsed = JSON.parse(saved);
+      const parsed = parseStoredJson(saved);
       if (Array.isArray(parsed) && parsed.length > 0) {
         const normalized = parsed
           .map((entry, index) => toTab(entry, index))
