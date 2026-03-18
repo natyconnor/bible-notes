@@ -30,7 +30,7 @@ import { usePassageViewMode } from "./hooks/use-passage-view-mode";
 import { usePassageKeyboardShortcuts } from "./hooks/use-passage-keyboard-shortcuts";
 import { usePassageScrollRestoration } from "./hooks/use-passage-scroll-restoration";
 import { usePassageViewTour } from "./hooks/use-passage-view-tour";
-import { NOTE_LAYOUT_TRANSITION } from "./note-animation-config";
+import { NOTE_ENTER_TRANSITION } from "./note-animation-config";
 import { api } from "../../../convex/_generated/api";
 
 interface PassageViewProps {
@@ -406,8 +406,8 @@ export function PassageView({
                     initial={{ height: 0, opacity: 0 }}
                     animate={{ height: "auto", opacity: 1 }}
                     exit={{ height: 0, opacity: 0 }}
-                    transition={NOTE_LAYOUT_TRANSITION}
-                    style={{ overflow: "visible" }}
+                    transition={NOTE_ENTER_TRANSITION}
+                    style={{ overflow: "hidden" }}
                   >
                     <VerseRowWithNotes
                       verseNumber={verse.verseNumber}

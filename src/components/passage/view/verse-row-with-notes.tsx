@@ -1,5 +1,5 @@
 import { memo, useCallback, useRef } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, LayoutGroup } from "framer-motion";
 import type { Id } from "../../../../convex/_generated/dataModel";
 import { VerseRowLeft } from "../verse-row";
 import { VerseNotes } from "../verse-notes";
@@ -13,7 +13,7 @@ import type { NoteWithRef } from "@/components/notes/model/note-model";
 import type { HighlightRange } from "@/lib/highlight-utils";
 import type { InsertQuoteFn } from "@/components/notes/editor/inline-verse-editor";
 import {
-  NOTE_LAYOUT_TRANSITION,
+  LAYOUT_CORRECTION_TRANSITION,
   NOTE_ENTER_TRANSITION,
 } from "../note-animation-config";
 
@@ -200,7 +200,7 @@ export const VerseRowWithNotes = memo(function VerseRowWithNotes({
     passageNotes.length > 0 ? (
       <motion.div
         layout
-        transition={{ layout: NOTE_LAYOUT_TRANSITION }}
+        transition={{ layout: LAYOUT_CORRECTION_TRANSITION }}
         className={cn(
           useSideBySide &&
             (isPassageOpen
@@ -253,19 +253,22 @@ export const VerseRowWithNotes = memo(function VerseRowWithNotes({
     ) : null;
 
   return (
+    // LayoutGroup scopes all layout animations to this single verse row so
+    // that a layout change in row N never triggers layout corrections in row M.
+    <LayoutGroup id={`verse-row-${verseNumber}`}>
     <motion.div
       layout
-      transition={{ layout: NOTE_LAYOUT_TRANSITION }}
+      transition={{ layout: LAYOUT_CORRECTION_TRANSITION }}
       className={cn(
         "relative overflow-visible hover:z-10 focus-within:z-10",
         isReadMode
           ? "grid grid-cols-[minmax(360px,1fr)_minmax(520px,1.4fr)] gap-6 items-start"
-          : "grid grid-cols-[minmax(0,1.1fr)_minmax(360px,440px)] gap-5 items-stretch",
+          : "grid grid-cols-[minmax(0,1.1fr)_minmax(360px,440px)] gap-5 items-start",
       )}
     >
       <motion.div
-        layout
-        transition={{ layout: NOTE_LAYOUT_TRANSITION }}
+        layout="position"
+        transition={{ layout: LAYOUT_CORRECTION_TRANSITION }}
         className="flex h-full flex-col"
       >
         <VerseRowLeft
@@ -315,7 +318,7 @@ export const VerseRowWithNotes = memo(function VerseRowWithNotes({
 
       <motion.div
         layout
-        transition={{ layout: NOTE_LAYOUT_TRANSITION }}
+        transition={{ layout: LAYOUT_CORRECTION_TRANSITION }}
         className={cn(
           "py-1 select-none",
           useSideBySide ? "flex gap-2 items-start" : "space-y-1.5",
@@ -325,7 +328,7 @@ export const VerseRowWithNotes = memo(function VerseRowWithNotes({
         {singleNotes.length > 0 ? (
           <motion.div
             layout
-            transition={{ layout: NOTE_LAYOUT_TRANSITION }}
+            transition={{ layout: LAYOUT_CORRECTION_TRANSITION }}
             className={cn(
               useSideBySide &&
                 (showVerseAsPill ? "shrink-0" : "flex-1 min-w-0"),
@@ -402,5 +405,6 @@ export const VerseRowWithNotes = memo(function VerseRowWithNotes({
         </AnimatePresence>
       </motion.div>
     </motion.div>
+    </LayoutGroup>
   );
 });

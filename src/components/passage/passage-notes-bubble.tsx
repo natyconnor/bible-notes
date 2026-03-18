@@ -19,7 +19,7 @@ import {
 } from "@/components/notes/view/note-card-primitives";
 import { NoteEditor } from "@/components/notes/note-editor";
 import { NoteBubbleShell, type BubbleState } from "./view/note-bubble-shell";
-import { NOTE_LAYOUT_TRANSITION } from "./note-animation-config";
+import { LAYOUT_CORRECTION_TRANSITION } from "./note-animation-config";
 
 type PassageNote = NoteWithRef;
 
@@ -168,7 +168,7 @@ export const PassageNotesBubble = memo(function PassageNotesBubble({
               key={note.noteId}
               layout
               transition={{
-                layout: NOTE_LAYOUT_TRANSITION,
+                layout: LAYOUT_CORRECTION_TRANSITION,
                 delay: index * 0.03,
               }}
             >

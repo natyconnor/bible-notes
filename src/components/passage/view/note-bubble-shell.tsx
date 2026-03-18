@@ -25,7 +25,7 @@ export function NoteBubbleShell({
     state === "expanded" ? NOTE_CONTENT_VARIANTS : NOTE_FADE_VARIANTS;
 
   return (
-    <AnimatePresence mode="popLayout" initial={false}>
+    <AnimatePresence mode="wait" initial={false}>
       <motion.div
         key={state}
         variants={variants}

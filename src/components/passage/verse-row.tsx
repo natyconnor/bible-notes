@@ -7,7 +7,7 @@ import {
   type HighlightRange,
 } from "@/lib/highlight-utils";
 import { getHighlightColor } from "@/lib/highlight-colors";
-import { NOTE_LAYOUT_TRANSITION } from "./note-animation-config";
+import { VERSE_EXPAND_TRANSITION } from "./note-animation-config";
 
 export interface VerseSelectionState {
   isSelected: boolean;
@@ -54,6 +54,28 @@ interface VerseRowLeftProps {
   handlers: VerseInteractionHandlers;
 }
 
+// Explicit pixel values for each expand state. Editing these two objects is the
+// single place to tune the verse growing animation — no class swaps involved.
+const COLLAPSED = {
+  paddingTop: "0.5rem",    // py-2
+  paddingBottom: "0.5rem",
+  paddingLeft: "0.75rem",  // px-3
+  paddingRight: "0.75rem",
+  verseNumberFontSize: "0.75rem",  // text-xs
+  textFontSize: "1rem",            // text-base
+  verseNumberPaddingTop: "0.125rem", // pt-0.5
+} as const;
+
+const EXPANDED = {
+  paddingTop: "1.25rem",   // py-5
+  paddingBottom: "1.25rem",
+  paddingLeft: "1.25rem",  // px-5
+  paddingRight: "1.25rem",
+  verseNumberFontSize: "1rem",     // text-base
+  textFontSize: "1.5rem",          // text-2xl
+  verseNumberPaddingTop: "0.375rem", // pt-1.5
+} as const;
+
 export const VerseRowLeft = memo(function VerseRowLeft({
   verseNumber,
   text,
@@ -77,6 +99,8 @@ export const VerseRowLeft = memo(function VerseRowLeft({
   const shouldFlipTooltipBelow = verseNumber <= 2;
   const { onAddNote, onMouseDown, onMouseEnter, onMouseLeave } = handlers;
 
+  const sizes = isExpanded ? EXPANDED : COLLAPSED;
+
   const segments =
     highlights && highlights.length > 0
       ? splitTextByHighlights(text, highlights)
@@ -89,9 +113,7 @@ export const VerseRowLeft = memo(function VerseRowLeft({
         return <span key={i}>{seg.text}</span>;
       }
       const colorDef = getHighlightColor(seg.color);
-      const bgClass = isExpanded
-        ? colorDef?.bg
-        : colorDef?.bgSubtle;
+      const bgClass = isExpanded ? colorDef?.bg : colorDef?.bgSubtle;
       return (
         <mark
           key={i}
@@ -107,16 +129,22 @@ export const VerseRowLeft = memo(function VerseRowLeft({
   }, [segments, text, isExpanded]);
 
   return (
+    // No `layout` here — padding and font-size are driven by explicit `animate`
+    // values so Framer Motion never needs to use scale-based projection to
+    // correct this element's size, eliminating the "text zooms" artifact.
     <motion.div
-      layout
-      transition={{ layout: NOTE_LAYOUT_TRANSITION }}
+      animate={{
+        paddingTop: sizes.paddingTop,
+        paddingBottom: sizes.paddingBottom,
+        paddingLeft: sizes.paddingLeft,
+        paddingRight: sizes.paddingRight,
+      }}
+      transition={VERSE_EXPAND_TRANSITION}
       data-verse-number={verseNumber}
       {...(rowTourId ? { "data-tour-id": rowTourId } : {})}
       className={cn(
         "group relative h-full rounded-sm transition-[color,background-color,border-color,box-shadow] duration-200 ease-out",
-        isExpanded
-          ? "px-5 py-5 cursor-text"
-          : "py-2 px-3 min-h-10 select-none cursor-pointer",
+        isExpanded ? "cursor-text" : "min-h-10 select-none cursor-pointer",
         isSelected &&
           isPassageSelection &&
           "bg-amber-100/80 dark:bg-amber-800/30 ring-1 ring-amber-400/40 dark:ring-amber-500/30",
@@ -160,23 +188,21 @@ export const VerseRowLeft = memo(function VerseRowLeft({
       onMouseEnter={() => onMouseEnter(verseNumber)}
       onMouseLeave={onMouseLeave}
     >
-      <motion.div
-        layout="position"
-        transition={{ layout: NOTE_LAYOUT_TRANSITION }}
-        className="flex h-full items-center"
-      >
+      {/* Plain div — no layout="position" needed since the parent no longer
+          uses scale-based projection. */}
+      <div className="flex h-full items-center">
         <div className="flex w-full gap-2">
-          <span
-            className={cn(
-              "flex items-start gap-1 shrink-0 select-none",
-              isExpanded ? "pt-1.5" : "pt-0.5",
-            )}
+          <motion.span
+            animate={{ paddingTop: sizes.verseNumberPaddingTop }}
+            transition={VERSE_EXPAND_TRANSITION}
+            className="flex items-start gap-1 shrink-0 select-none"
           >
             <span
-              className={cn(
-                "font-semibold text-muted-foreground tabular-nums min-w-6 text-right",
-                isExpanded ? "text-base" : "text-xs",
-              )}
+              style={{
+                fontSize: sizes.verseNumberFontSize,
+                transition: "font-size 0.28s cubic-bezier(0.22, 1, 0.36, 1)",
+              }}
+              className="font-semibold text-muted-foreground tabular-nums min-w-6 text-right"
             >
               {verseNumber}
             </span>
@@ -191,15 +217,14 @@ export const VerseRowLeft = memo(function VerseRowLeft({
                 <span className="mt-0.5 h-0.5 w-2 shrink-0 rounded bg-amber-300/70 dark:bg-amber-500/40" />
               )}
             </span>
-          </span>
+          </motion.span>
           <span
             ref={verseTextRef}
-            className={cn(
-              "font-serif flex-1 min-w-0 whitespace-pre-wrap",
-              isExpanded
-                ? "text-2xl leading-relaxed"
-                : "text-base leading-relaxed",
-            )}
+            style={{
+              fontSize: sizes.textFontSize,
+              transition: "font-size 0.28s cubic-bezier(0.22, 1, 0.36, 1)",
+            }}
+            className="font-serif flex-1 min-w-0 whitespace-pre-wrap leading-relaxed"
           >
             {renderHighlightedText()}
           </span>
@@ -233,7 +258,7 @@ export const VerseRowLeft = memo(function VerseRowLeft({
             </div>
           )}
         </div>
-      </motion.div>
+      </div>
     </motion.div>
   );
 });
