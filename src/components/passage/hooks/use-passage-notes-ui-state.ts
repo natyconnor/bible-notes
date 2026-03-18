@@ -231,25 +231,15 @@ export function usePassageNotesUiState({
         return;
       }
 
-      const path = event.composedPath();
-      const hasSelectorInPath = (selector: string) =>
-        path.some((node) => node instanceof Element && node.matches(selector));
-      const isInteractiveTarget =
-        hasSelectorInPath("[data-note-trigger]") ||
-        hasSelectorInPath("[data-note-surface]") ||
-        hasSelectorInPath("[data-verse-number]") ||
-        hasSelectorInPath("[data-highlight-popover]") ||
-        hasSelectorInPath("[data-highlight-toolbar]");
+      if (isInsideInteractiveSurface(event)) return;
 
-      if (!isInteractiveTarget) {
-        if (canDismissOnClickAwayRef.current) {
-          setOpenVerseKey(null);
-          setOpenPassageKey(null);
-          setOpenEditors(new Map());
-          setEditorHasChanges(new Set());
-          setViewSelectedVerses(new Set());
-          setIsPassageSelection(false);
-        }
+      if (canDismissOnClickAwayRef.current) {
+        setOpenVerseKey(null);
+        setOpenPassageKey(null);
+        setOpenEditors(new Map());
+        setEditorHasChanges(new Set());
+        setViewSelectedVerses(new Set());
+        setIsPassageSelection(false);
       }
     }
 
@@ -627,4 +617,21 @@ export function usePassageNotesUiState({
     confirmDiscard,
     cancelDiscard,
   };
+}
+
+const INTERACTIVE_SURFACE_SELECTORS = [
+  "[data-note-trigger]",
+  "[data-note-surface]",
+  "[data-verse-number]",
+  "[data-highlight-popover]",
+  "[data-highlight-toolbar]",
+] as const;
+
+function isInsideInteractiveSurface(event: MouseEvent): boolean {
+  const path = event.composedPath();
+  return path.some(
+    (node) =>
+      node instanceof Element &&
+      INTERACTIVE_SURFACE_SELECTORS.some((sel) => node.matches(sel)),
+  );
 }

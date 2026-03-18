@@ -74,6 +74,7 @@ export function HighlightMarkPopover({
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.86, y: showAbove ? 8 : -8 }}
         transition={POPOVER_SPRING}
+        onMouseDown={(e) => e.preventDefault()}
       >
         {HIGHLIGHT_COLORS.map((color) => (
           <motion.button
@@ -90,15 +91,7 @@ export function HighlightMarkPopover({
             whileHover={{ scale: 1.18 }}
             whileTap={{ scale: 0.92 }}
             transition={{ type: "spring", stiffness: 500, damping: 28 }}
-            onMouseDown={(e) => {
-              e.preventDefault();
-              onRecolor(color.id);
-            }}
-            onClick={(e) => {
-              if (e.detail === 0) {
-                onRecolor(color.id);
-              }
-            }}
+            onClick={() => onRecolor(color.id)}
           />
         ))}
         <div className="mx-1 h-5 w-px bg-border" />
@@ -109,15 +102,7 @@ export function HighlightMarkPopover({
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.9 }}
           transition={{ type: "spring", stiffness: 500, damping: 28 }}
-          onMouseDown={(e) => {
-            e.preventDefault();
-            onDelete();
-          }}
-          onClick={(e) => {
-            if (e.detail === 0) {
-              onDelete();
-            }
-          }}
+          onClick={onDelete}
         >
           <Trash2 className="h-3.5 w-3.5" />
         </motion.button>

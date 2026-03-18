@@ -1,4 +1,4 @@
-import { memo, useCallback, useRef, useState } from "react";
+import { memo, useCallback, useRef } from "react";
 import { motion, AnimatePresence, LayoutGroup } from "framer-motion";
 import type { Id } from "../../../../convex/_generated/dataModel";
 import { VerseRowLeft } from "../verse-row";
@@ -7,6 +7,7 @@ import { PassageNotesBubble } from "../passage-notes-bubble";
 import { NoteEditor } from "@/components/notes/note-editor";
 import { HighlightToolbar } from "../highlight-toolbar";
 import { HighlightMarkPopover } from "../highlight-mark-popover";
+import { useHighlightPopover } from "../hooks/use-highlight-popover";
 import { cn } from "@/lib/utils";
 import type { NoteBody } from "@/lib/note-inline-content";
 import type { VerseRef } from "@/lib/verse-ref-utils";
@@ -145,35 +146,18 @@ export const VerseRowWithNotes = memo(function VerseRowWithNotes({
   const verseTextRef = useRef<HTMLSpanElement>(null);
   const insertQuoteRef = useRef<InsertQuoteFn | null>(null);
 
-  const [markPopover, setMarkPopover] = useState<{
-    highlightId: string;
-    rect: DOMRect;
-    currentColor: string;
-  } | null>(null);
-
-  const handleMarkClick = useCallback(
-    (highlightId: string, rect: DOMRect) => {
-      const color =
-        highlights?.find((h) => h.highlightId === highlightId)?.color ?? "";
-      setMarkPopover({ highlightId, rect, currentColor: color });
-    },
-    [highlights],
-  );
-
-  const handlePopoverDelete = useCallback(() => {
-    if (!markPopover) return;
-    onDeleteHighlight?.(markPopover.highlightId);
-    setMarkPopover(null);
-  }, [markPopover, onDeleteHighlight]);
-
-  const handlePopoverRecolor = useCallback(
-    (color: string) => {
-      if (!markPopover) return;
-      onRecolorHighlight?.(markPopover.highlightId, color);
-      setMarkPopover(null);
-    },
-    [markPopover, onRecolorHighlight],
-  );
+  const {
+    markPopover,
+    activeHighlightId,
+    handleMarkClick,
+    handlePopoverClose,
+    handlePopoverDelete,
+    handlePopoverRecolor,
+  } = useHighlightPopover({
+    highlights,
+    onDeleteHighlight,
+    onRecolorHighlight,
+  });
 
   const isPassageAnchor = passageNotes.length > 0;
   const isInPassageRange = passageAnchor !== undefined && !isPassageAnchor;
@@ -326,7 +310,7 @@ export const VerseRowWithNotes = memo(function VerseRowWithNotes({
           }}
           isExpanded={isExpanded}
           highlights={highlights}
-          activeHighlightId={markPopover?.highlightId ?? null}
+          activeHighlightId={activeHighlightId}
           verseTextRef={verseTextRef}
           onMarkClick={handleMarkClick}
           forceAddButtonVisible={forceAddButtonVisible}
@@ -357,7 +341,7 @@ export const VerseRowWithNotes = memo(function VerseRowWithNotes({
               currentColor={markPopover.currentColor}
               onDelete={handlePopoverDelete}
               onRecolor={handlePopoverRecolor}
-              onClose={() => setMarkPopover(null)}
+              onClose={handlePopoverClose}
             />
           )}
         </AnimatePresence>
