@@ -105,6 +105,8 @@ export function PassageView({
     chapter,
   });
   const createHighlightMutation = useMutation(api.highlights.create);
+  const removeHighlightMutation = useMutation(api.highlights.remove);
+  const updateHighlightColorMutation = useMutation(api.highlights.updateColor);
 
   const highlightsByVerse = useMemo(() => {
     const map = new Map<number, HighlightRange[]>();
@@ -135,6 +137,20 @@ export function PassageView({
       });
     },
     [book, chapter, createHighlightMutation],
+  );
+
+  const handleDeleteHighlight = useCallback(
+    (highlightId: string) => {
+      void removeHighlightMutation({ id: highlightId as Id<"highlights"> });
+    },
+    [removeHighlightMutation],
+  );
+
+  const handleRecolorHighlight = useCallback(
+    (highlightId: string, color: string) => {
+      void updateHighlightColorMutation({ id: highlightId as Id<"highlights">, color });
+    },
+    [updateHighlightColorMutation],
   );
 
   const { effectiveViewMode, isReadMode, editorMode, setViewMode } =
@@ -459,6 +475,8 @@ export function PassageView({
                       onStartCreatingPassageNote={startCreatingPassageNote}
                       highlights={highlightsByVerse.get(verse.verseNumber)}
                       onCreateHighlight={handleCreateHighlight}
+                      onDeleteHighlight={handleDeleteHighlight}
+                      onRecolorHighlight={handleRecolorHighlight}
                       forceAddButtonVisible={
                         forceAddButtonVisible && verse.verseNumber === 1
                       }

@@ -14,7 +14,6 @@ export interface HighlightToolbarHandle {
 
 interface HighlightToolbarProps {
   verseTextRef: React.RefObject<HTMLSpanElement | null>;
-  verseNumber: number;
   verseText: string;
   verseRef: VerseRef;
   onHighlight: (startOffset: number, endOffset: number, color: string) => void;
@@ -29,7 +28,6 @@ interface ToolbarPosition {
 
 export function HighlightToolbar({
   verseTextRef,
-  verseNumber,
   verseText,
   verseRef,
   onHighlight,
@@ -121,6 +119,7 @@ export function HighlightToolbar({
   return createPortal(
     <div
       ref={toolbarRef}
+      data-highlight-toolbar
       className={cn(
         "fixed z-100 flex items-center gap-1 rounded-lg border bg-popover px-2 py-1.5 shadow-lg",
         "animate-in fade-in-0 zoom-in-95 duration-150",

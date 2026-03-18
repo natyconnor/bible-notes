@@ -237,7 +237,9 @@ export function usePassageNotesUiState({
       const isInteractiveTarget =
         hasSelectorInPath("[data-note-trigger]") ||
         hasSelectorInPath("[data-note-surface]") ||
-        hasSelectorInPath("[data-verse-number]");
+        hasSelectorInPath("[data-verse-number]") ||
+        hasSelectorInPath("[data-highlight-popover]") ||
+        hasSelectorInPath("[data-highlight-toolbar]");
 
       if (!isInteractiveTarget) {
         if (canDismissOnClickAwayRef.current) {

@@ -109,7 +109,7 @@ export const VerseNotes = memo(function VerseNotes({
       expanded={
         <div
           data-note-surface
-          className={isReadMode ? "space-y-3" : "space-y-1.5"}
+          className={isReadMode ? "space-y-3" : "min-h-[96px] space-y-1.5"}
           onClick={(e) => e.stopPropagation()}
           onMouseEnter={onMouseEnter}
           onMouseLeave={onMouseLeave}

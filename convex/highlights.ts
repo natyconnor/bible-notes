@@ -80,6 +80,20 @@ export const remove = mutation({
   },
 });
 
+export const updateColor = mutation({
+  args: { id: v.id("highlights"), color: v.string() },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    const userId = await getCurrentUserId(ctx);
+    const highlight = await ctx.db.get(args.id);
+    if (!highlight || highlight.userId !== userId) {
+      throw new Error("Highlight not found or access denied");
+    }
+    await ctx.db.patch(args.id, { color: args.color });
+    return null;
+  },
+});
+
 export const removeForVerse = mutation({
   args: {
     book: v.string(),

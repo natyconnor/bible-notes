@@ -47,19 +47,22 @@ export function splitTextByHighlights(
   let i = 0;
   while (i < text.length) {
     const current = charColors[i];
-    const currentColor = current?.color ?? undefined;
-    const currentId = current?.highlightId ?? undefined;
     let j = i + 1;
     while (
       j < text.length &&
-      charColors[j]?.color === currentColor &&
-      charColors[j]?.highlightId === currentId
+      charColors[j]?.color === current?.color &&
+      charColors[j]?.highlightId === current?.highlightId
     ) {
       j++;
     }
     segments.push({
       text: text.slice(i, j),
-      ...(currentColor ? { color: currentColor, highlightId: currentId } : {}),
+      ...(current
+        ? {
+            color: current.color || "yellow",
+            highlightId: current.highlightId,
+          }
+        : {}),
     });
     i = j;
   }

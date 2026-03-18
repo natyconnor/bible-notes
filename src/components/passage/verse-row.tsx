@@ -1,4 +1,4 @@
-import { memo, useCallback, type RefObject } from "react";
+import { memo, useCallback, useRef, type RefObject } from "react";
 import { motion } from "framer-motion";
 import { Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -46,8 +46,10 @@ interface VerseRowLeftProps {
   focus?: VerseFocusState;
   isExpanded?: boolean;
   highlights?: HighlightRange[];
+  activeHighlightId?: string | null;
   verseTextRef?: RefObject<HTMLSpanElement | null>;
   onTextMouseUp?: () => void;
+  onMarkClick?: (highlightId: string, rect: DOMRect) => void;
   forceAddButtonVisible?: boolean;
   addNoteTourId?: string;
   rowTourId?: string;
@@ -85,8 +87,10 @@ export const VerseRowLeft = memo(function VerseRowLeft({
   focus,
   isExpanded = false,
   highlights,
+  activeHighlightId = null,
   verseTextRef,
   onTextMouseUp,
+  onMarkClick,
   forceAddButtonVisible = false,
   addNoteTourId,
   rowTourId,
@@ -106,6 +110,10 @@ export const VerseRowLeft = memo(function VerseRowLeft({
       ? splitTextByHighlights(text, highlights)
       : null;
 
+  const dragStateRef = useRef<{ startX: number; startY: number } | null>(null);
+
+  const DRAG_THRESHOLD = 4;
+
   const renderHighlightedText = useCallback((expanded: boolean) => {
     if (!segments) return text;
     return segments.map((seg, i) => {
@@ -114,19 +122,50 @@ export const VerseRowLeft = memo(function VerseRowLeft({
       }
       const colorDef = getHighlightColor(seg.color);
       const bgClass = expanded ? colorDef?.bg : colorDef?.bgSubtle;
+      const isActiveHighlight =
+        expanded &&
+        seg.highlightId !== undefined &&
+        seg.highlightId === activeHighlightId;
       return (
         <mark
           key={i}
           className={cn(
-            "rounded-sm px-px",
+            "rounded-sm",
             bgClass ?? "bg-yellow-200/70",
+            expanded && onMarkClick
+              ? cn(
+                  "cursor-pointer px-1 py-0.5 rounded transition-all duration-150 hover:brightness-[1.08] hover:saturate-[1.4] hover:shadow-sm",
+                  isActiveHighlight &&
+                    "brightness-[1.08] saturate-[1.4] shadow-sm",
+                )
+              : "px-px",
           )}
+          onPointerDown={
+            expanded && onMarkClick
+              ? (e) => { dragStateRef.current = { startX: e.clientX, startY: e.clientY }; }
+              : undefined
+          }
+          onPointerUp={
+            expanded && onMarkClick && seg.highlightId
+              ? (e) => {
+                  if (dragStateRef.current) {
+                    const dx = e.clientX - dragStateRef.current.startX;
+                    const dy = e.clientY - dragStateRef.current.startY;
+                    if (Math.sqrt(dx * dx + dy * dy) <= DRAG_THRESHOLD) {
+                      e.stopPropagation();
+                      onMarkClick(seg.highlightId!, e.currentTarget.getBoundingClientRect());
+                    }
+                    dragStateRef.current = null;
+                  }
+                }
+              : undefined
+          }
         >
           {seg.text}
         </mark>
       );
     });
-  }, [segments, text]);
+  }, [activeHighlightId, segments, text, onMarkClick]);
 
   return (
     // No `layout` here — padding and font-size are driven by explicit `animate`
@@ -225,6 +264,7 @@ export const VerseRowLeft = memo(function VerseRowLeft({
               style={{
                 fontSize: COLLAPSED.textFontSize,
                 opacity: isExpanded ? 0 : 1,
+                pointerEvents: isExpanded ? "none" : undefined,
                 transition: "opacity 0.28s cubic-bezier(0.22, 1, 0.36, 1)",
                 ...(isExpanded
                   ? { position: "absolute" as const, top: 0, left: 0, right: 0 }
@@ -242,6 +282,7 @@ export const VerseRowLeft = memo(function VerseRowLeft({
               style={{
                 fontSize: EXPANDED.textFontSize,
                 opacity: isExpanded ? 1 : 0,
+                pointerEvents: isExpanded ? undefined : "none",
                 transition: "opacity 0.28s cubic-bezier(0.22, 1, 0.36, 1)",
                 ...(!isExpanded
                   ? { position: "absolute" as const, top: 0, left: 0, right: 0 }
@@ -249,7 +290,7 @@ export const VerseRowLeft = memo(function VerseRowLeft({
               }}
               className="font-serif w-full whitespace-pre-wrap leading-relaxed"
             >
-              {renderHighlightedText(true)}
+              {renderHighlightedText(isExpanded)}
             </span>
           </div>
           {!isExpanded && (
