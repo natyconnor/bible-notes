@@ -583,6 +583,7 @@ export function usePassageNotesUiState({
   const openVerseNotes = useCallback((verseNumber: number) => {
     setOpenVerseKeys((prev) => new Set(prev).add(verseNumber));
     setViewSelectedVerses((prev) => new Set(prev).add(verseNumber));
+    setIsPassageSelection(false);
   }, []);
 
   const closeVerseNotes = useCallback((verseNumber: number) => {
@@ -602,6 +603,13 @@ export function usePassageNotesUiState({
     (verseNumber: number) => {
       setOpenPassageKeys((prev) => new Set(prev).add(verseNumber));
       const passageVerses = getSelectedVersesForPassageAnchor(verseNumber);
+      setOpenVerseKeys((prev) => {
+        const next = new Set(prev);
+        for (const v of passageVerses) {
+          next.delete(v);
+        }
+        return next;
+      });
       setViewSelectedVerses((prev) => {
         const next = new Set(prev);
         for (const v of passageVerses) next.add(v);

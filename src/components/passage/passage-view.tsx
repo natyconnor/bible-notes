@@ -508,7 +508,6 @@ export function PassageView({
                         onDeleteHighlight={handleDeleteHighlight}
                         onRecolorHighlight={handleRecolorHighlight}
                         isPassageOpen={openPassageKeys.has(item.anchorVerse)}
-                        openVerseKeys={openVerseKeys}
                         editingNoteIds={editingNoteIds}
                         draftsForAnchor={
                           newDraftsByAnchor.get(item.anchorVerse) ?? []
@@ -516,7 +515,6 @@ export function PassageView({
                         onOpenPassageNotes={openPassageNotes}
                         onClosePassageNotes={closePassageNotes}
                         onOpenVerseNotes={openVerseNotes}
-                        onCloseVerseNotes={closeVerseNotes}
                         onEditNote={startEditingNote}
                         onDelete={handleDelete}
                         onSaveEdit={handleSaveEdit}

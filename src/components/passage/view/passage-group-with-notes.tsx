@@ -1,9 +1,9 @@
-import { memo, useCallback } from "react";
+import { memo, useCallback, useMemo } from "react";
 import { motion, AnimatePresence, LayoutGroup } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { VerseTextPane } from "./verse-text-pane";
 import { PassageNotesBubble } from "../passage-notes-bubble";
-import { VerseNotes } from "../verse-notes";
+import { VerseNotesPill } from "../verse-notes";
 import { NoteEditor } from "@/components/notes/note-editor";
 import type { VerseInteractionHandlers } from "../verse-row";
 import {
@@ -35,13 +35,11 @@ interface PassageGroupWithNotesProps {
   onDeleteHighlight?: (highlightId: string) => void;
   onRecolorHighlight?: (highlightId: string, color: string) => void;
   isPassageOpen: boolean;
-  openVerseKeys: Set<number>;
   editingNoteIds: Set<Id<"notes">>;
   draftsForAnchor: VerseRef[];
   onOpenPassageNotes: (verseNumber: number) => void;
   onClosePassageNotes: (verseNumber: number) => void;
   onOpenVerseNotes: (verseNumber: number) => void;
-  onCloseVerseNotes: (verseNumber: number) => void;
   onEditNote: (
     noteId: Id<"notes">,
     verseRef: VerseRef,
@@ -103,13 +101,11 @@ export const PassageGroupWithNotes = memo(function PassageGroupWithNotes({
   onDeleteHighlight,
   onRecolorHighlight,
   isPassageOpen,
-  openVerseKeys,
   editingNoteIds,
   draftsForAnchor,
   onOpenPassageNotes,
   onClosePassageNotes,
   onOpenVerseNotes,
-  onCloseVerseNotes,
   onEditNote,
   onDelete,
   onSaveEdit,
@@ -124,9 +120,23 @@ export const PassageGroupWithNotes = memo(function PassageGroupWithNotes({
   const anchorVerse = verses[0]?.verseNumber ?? 0;
   const shouldShowInlineEditors = editorMode === "inline";
 
-  const handleCollapseGroup = useCallback(
-    (_verseNumber: number) => onCollapse(),
-    [onCollapse],
+  const handleCollapseGroup = useCallback(() => onCollapse(), [onCollapse]);
+
+  const handleVerseNotePillClick = useCallback(
+    (verseNumber: number) => {
+      onClosePassageNotes(anchorVerse);
+      onOpenVerseNotes(verseNumber);
+    },
+    [anchorVerse, onClosePassageNotes, onOpenVerseNotes],
+  );
+
+  const versesWithSingleNotes = useMemo(
+    () =>
+      verses.filter((v) => {
+        const notes = singleNotesByVerse.get(v.verseNumber);
+        return notes !== undefined && notes.length > 0;
+      }),
+    [verses, singleNotesByVerse],
   );
 
   return (
@@ -180,115 +190,110 @@ export const PassageGroupWithNotes = memo(function PassageGroupWithNotes({
         <motion.div
           layout="position"
           transition={{ layout: LAYOUT_CORRECTION_TRANSITION }}
-          className="py-1 select-none space-y-1.5"
+          className="py-1 select-none"
           data-note-surface
         >
-          {passageNotes.length > 0 && (
-            <PassageNotesBubble
-              notes={passageNotes}
-              isOpen={isPassageOpen}
-              isGlowing={false}
-              viewMode={viewMode}
-              currentChapter={currentChapter}
-              editingNoteIds={shouldShowInlineEditors ? editingNoteIds : undefined}
-              onSaveEdit={shouldShowInlineEditors ? onSaveEdit : undefined}
-              onCancelEdit={
-                shouldShowInlineEditors
-                  ? (noteId) => onCancelEditor(`edit:${noteId}`)
-                  : undefined
-              }
-              onEditorDirtyChange={
-                shouldShowInlineEditors
-                  ? (noteId, isDirty) =>
-                      onEditorDirtyChange(`edit:${noteId}`, isDirty)
-                  : undefined
-              }
-              onOpen={() => onOpenPassageNotes(anchorVerse)}
-              onClose={() => onClosePassageNotes(anchorVerse)}
-              onEdit={(noteId: Id<"notes">) => {
-                const note = passageNotes.find((n) => n.noteId === noteId);
-                if (note) onEditNote(noteId, note.verseRef, anchorVerse, true);
-              }}
-              onDelete={onDelete}
-              onAddNote={() =>
-                onStartCreatingPassageNote({
-                  book: passageNotes[0].verseRef.book,
-                  chapter: passageNotes[0].verseRef.chapter,
-                  startVerse: passageNotes[0].verseRef.startVerse,
-                  endVerse: passageNotes[0].verseRef.endVerse,
-                })
-              }
-              onMouseEnter={() => onPassageBubbleMouseEnter(anchorVerse)}
-              onMouseLeave={onPassageBubbleMouseLeave}
-            />
-          )}
+          <div className="flex items-start gap-3">
+            {versesWithSingleNotes.length > 0 && (
+              <div className="shrink-0 flex flex-col items-start gap-1.5 pt-0.5">
+                {versesWithSingleNotes.map((verse) => {
+                  const notes = singleNotesByVerse.get(verse.verseNumber)!;
+                  return (
+                    <div
+                      key={verse.verseNumber}
+                      className="flex flex-col items-center gap-0.5"
+                    >
+                      <span className="text-[9px] font-semibold text-muted-foreground tabular-nums leading-none">
+                        v{verse.verseNumber}
+                      </span>
+                      <VerseNotesPill
+                        count={notes.length}
+                        onClick={() =>
+                          handleVerseNotePillClick(verse.verseNumber)
+                        }
+                      />
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+            <div className="flex-1 min-w-0 space-y-1.5">
+              {passageNotes.length > 0 && (
+                <PassageNotesBubble
+                  notes={passageNotes}
+                  isOpen={isPassageOpen}
+                  isGlowing={false}
+                  viewMode={viewMode}
+                  currentChapter={currentChapter}
+                  editingNoteIds={
+                    shouldShowInlineEditors ? editingNoteIds : undefined
+                  }
+                  onSaveEdit={shouldShowInlineEditors ? onSaveEdit : undefined}
+                  onCancelEdit={
+                    shouldShowInlineEditors
+                      ? (noteId) => onCancelEditor(`edit:${noteId}`)
+                      : undefined
+                  }
+                  onEditorDirtyChange={
+                    shouldShowInlineEditors
+                      ? (noteId, isDirty) =>
+                          onEditorDirtyChange(`edit:${noteId}`, isDirty)
+                      : undefined
+                  }
+                  onOpen={() => onOpenPassageNotes(anchorVerse)}
+                  onClose={() => onClosePassageNotes(anchorVerse)}
+                  onEdit={(noteId: Id<"notes">) => {
+                    const note = passageNotes.find((n) => n.noteId === noteId);
+                    if (note)
+                      onEditNote(noteId, note.verseRef, anchorVerse, true);
+                  }}
+                  onDelete={onDelete}
+                  onAddNote={() =>
+                    onStartCreatingPassageNote({
+                      book: passageNotes[0].verseRef.book,
+                      chapter: passageNotes[0].verseRef.chapter,
+                      startVerse: passageNotes[0].verseRef.startVerse,
+                      endVerse: passageNotes[0].verseRef.endVerse,
+                    })
+                  }
+                  onMouseEnter={() => onPassageBubbleMouseEnter(anchorVerse)}
+                  onMouseLeave={onPassageBubbleMouseLeave}
+                />
+              )}
 
-          {Array.from(singleNotesByVerse.entries()).map(([verseNum, notes]) => (
-            <div key={verseNum}>
-              <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide px-1">
-                v{verseNum}
-              </span>
-              <VerseNotes
-                notes={notes}
-                isOpen={openVerseKeys.has(verseNum)}
-                viewMode={viewMode}
-                currentChapter={currentChapter}
-                editingNoteIds={shouldShowInlineEditors ? editingNoteIds : undefined}
-                onSaveEdit={shouldShowInlineEditors ? onSaveEdit : undefined}
-                onCancelEdit={
-                  shouldShowInlineEditors
-                    ? (noteId) => onCancelEditor(`edit:${noteId}`)
-                    : undefined
-                }
-                onEditorDirtyChange={
-                  shouldShowInlineEditors
-                    ? (noteId, isDirty) =>
-                        onEditorDirtyChange(`edit:${noteId}`, isDirty)
-                    : undefined
-                }
-                onOpen={() => onOpenVerseNotes(verseNum)}
-                onClose={() => onCloseVerseNotes(verseNum)}
-                onEdit={(noteId) => {
-                  const note = notes.find((n) => n.noteId === noteId);
-                  if (note) onEditNote(noteId, note.verseRef, verseNum, false);
-                }}
-                onDelete={onDelete}
-                onAddNote={() => {}}
-              />
+              <AnimatePresence initial={false}>
+                {shouldShowInlineEditors &&
+                  draftsForAnchor.map((draft) => {
+                    const draftEditorKey = `new:${draft.startVerse}:${draft.endVerse}`;
+                    return (
+                      <motion.div
+                        key={draftEditorKey}
+                        layout
+                        data-note-surface
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: "auto" }}
+                        exit={{ opacity: 0, height: 0 }}
+                        transition={NOTE_ENTER_TRANSITION}
+                      >
+                        <NoteEditor
+                          verseRef={draft}
+                          variant={
+                            draft.startVerse !== draft.endVerse
+                              ? "passage"
+                              : "default"
+                          }
+                          onSave={(body, tags) => onSaveNew(draft, body, tags)}
+                          onCancel={() => onCancelEditor(draftEditorKey)}
+                          onDirtyChange={(isDirty) =>
+                            onEditorDirtyChange(draftEditorKey, isDirty)
+                          }
+                        />
+                      </motion.div>
+                    );
+                  })}
+              </AnimatePresence>
             </div>
-          ))}
-
-          <AnimatePresence initial={false}>
-            {shouldShowInlineEditors &&
-              draftsForAnchor.map((draft) => {
-                const draftEditorKey = `new:${draft.startVerse}:${draft.endVerse}`;
-                return (
-                  <motion.div
-                    key={draftEditorKey}
-                    layout
-                    data-note-surface
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: "auto" }}
-                    exit={{ opacity: 0, height: 0 }}
-                    transition={NOTE_ENTER_TRANSITION}
-                  >
-                    <NoteEditor
-                      verseRef={draft}
-                      variant={
-                        draft.startVerse !== draft.endVerse
-                          ? "passage"
-                          : "default"
-                      }
-                      onSave={(body, tags) => onSaveNew(draft, body, tags)}
-                      onCancel={() => onCancelEditor(draftEditorKey)}
-                      onDirtyChange={(isDirty) =>
-                        onEditorDirtyChange(draftEditorKey, isDirty)
-                      }
-                    />
-                  </motion.div>
-                );
-              })}
-          </AnimatePresence>
+          </div>
         </motion.div>
       </div>
     </LayoutGroup>

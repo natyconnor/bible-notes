@@ -262,7 +262,7 @@ function StackedBubble({
   );
 }
 
-function VerseNotesPill({
+export function VerseNotesPill({
   count,
   onClick,
 }: {
