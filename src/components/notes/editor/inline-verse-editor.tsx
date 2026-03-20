@@ -31,9 +31,11 @@ import {
 } from "@/lib/verse-ref-utils";
 import { getVerseRefBoundsErrorMessage } from "../../../../shared/verse-ref-validation";
 import { useDebouncedEsvReferenceValidation } from "@/hooks/use-esv-reference";
+import { useNoteUiVariant } from "@/components/notes/use-note-ui-variant";
 import { VerseRefPreviewCard } from "@/components/verse-ref/verse-ref-hover-preview";
 import { useVerseLinkNavigation } from "@/hooks/use-verse-link-navigation";
 import { useTypedText } from "@/components/tutorial/use-typed-text";
+import type { NoteUiVariantId } from "@/lib/note-ui-variant";
 
 interface CurrentChapter {
   book: string;
@@ -46,6 +48,8 @@ interface InlineVerseEditorProps {
   currentChapter?: CurrentChapter;
   placeholder?: string;
   className?: string;
+  /** When set (e.g. dialog forcing classic), overrides global note UI variant for editor chrome. */
+  editorChrome?: NoteUiVariantId;
   tourId?: string;
   tutorialPreviewText?: string;
   tutorialAnimateText?: boolean;
@@ -545,12 +549,18 @@ export function InlineVerseEditor({
   currentChapter,
   placeholder = "Write your note...",
   className,
+  editorChrome: editorChromeProp,
   tourId,
   tutorialPreviewText,
   tutorialAnimateText = false,
   tutorialPreviewQuery,
   onChange,
 }: InlineVerseEditorProps) {
+  const { variant: noteUiVariantFromContext } = useNoteUiVariant();
+  const editorChrome = editorChromeProp ?? noteUiVariantFromContext;
+  const isRuledEditorChrome =
+    editorChrome === "margin" || editorChrome === "manuscript";
+
   const wrapperRef = useRef<HTMLDivElement>(null);
   const navigateToVerse = useVerseLinkNavigation(currentChapter);
   const editorRef = useRef<HTMLDivElement>(null);
@@ -914,12 +924,22 @@ export function InlineVerseEditor({
   return (
     <div ref={wrapperRef} className={cn("relative", className)}>
       {!isFocused && isEmpty && !showTutorialText ? (
-        <div className="pointer-events-none absolute left-3 top-2.5 text-sm text-muted-foreground">
+        <div
+          className={cn(
+            "pointer-events-none absolute text-sm text-muted-foreground",
+            isRuledEditorChrome ? "left-1 top-2" : "left-3 top-2.5",
+          )}
+        >
           {placeholder}
         </div>
       ) : null}
       {showTutorialText ? (
-        <div className="pointer-events-none absolute inset-x-3 top-2.5 z-10 whitespace-pre-wrap text-sm leading-relaxed text-foreground">
+        <div
+          className={cn(
+            "pointer-events-none absolute z-10 whitespace-pre-wrap text-sm leading-relaxed text-foreground",
+            isRuledEditorChrome ? "left-1 top-2 right-1" : "inset-x-3 top-2.5",
+          )}
+        >
           {displayedTutorialText}
           {isTutorialLinkStep ? (
             <>
@@ -947,8 +967,19 @@ export function InlineVerseEditor({
         role="textbox"
         aria-multiline="true"
         className={cn(
-          "min-h-[96px] rounded-md border bg-background px-3 py-2.5 text-sm leading-relaxed outline-hidden whitespace-pre-wrap",
-          "focus:border-ring focus:ring-ring/50 focus:ring-[3px]",
+          "min-h-[96px] text-sm leading-relaxed whitespace-pre-wrap",
+          isRuledEditorChrome
+            ? cn(
+                "rounded-none border-0 border-b border-border/60 bg-transparent px-1 py-2 outline-hidden",
+                editorChrome === "manuscript"
+                  ? "focus:border-b-amber-800/40 dark:focus:border-b-amber-500/45"
+                  : "focus:border-b-primary/70",
+                "focus:ring-0 focus-visible:outline-none",
+              )
+            : cn(
+                "rounded-md border bg-background px-3 py-2.5 outline-hidden",
+                "focus:border-ring focus:ring-ring/50 focus:ring-[3px]",
+              ),
         )}
         {...(tourId ? { "data-tour-id": tourId } : {})}
         onFocus={() => setIsFocused(true)}

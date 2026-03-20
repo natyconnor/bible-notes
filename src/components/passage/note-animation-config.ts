@@ -29,6 +29,12 @@ export const NOTE_ENTER_TRANSITION: Transition = {
   ease: [0.22, 1, 0.36, 1],
 };
 
+/** Calmer note reveal for manuscript — slightly longer, softer ease. */
+export const MANUSCRIPT_NOTE_ENTER_TRANSITION: Transition = {
+  duration: 0.22,
+  ease: [0.33, 0.46, 0.32, 0.99],
+};
+
 /**
  * @deprecated Use LAYOUT_CORRECTION_TRANSITION for layout-prop transitions,
  * VERSE_EXPAND_TRANSITION for explicit verse animate transitions, or

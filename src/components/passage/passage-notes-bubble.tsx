@@ -18,6 +18,7 @@ import {
   NoteContent,
 } from "@/components/notes/view/note-card-primitives";
 import { NoteEditor } from "@/components/notes/note-editor";
+import { useNoteUiVariant } from "@/components/notes/use-note-ui-variant";
 import { NoteBubbleShell, type BubbleState } from "./view/note-bubble-shell";
 import { LAYOUT_CORRECTION_TRANSITION } from "./note-animation-config";
 
@@ -69,6 +70,9 @@ export const PassageNotesBubble = memo(function PassageNotesBubble({
   onMouseEnter,
   onMouseLeave,
 }: PassageNotesBubbleProps) {
+  const { variant: noteUiVariant } = useNoteUiVariant();
+  const isMargin = noteUiVariant === "margin";
+  const isManuscript = noteUiVariant === "manuscript";
   if (notes.length === 0) return null;
   const isReadMode = viewMode === "read";
   const supportsInlineEditing = !!onSaveEdit && !!onCancelEdit;
@@ -80,10 +84,6 @@ export const PassageNotesBubble = memo(function PassageNotesBubble({
   const shouldShowExpanded = isOpen || isReadMode || isEditingWithinGroup;
 
   const previewLength = compact ? 34 : 100;
-  const preview =
-    notes[0].content.length > previewLength
-      ? notes[0].content.slice(0, previewLength) + "..."
-      : notes[0].content;
 
   const bubbleState: BubbleState =
     isPill && !isEditingWithinGroup
@@ -106,7 +106,8 @@ export const PassageNotesBubble = memo(function PassageNotesBubble({
       collapsed={
         <CollapsedPassageBubble
           notes={notes}
-          preview={preview}
+          previewLength={previewLength}
+          currentChapter={currentChapter}
           compact={compact}
           isGlowing={isGlowing}
           onOpen={onOpen}
@@ -119,9 +120,13 @@ export const PassageNotesBubble = memo(function PassageNotesBubble({
         <div
           data-note-surface
           className={
-            isReadMode
-              ? "space-y-3 rounded-xl border border-amber-200 bg-amber-50/30 dark:bg-amber-900/20 dark:border-amber-700/50 p-3"
-              : "min-h-[96px] space-y-1.5 rounded-lg border border-amber-200 bg-amber-50/40 dark:bg-amber-900/15 dark:border-amber-700/50 p-2.5"
+            isManuscript
+              ? isReadMode
+                ? "space-y-3 rounded-md p-3"
+                : "min-h-[96px] space-y-1.5 rounded-md p-2.5"
+              : isReadMode
+                ? "space-y-3 rounded-xl border border-amber-200 bg-amber-50/30 dark:bg-amber-900/20 dark:border-amber-700/50 p-3"
+                : "min-h-[96px] space-y-1.5 rounded-lg border border-amber-200 bg-amber-50/40 dark:bg-amber-900/15 dark:border-amber-700/50 p-2.5"
           }
           onClick={(e) => e.stopPropagation()}
           onMouseEnter={onMouseEnter}
@@ -138,7 +143,12 @@ export const PassageNotesBubble = memo(function PassageNotesBubble({
               <Tooltip>
                 <TooltipTrigger asChild>
                   <button
-                    className="flex items-center gap-1 text-xs text-primary hover:text-primary/80 font-medium transition-colors"
+                    className={cn(
+                      "flex items-center gap-1 text-xs font-medium transition-colors",
+                      isMargin || isManuscript
+                        ? "text-muted-foreground hover:text-foreground"
+                        : "text-primary hover:text-primary/80",
+                    )}
                     onClick={onAddNote}
                   >
                     <Plus className="h-3 w-3" />
@@ -210,7 +220,8 @@ export const PassageNotesBubble = memo(function PassageNotesBubble({
 
 function CollapsedPassageBubble({
   notes,
-  preview,
+  previewLength,
+  currentChapter,
   compact,
   isGlowing,
   onOpen,
@@ -219,7 +230,8 @@ function CollapsedPassageBubble({
   onMouseLeave,
 }: {
   notes: PassageNote[];
-  preview: string;
+  previewLength: number;
+  currentChapter?: CurrentChapter;
   compact: boolean;
   isGlowing: boolean;
   onOpen: () => void;
@@ -227,15 +239,26 @@ function CollapsedPassageBubble({
   onMouseEnter?: () => void;
   onMouseLeave?: () => void;
 }) {
+  const { variant: noteUiVariant } = useNoteUiVariant();
+  const isManuscript = noteUiVariant === "manuscript";
   return (
     <div
       className={cn(
-        "group relative text-sm",
-        "rounded-lg border-l-2 border text-sm transition-colors",
-        "border-l-amber-400 border-amber-200 bg-amber-50/80 dark:bg-amber-900/20 dark:border-amber-700/50 dark:border-l-amber-600/70",
-        "hover:shadow-sm hover:bg-amber-50 dark:hover:bg-amber-800/25",
+        "group relative text-sm transition-colors",
+        isManuscript
+          ? cn("rounded-lg border-0 overflow-visible", "ms-note-hit")
+          : cn(
+              "rounded-lg border-l-2 border text-sm",
+              "border-l-amber-400 border-amber-200 bg-amber-50/80 dark:bg-amber-900/20 dark:border-amber-700/50 dark:border-l-amber-600/70",
+              "hover:shadow-sm hover:bg-amber-50 dark:hover:bg-amber-800/25",
+            ),
+        noteUiVariant === "margin" && !isManuscript && "note-grain",
         isGlowing &&
-          "animate-pulse-subtle ring-1 ring-amber-400/50 shadow-sm shadow-amber-200/60 dark:shadow-amber-950/60",
+          cn(
+            "animate-pulse-subtle ring-1 ring-amber-400/50",
+            !isManuscript &&
+              "shadow-sm shadow-amber-200/60 dark:shadow-amber-950/60",
+          ),
       )}
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
@@ -276,14 +299,22 @@ function CollapsedPassageBubble({
               </Badge>
             )}
           </div>
-          <p
+          <NoteContent
+            content={notes[0].content}
+            body={notes[0].body}
+            truncateAt={previewLength}
+            currentChapter={currentChapter}
+            uiVariant={noteUiVariant}
             className={cn(
-              "text-muted-foreground leading-relaxed",
-              compact ? "line-clamp-1 text-[10px]" : "line-clamp-2",
+              "text-muted-foreground",
+              compact
+                ? cn(
+                    "line-clamp-1",
+                    isManuscript ? "text-xs" : "text-[10px]",
+                  )
+                : cn("line-clamp-2", isManuscript && "text-sm"),
             )}
-          >
-            {preview}
-          </p>
+          />
           {!compact && notes[0].tags.length > 0 && (
             <NoteTagList
               tags={notes[0].tags}
@@ -360,14 +391,26 @@ function ExpandedPassageNote({
   onEdit: () => void;
   onDelete: () => void;
 }) {
+  const { variant: noteUiVariant } = useNoteUiVariant();
+  const isMargin = noteUiVariant === "margin";
+  const isManuscript = noteUiVariant === "manuscript";
   const isReading = density === "reading";
   return (
     <div
-      className={
-        isReading
-          ? "rounded-lg border border-amber-200/70 bg-amber-50/60 dark:bg-amber-900/18 dark:border-amber-700/45 px-4 py-3"
-          : "rounded-md border border-amber-200/70 bg-amber-50/60 dark:bg-amber-900/18 dark:border-amber-700/45 px-3 py-2 text-sm"
-      }
+      className={cn(
+        isManuscript
+          ? isReading
+            ? "rounded-md ink-rule-bottom ms-note-hit ms-ink-group relative overflow-visible px-4 py-3"
+            : "rounded-md ink-rule-bottom ms-note-hit ms-ink-group relative overflow-visible px-3 py-2 text-sm"
+          : isMargin
+            ? isReading
+              ? "rounded-lg bg-amber-50/40 dark:bg-amber-900/15 px-4 py-3"
+              : "rounded-md bg-amber-50/30 dark:bg-amber-900/12 px-3 py-2 text-sm"
+            : isReading
+              ? "rounded-lg border border-amber-200/70 bg-amber-50/60 dark:bg-amber-900/18 dark:border-amber-700/45 px-4 py-3"
+              : "rounded-md border border-amber-200/70 bg-amber-50/60 dark:bg-amber-900/18 dark:border-amber-700/45 px-3 py-2 text-sm",
+        isMargin && !isManuscript && "note-grain",
+      )}
     >
       <div className="flex items-start justify-between gap-2">
         <NoteContent
@@ -375,6 +418,7 @@ function ExpandedPassageNote({
           body={note.body}
           density={density}
           currentChapter={currentChapter}
+          uiVariant={noteUiVariant}
           className={isReading ? "flex-1 text-foreground" : "flex-1"}
         />
         <NoteCardActions

@@ -16,6 +16,7 @@ import {
 } from "@/lib/note-inline-content";
 import { VerseLinkPill } from "@/components/verse-ref/verse-link-pill";
 import type { CurrentChapter } from "@/hooks/use-verse-link-navigation";
+import type { NoteUiVariantId } from "@/lib/note-ui-variant";
 
 export type { CurrentChapter };
 
@@ -106,6 +107,8 @@ export interface NoteContentProps {
   density?: "default" | "reading";
   currentChapter?: CurrentChapter;
   className?: string;
+  /** When `"margin"` or `"manuscript"`, saved note prose uses the verse serif (Cormorant Garamond). */
+  uiVariant?: NoteUiVariantId;
 }
 
 export function NoteContent({
@@ -115,9 +118,14 @@ export function NoteContent({
   density = "default",
   currentChapter,
   className,
+  uiVariant,
 }: NoteContentProps) {
   const densityClass =
     density === "reading" ? "text-base leading-7" : "leading-relaxed";
+  const marginSerif =
+    uiVariant === "margin" || uiVariant === "manuscript"
+      ? "font-serif tracking-[0.01em] dark:font-normal"
+      : undefined;
   const normalizedBody = normalizeNoteBody(body, content);
 
   if (truncateAt) {
@@ -126,14 +134,23 @@ export function NoteContent({
       truncateAt,
     );
     return (
-      <p className={cn("whitespace-pre-wrap", densityClass, className)}>
+      <p
+        className={cn(
+          "whitespace-pre-wrap",
+          densityClass,
+          marginSerif,
+          className,
+        )}
+      >
         {displayContent}
       </p>
     );
   }
 
   return (
-    <div className={cn("whitespace-pre-wrap", densityClass, className)}>
+    <div
+      className={cn("whitespace-pre-wrap", densityClass, marginSerif, className)}
+    >
       {normalizedBody.segments.length === 0 ? (
         <p />
       ) : (

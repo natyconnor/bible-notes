@@ -1,4 +1,6 @@
 import { Badge } from "@/components/ui/badge";
+import { useNoteUiVariant } from "@/components/notes/use-note-ui-variant";
+import { cn } from "@/lib/utils";
 import { StackedCardBackground } from "./view/note-card-primitives";
 
 interface NoteBubbleStackProps {
@@ -14,10 +16,24 @@ export function NoteBubbleStack({
   verseLabel,
   onClick,
 }: NoteBubbleStackProps) {
+  const { variant: noteUiVariant } = useNoteUiVariant();
+  const isMargin = noteUiVariant === "margin";
+  const isManuscript = noteUiVariant === "manuscript";
+
   return (
     <div className="relative cursor-pointer" onClick={onClick}>
-      <StackedCardBackground count={count} />
-      <div className="relative border rounded-lg p-3 bg-card transition-all hover:shadow-sm">
+      {!isManuscript && <StackedCardBackground count={count} />}
+      <div
+        className={cn(
+          "relative p-3 transition-colors overflow-visible",
+          isManuscript
+            ? cn("rounded-md border-0", "ms-note-hit")
+            : cn(
+                "border rounded-lg bg-card transition-all hover:shadow-sm",
+                isMargin && "note-grain",
+              ),
+        )}
+      >
         <div className="flex items-center justify-between mb-1">
           <Badge variant="secondary" className="text-xs font-normal">
             {verseLabel}

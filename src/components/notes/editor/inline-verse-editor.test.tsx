@@ -1,11 +1,17 @@
 import { act, fireEvent, render, screen } from "@testing-library/react";
+import type { ReactElement } from "react";
 import { describe, expect, it, vi } from "vitest";
 import {
   EMPTY_NOTE_BODY,
   type NoteBody,
   noteBodyToPlainText,
 } from "@/lib/note-inline-content";
+import { NoteUiVariantProvider } from "@/components/notes/note-ui-variant-provider";
 import { InlineVerseEditor } from "./inline-verse-editor";
+
+function renderWithNoteUi(ui: ReactElement) {
+  return render(<NoteUiVariantProvider>{ui}</NoteUiVariantProvider>);
+}
 
 vi.mock("@/hooks/use-esv-reference", () => ({
   useDebouncedEsvReferenceValidation: () => ({
@@ -35,7 +41,7 @@ describe("InlineVerseEditor", () => {
   it("reads a browser-inserted line break between inline and block content", () => {
     let latestBody: NoteBody = EMPTY_NOTE_BODY;
 
-    render(
+    renderWithNoteUi(
       <InlineVerseEditor
         initialBody={EMPTY_NOTE_BODY}
         verseRef={{ book: "John", chapter: 3, startVerse: 16, endVerse: 16 }}
@@ -57,7 +63,7 @@ describe("InlineVerseEditor", () => {
   it("does not intercept Enter once @ text is no longer a verse query", () => {
     const onChange = vi.fn();
 
-    render(
+    renderWithNoteUi(
       <InlineVerseEditor
         initialBody={EMPTY_NOTE_BODY}
         verseRef={{ book: "John", chapter: 3, startVerse: 16, endVerse: 16 }}
@@ -93,7 +99,7 @@ describe("InlineVerseEditor", () => {
   it("still intercepts Enter for an active verse query", () => {
     const onChange = vi.fn();
 
-    render(
+    renderWithNoteUi(
       <InlineVerseEditor
         initialBody={EMPTY_NOTE_BODY}
         verseRef={{ book: "John", chapter: 3, startVerse: 16, endVerse: 16 }}
