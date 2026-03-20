@@ -6,7 +6,7 @@ import { SettingsPage } from "./settings-page";
 
 const navigateMock = vi.fn();
 const startTourMock = vi.fn();
-const useQueryMock = vi.fn<(reference: unknown, args?: unknown) => unknown>();
+const useQueryMock = vi.fn<(...args: unknown[]) => unknown>();
 const addManyMock = vi.fn();
 const removeManyMock = vi.fn();
 const removeCustomTagAndDetachMock = vi.fn();
@@ -117,7 +117,7 @@ describe("SettingsPage", () => {
       needsStarterTagsSetup: false,
       categoryColors: {},
     };
-    useQueryMock.mockImplementation((reference: string) => {
+    useQueryMock.mockImplementation((reference: unknown) => {
       if (reference === "api.tags.listCatalog") {
         return catalog;
       }

@@ -5,7 +5,7 @@ import { SearchWorkspace } from "./search-workspace";
 
 const openTabMock = vi.fn();
 const selectNoteMock = vi.fn();
-const useQueryMock = vi.fn<(reference: unknown, args?: unknown) => unknown>();
+const useQueryMock = vi.fn<(...args: unknown[]) => unknown>();
 
 vi.mock("framer-motion", () => ({
   motion: {
@@ -96,7 +96,7 @@ describe("SearchWorkspace", () => {
   });
 
   it("groups matching notes by reference and jumps to the referenced passage", () => {
-    useQueryMock.mockImplementation((reference: string) => {
+    useQueryMock.mockImplementation((reference: unknown) => {
       if (reference === "api.tags.listCatalog") {
         return [{ tag: "love" }];
       }
@@ -176,7 +176,7 @@ describe("SearchWorkspace", () => {
   });
 
   it("selects a note when a result card is clicked", () => {
-    useQueryMock.mockImplementation((reference: string) => {
+    useQueryMock.mockImplementation((reference: unknown) => {
       if (reference === "api.tags.listCatalog") {
         return [];
       }

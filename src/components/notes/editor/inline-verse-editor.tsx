@@ -287,6 +287,10 @@ function appendSegmentsToEditor(root: HTMLElement, body: NoteBody) {
       root.append(documentRef.createElement("br"));
       continue;
     }
+    if (segment.type === "verseQuote") {
+      root.append(documentRef.createTextNode(`> ${segment.text}`));
+      continue;
+    }
     root.append(createPillElement(documentRef, segment.label, segment.ref));
   }
 }

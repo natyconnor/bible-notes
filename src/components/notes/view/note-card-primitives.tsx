@@ -144,6 +144,11 @@ export function NoteContent({
           if (segment.type === "lineBreak") {
             return <br key={`br-${index}`} />;
           }
+          if (segment.type === "verseQuote") {
+            return (
+              <Fragment key={`quote-${index}`}>{`> ${segment.text}`}</Fragment>
+            );
+          }
           return (
             <VerseLinkPill
               key={`ref-${index}`}

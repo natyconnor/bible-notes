@@ -1,9 +1,10 @@
 import { act, renderHook } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import type { Id } from "../../../../convex/_generated/dataModel";
 import type { NoteBody } from "@/lib/note-inline-content";
 import { useChapterNotesData } from "./use-chapter-notes-data";
 
-const useQueryMock = vi.fn<(reference: unknown, args?: unknown) => unknown>();
+const useQueryMock = vi.fn<(...args: unknown[]) => unknown>();
 const createNoteMock = vi.fn();
 const updateNoteMock = vi.fn();
 const removeNoteMock = vi.fn();
@@ -195,17 +196,18 @@ describe("useChapterNotesData", () => {
 
     const { result } = renderHook(() => useChapterNotesData("Genesis", 1));
     const body = { segments: [] } as unknown as NoteBody;
+    const noteId = "note-7" as Id<"notes">;
 
     await act(async () => {
-      await result.current.saveEditedNote("note-7", body, ["updated"]);
-      await result.current.deleteNote("note-7");
+      await result.current.saveEditedNote(noteId, body, ["updated"]);
+      await result.current.deleteNote(noteId);
     });
 
     expect(updateNoteMock).toHaveBeenCalledWith({
-      id: "note-7",
+      id: noteId,
       body,
       tags: ["updated"],
     });
-    expect(removeNoteMock).toHaveBeenCalledWith({ id: "note-7" });
+    expect(removeNoteMock).toHaveBeenCalledWith({ id: noteId });
   });
 });

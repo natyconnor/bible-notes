@@ -15,10 +15,17 @@ export interface NoteVerseRefSegment {
   ref: VerseRef;
 }
 
+export interface NoteVerseQuoteSegment {
+  type: "verseQuote";
+  text: string;
+  ref: VerseRef;
+}
+
 export type NoteBodySegment =
   | NoteTextSegment
   | NoteLineBreakSegment
-  | NoteVerseRefSegment;
+  | NoteVerseRefSegment
+  | NoteVerseQuoteSegment;
 
 export interface NoteBody {
   version: 1;
@@ -156,6 +163,7 @@ export function noteBodyToPlainText(
     .map((segment) => {
       if (segment.type === "text") return segment.text;
       if (segment.type === "lineBreak") return "\n";
+      if (segment.type === "verseQuote") return `> ${segment.text}`;
       return segment.label;
     })
     .join("");
