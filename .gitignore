@@ -39,3 +39,5 @@ convex/_generated
 # Test coverage
 coverage
 *.lcov
+
+.pnpm-store
