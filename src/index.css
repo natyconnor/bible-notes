@@ -78,6 +78,26 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
+  /*
+   * Candlelight — neutral card shadows (light mode only).
+   * Mid/far layers: warm base + a little foreground so tints follow tinted light themes.
+   * Dark mode ignores these: `.dark .cl-shadow` / `.cl-specular` replace the full stack.
+   */
+  --cl-candlelight-ambient-core: color-mix(
+    in oklch,
+    oklch(0.45 0.055 58) 88%,
+    var(--foreground) 12%
+  );
+  --cl-candlelight-shadow-mid: color-mix(
+    in oklch,
+    var(--cl-candlelight-ambient-core) 7%,
+    transparent
+  );
+  --cl-candlelight-shadow-far: color-mix(
+    in oklch,
+    var(--cl-candlelight-ambient-core) 4%,
+    transparent
+  );
 }
 
 .dark {
@@ -382,6 +402,193 @@
 
 .ms-manuscript-editor.ink-rule-bottom:focus-within::after {
   opacity: 1;
+}
+
+/* Candlelight variant — depth / shadow utilities (see docs/note-candlelight-depth-spec.md) */
+
+/* Three-layer shadow: contact → near-field penumbra → ambient haze */
+.cl-shadow {
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.07),
+    0 4px 12px var(--cl-candlelight-shadow-mid),
+    0 12px 32px var(--cl-candlelight-shadow-far);
+}
+
+/* Simulates overhead light catching the card's top face */
+.cl-specular {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.72),
+    0 1px 2px rgba(0, 0, 0, 0.07),
+    0 4px 12px var(--cl-candlelight-shadow-mid),
+    0 12px 32px var(--cl-candlelight-shadow-far);
+}
+
+/* Deeper shadow when card is raised (focused / active editor) */
+.cl-shadow-lifted {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.75),
+    0 2px 4px rgba(0, 0, 0, 0.09),
+    0 8px 24px rgba(0, 0, 0, 0.1),
+    0 20px 44px rgba(0, 0, 0, 0.06);
+}
+
+/* Amber ambient bleed for passage notes */
+.cl-shadow-amber {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.65),
+    0 1px 2px rgba(0, 0, 0, 0.06),
+    0 4px 14px rgba(180, 120, 20, 0.1),
+    0 12px 32px rgba(180, 120, 20, 0.07);
+}
+
+.cl-shadow-amber-lifted {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.68),
+    0 2px 4px rgba(0, 0, 0, 0.08),
+    0 8px 24px rgba(180, 120, 20, 0.14),
+    0 20px 44px rgba(180, 120, 20, 0.08);
+}
+
+/*
+ * Editor lift: resting cl-shadow has 3 layers but lifted state has 4 (inset highlight).
+ * Browsers won't interpolate mismatched shadow lists — add a transparent inset on rest so it animates.
+ */
+.cl-shadow.cl-lift-on-focus:not(:focus-within) {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0),
+    0 1px 2px rgba(0, 0, 0, 0.07),
+    0 4px 12px var(--cl-candlelight-shadow-mid),
+    0 12px 32px var(--cl-candlelight-shadow-far);
+}
+
+.dark .cl-shadow.cl-lift-on-focus:not(:focus-within) {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0),
+    0 1px 2px rgba(0, 0, 0, 0.18),
+    0 4px 12px rgba(0, 0, 0, 0.15),
+    0 12px 32px rgba(0, 0, 0, 0.1);
+}
+
+/* Editor card: resting shadow from cl-shadow / cl-shadow-amber; lift when any child is focused */
+.cl-lift-on-focus:focus-within {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.75),
+    0 2px 4px rgba(0, 0, 0, 0.09),
+    0 8px 24px rgba(0, 0, 0, 0.1),
+    0 20px 44px rgba(0, 0, 0, 0.06);
+}
+
+.cl-lift-on-focus-amber:focus-within {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.68),
+    0 2px 4px rgba(0, 0, 0, 0.08),
+    0 8px 24px rgba(180, 120, 20, 0.14),
+    0 20px 44px rgba(180, 120, 20, 0.08);
+}
+
+/* Applied to the contentEditable in Candlelight — writing area is carved in */
+.cl-well {
+  box-shadow:
+    inset 0 2px 8px rgba(0, 0, 0, 0.07),
+    inset 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+/* Applied via :focus-within on the editor card in Candlelight */
+.cl-focus-bloom:focus-within {
+  background-image: radial-gradient(
+    ellipse at 40% -5%,
+    rgba(255, 248, 220, 0.45) 0%,
+    transparent 58%
+  );
+}
+
+.dark .cl-shadow {
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.18),
+    0 4px 12px rgba(0, 0, 0, 0.15),
+    0 12px 32px rgba(0, 0, 0, 0.1);
+}
+
+.dark .cl-specular {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 1px 2px rgba(0, 0, 0, 0.18),
+    0 4px 12px rgba(0, 0, 0, 0.15),
+    0 12px 32px rgba(0, 0, 0, 0.1);
+}
+
+.dark .cl-shadow-lifted {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.09),
+    0 2px 4px rgba(0, 0, 0, 0.22),
+    0 8px 24px rgba(0, 0, 0, 0.2),
+    0 20px 44px rgba(0, 0, 0, 0.14);
+}
+
+.dark .cl-shadow-amber {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 1px 2px rgba(0, 0, 0, 0.18),
+    0 4px 14px rgba(180, 120, 20, 0.18),
+    0 12px 32px rgba(180, 120, 20, 0.12);
+}
+
+.dark .cl-shadow-amber-lifted {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.07),
+    0 2px 4px rgba(0, 0, 0, 0.2),
+    0 8px 24px rgba(180, 120, 20, 0.22),
+    0 20px 44px rgba(180, 120, 20, 0.14);
+}
+
+.dark .cl-lift-on-focus:focus-within {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.09),
+    0 2px 4px rgba(0, 0, 0, 0.22),
+    0 8px 24px rgba(0, 0, 0, 0.2),
+    0 20px 44px rgba(0, 0, 0, 0.14);
+}
+
+.dark .cl-lift-on-focus-amber:focus-within {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.07),
+    0 2px 4px rgba(0, 0, 0, 0.2),
+    0 8px 24px rgba(180, 120, 20, 0.22),
+    0 20px 44px rgba(180, 120, 20, 0.14);
+}
+
+.dark .cl-well {
+  box-shadow:
+    inset 0 2px 8px rgba(0, 0, 0, 0.22),
+    inset 0 1px 3px rgba(0, 0, 0, 0.16);
+}
+
+.dark .cl-focus-bloom:focus-within {
+  background-image: radial-gradient(
+    ellipse at 40% -5%,
+    rgba(180, 130, 50, 0.18) 0%,
+    transparent 58%
+  );
+}
+
+.cl-transition {
+  transition:
+    box-shadow 200ms ease-out,
+    background-image 260ms ease-out;
+}
+
+/* Note editor shell: slower shadow ease so lift reads as motion, not a snap */
+.cl-transition-editor-shell {
+  transition:
+    box-shadow 380ms cubic-bezier(0.33, 1, 0.68, 1),
+    background-image 280ms ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cl-transition,
+  .cl-transition-editor-shell {
+    transition: none;
+  }
 }
 
 @layer base {

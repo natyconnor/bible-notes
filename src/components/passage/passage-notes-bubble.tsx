@@ -241,6 +241,7 @@ function CollapsedPassageBubble({
 }) {
   const { variant: noteUiVariant } = useNoteUiVariant();
   const isManuscript = noteUiVariant === "manuscript";
+  const isCandlelight = noteUiVariant === "candlelight";
   return (
     <div
       className={cn(
@@ -250,13 +251,20 @@ function CollapsedPassageBubble({
           : cn(
               "rounded-lg border-l-2 border text-sm",
               "border-l-amber-400 border-amber-200 bg-amber-50/80 dark:bg-amber-900/20 dark:border-amber-700/50 dark:border-l-amber-600/70",
-              "hover:shadow-sm hover:bg-amber-50 dark:hover:bg-amber-800/25",
+              !isCandlelight &&
+                "hover:shadow-sm hover:bg-amber-50 dark:hover:bg-amber-800/25",
+              isCandlelight &&
+                cn(
+                  "cl-shadow-amber cl-transition shadow-none",
+                  "hover:bg-amber-50 dark:hover:bg-amber-800/25",
+                ),
             ),
         noteUiVariant === "margin" && !isManuscript && "note-grain",
         isGlowing &&
           cn(
             "animate-pulse-subtle ring-1 ring-amber-400/50",
             !isManuscript &&
+              !isCandlelight &&
               "shadow-sm shadow-amber-200/60 dark:shadow-amber-950/60",
           ),
       )}
@@ -394,6 +402,7 @@ function ExpandedPassageNote({
   const { variant: noteUiVariant } = useNoteUiVariant();
   const isMargin = noteUiVariant === "margin";
   const isManuscript = noteUiVariant === "manuscript";
+  const isCandlelight = noteUiVariant === "candlelight";
   const isReading = density === "reading";
   return (
     <div
@@ -410,6 +419,10 @@ function ExpandedPassageNote({
               ? "rounded-lg border border-amber-200/70 bg-amber-50/60 dark:bg-amber-900/18 dark:border-amber-700/45 px-4 py-3"
               : "rounded-md border border-amber-200/70 bg-amber-50/60 dark:bg-amber-900/18 dark:border-amber-700/45 px-3 py-2 text-sm",
         isMargin && !isManuscript && "note-grain",
+        isCandlelight &&
+          !isManuscript &&
+          !isMargin &&
+          cn("cl-shadow-amber cl-transition shadow-none"),
       )}
     >
       <div className="flex items-start justify-between gap-2">

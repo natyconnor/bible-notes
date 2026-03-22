@@ -1,6 +1,7 @@
 import { useAuthActions } from "@convex-dev/auth/react";
 import { type CSSProperties, useEffect, useRef, useState } from "react";
 import { LoginPageAtmosphere } from "@/components/login-page-atmosphere";
+import { devLog } from "@/lib/dev-log";
 import {
   heroBackgroundLayerStyle,
   heroGradientOverlayLayerStyle,
@@ -68,7 +69,11 @@ export function LoginPage({ isLoading = false }: { isLoading?: boolean }) {
     try {
       await signIn("google");
     } catch (error) {
-      console.error("Sign in failed:", error);
+      if (import.meta.env.DEV) {
+        devLog.error("auth", "Sign in failed:", error);
+      } else {
+        console.error("Sign in failed:", error);
+      }
       setIsSigningIn(false);
     }
   };

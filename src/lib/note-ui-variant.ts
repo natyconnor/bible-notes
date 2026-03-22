@@ -1,4 +1,4 @@
-export type NoteUiVariantId = "classic" | "margin" | "manuscript";
+export type NoteUiVariantId = "classic" | "margin" | "manuscript" | "candlelight";
 
 export const NOTE_UI_VARIANT_STORAGE_KEY = "berean:note-ui-variant";
 
@@ -14,12 +14,22 @@ export const NOTE_UI_VARIANTS: readonly {
     label: "Manuscript",
     description: "Paper page, ink cues, more personal",
   },
+  {
+    id: "candlelight",
+    label: "Candlelight",
+    description: "Depth, shadow, warm light",
+  },
 ];
 
 const DEFAULT_VARIANT: NoteUiVariantId = "classic";
 
 function isNoteUiVariantId(value: string): value is NoteUiVariantId {
-  return value === "classic" || value === "margin" || value === "manuscript";
+  return (
+    value === "classic" ||
+    value === "margin" ||
+    value === "manuscript" ||
+    value === "candlelight"
+  );
 }
 
 export function readNoteUiVariant(): NoteUiVariantId {

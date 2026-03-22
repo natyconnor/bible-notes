@@ -184,11 +184,14 @@ export function NoteContent({
 export interface StackedCardBackgroundProps {
   count: number;
   variant?: "default" | "muted";
+  /** Candlelight: soften rear stack layers (depth of field). */
+  isCandlelight?: boolean;
 }
 
 export function StackedCardBackground({
   count,
   variant = "default",
+  isCandlelight = false,
 }: StackedCardBackgroundProps) {
   const bgClass = variant === "muted" ? "bg-muted/40" : "bg-muted/50";
   const bgClass2 = variant === "muted" ? "bg-muted/60" : "bg-muted/70";
@@ -200,7 +203,9 @@ export function StackedCardBackground({
           className={cn(
             "absolute inset-0 translate-x-1 translate-y-1 rounded-lg border",
             bgClass,
+            isCandlelight && "opacity-50",
           )}
+          style={isCandlelight ? { filter: "blur(0.6px)" } : undefined}
         />
       )}
       {count > 1 && (
@@ -208,7 +213,9 @@ export function StackedCardBackground({
           className={cn(
             "absolute inset-0 translate-x-0.5 translate-y-0.5 rounded-lg border",
             bgClass2,
+            isCandlelight && "opacity-70",
           )}
+          style={isCandlelight ? { filter: "blur(0.3px)" } : undefined}
         />
       )}
     </>

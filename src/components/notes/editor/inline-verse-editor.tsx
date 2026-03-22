@@ -560,6 +560,7 @@ export function InlineVerseEditor({
   const editorChrome = editorChromeProp ?? noteUiVariantFromContext;
   const isRuledEditorChrome =
     editorChrome === "margin" || editorChrome === "manuscript";
+  const isCandlelight = editorChrome === "candlelight";
 
   const wrapperRef = useRef<HTMLDivElement>(null);
   const navigateToVerse = useVerseLinkNavigation(currentChapter);
@@ -976,10 +977,16 @@ export function InlineVerseEditor({
                   : "focus:border-b-primary/70",
                 "focus:ring-0 focus-visible:outline-none",
               )
-            : cn(
-                "rounded-md border bg-background px-3 py-2.5 outline-hidden",
-                "focus:border-ring focus:ring-ring/50 focus:ring-[3px]",
-              ),
+            : isCandlelight
+              ? cn(
+                  "rounded-md border-0 bg-muted/30 px-3 py-2.5 outline-hidden dark:bg-muted/20",
+                  "cl-well transition-colors duration-150",
+                  "focus:bg-muted/40 focus:outline-none focus:ring-0 dark:focus:bg-muted/25",
+                )
+              : cn(
+                  "rounded-md border bg-background px-3 py-2.5 outline-hidden",
+                  "focus:border-ring focus:ring-ring/50 focus:ring-[3px]",
+                ),
         )}
         {...(tourId ? { "data-tour-id": tourId } : {})}
         onFocus={() => setIsFocused(true)}

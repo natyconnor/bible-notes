@@ -192,7 +192,7 @@ export function PassageViewBody({
                   initial={
                     isReentering
                       ? { opacity: 0 }
-                      : { height: 0, opacity: 0 }
+                      : { height: 0, opacity: 0, overflow: "hidden" }
                   }
                   animate={
                     isReentering
@@ -207,7 +207,6 @@ export function PassageViewBody({
                   transition={
                     isReentering ? CROSSFADE_TRANSITION : NOTE_ENTER_TRANSITION
                   }
-                  style={isReentering ? undefined : { overflow: "hidden" }}
                 >
                   <VerseRowWithNotes
                     verseNumber={item.verseNumber}

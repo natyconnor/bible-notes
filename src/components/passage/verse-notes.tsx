@@ -214,6 +214,7 @@ function CollapsedBubble({
   const { variant: noteUiVariant } = useNoteUiVariant();
   const isMargin = noteUiVariant === "margin";
   const isManuscript = noteUiVariant === "manuscript";
+  const isCandlelight = noteUiVariant === "candlelight";
   return (
     <div
       className="group relative"
@@ -231,10 +232,15 @@ function CollapsedBubble({
                 "ms-note-hit",
               )
             : cn(
-                "rounded-lg text-[13px] transition-all hover:shadow-sm",
+                "rounded-lg text-[13px]",
+                !isCandlelight && "transition-all hover:shadow-sm",
                 isMargin
                   ? "note-grain border bg-stone-50/60 dark:bg-stone-950/40 border-stone-200/70 dark:border-stone-800/60 hover:bg-stone-50/80"
-                  : "border border-border bg-card",
+                  : cn(
+                      "border border-border bg-card",
+                      isCandlelight &&
+                        "cl-shadow cl-transition shadow-none",
+                    ),
               ),
         )}
         onClick={onClick}
@@ -273,6 +279,7 @@ function StackedBubble({
   const { variant: noteUiVariant } = useNoteUiVariant();
   const isMargin = noteUiVariant === "margin";
   const isManuscript = noteUiVariant === "manuscript";
+  const isCandlelight = noteUiVariant === "candlelight";
   return (
     <button
       type="button"
@@ -283,7 +290,11 @@ function StackedBubble({
       onMouseLeave={onMouseLeave}
     >
       {!isMargin && !isManuscript && (
-        <StackedCardBackground count={count} variant="muted" />
+        <StackedCardBackground
+          count={count}
+          variant="muted"
+          isCandlelight={isCandlelight}
+        />
       )}
       <div
         className={cn(
@@ -291,10 +302,15 @@ function StackedBubble({
           isManuscript
             ? cn("rounded-md border-0 overflow-visible", "ms-note-hit")
             : cn(
-                "border rounded-lg transition-all hover:shadow-sm",
+                "border rounded-lg",
+                !isCandlelight && "transition-all hover:shadow-sm",
                 isMargin
                   ? "bg-stone-50/60 dark:bg-stone-950/40 border-stone-200/70 dark:border-stone-800/60"
-                  : "bg-card border-border",
+                  : cn(
+                      "bg-card border-border",
+                      isCandlelight &&
+                        "cl-shadow cl-transition shadow-none",
+                    ),
               ),
         )}
       >
@@ -358,6 +374,7 @@ function ExpandedBubble({
   onDelete: () => void;
 }) {
   const { variant: noteUiVariant } = useNoteUiVariant();
+  const isCandlelight = noteUiVariant === "candlelight";
   const isReading = density === "reading";
   const marginSurface =
     noteUiVariant === "margin"
@@ -381,6 +398,10 @@ function ExpandedBubble({
             ? "border rounded-xl px-4 py-3 shadow-sm bg-card border-border"
             : "border rounded-lg px-3 py-2.5 shadow-sm text-sm bg-card/95 border-border/90"),
         noteUiVariant === "margin" && "note-grain",
+        isCandlelight &&
+          cn(
+            "cl-specular cl-transition shadow-none",
+          ),
       )}
     >
       <div className="flex items-start justify-between gap-2">

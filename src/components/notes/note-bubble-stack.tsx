@@ -19,10 +19,13 @@ export function NoteBubbleStack({
   const { variant: noteUiVariant } = useNoteUiVariant();
   const isMargin = noteUiVariant === "margin";
   const isManuscript = noteUiVariant === "manuscript";
+  const isCandlelight = noteUiVariant === "candlelight";
 
   return (
     <div className="relative cursor-pointer" onClick={onClick}>
-      {!isManuscript && <StackedCardBackground count={count} />}
+      {!isManuscript && (
+        <StackedCardBackground count={count} isCandlelight={isCandlelight} />
+      )}
       <div
         className={cn(
           "relative p-3 transition-colors overflow-visible",

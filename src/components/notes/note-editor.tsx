@@ -155,6 +155,10 @@ export function NoteEditor({
     noteUiVariant === "manuscript" &&
     !isDialogPresentation &&
     presentation === "card";
+  const isCandlelightCard =
+    noteUiVariant === "candlelight" &&
+    !isDialogPresentation &&
+    presentation === "card";
   const useWarmCardFooter = isMarginCard || isManuscriptCard;
 
   return (
@@ -174,12 +178,19 @@ export function NoteEditor({
                     ? "border-l-2 border-l-amber-400 bg-stone-50/60 dark:border-l-amber-600/70 dark:bg-stone-950/40"
                     : "border-l-2 border-l-transparent bg-stone-50/60 focus-within:border-l-stone-400/60 dark:bg-stone-950/40 dark:focus-within:border-l-stone-500/50 transition-[border-left-color] duration-150",
                 )
-              : cn(
-                  "rounded-lg p-2.5 shadow-sm",
-                  isPassage
-                    ? "border-l-2 border border-amber-200 bg-amber-50/80 dark:bg-amber-900/20 dark:border-amber-700/50 border-l-amber-400 dark:border-l-amber-600/70"
-                    : "border bg-card",
-                ),
+              : isCandlelightCard
+                ? cn(
+                    "rounded-lg p-2.5 shadow-none",
+                    isPassage
+                      ? "border-l-2 border border-amber-200 bg-amber-50/80 dark:bg-amber-900/20 dark:border-amber-700/50 border-l-amber-400 dark:border-l-amber-600/70 cl-shadow-amber cl-lift-on-focus-amber cl-transition-editor-shell"
+                      : "border bg-card cl-shadow cl-lift-on-focus cl-focus-bloom cl-transition-editor-shell",
+                  )
+                : cn(
+                    "rounded-lg p-2.5 shadow-sm",
+                    isPassage
+                      ? "border-l-2 border border-amber-200 bg-amber-50/80 dark:bg-amber-900/20 dark:border-amber-700/50 border-l-amber-400 dark:border-l-amber-600/70"
+                      : "border bg-card",
+                  ),
       )}
       onKeyDown={handleKeyDown}
     >

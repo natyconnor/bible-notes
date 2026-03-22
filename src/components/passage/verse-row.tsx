@@ -12,7 +12,12 @@ import {
   type HighlightRange,
 } from "@/lib/highlight-utils";
 import { getHighlightColor } from "@/lib/highlight-colors";
+import { useNoteUiVariant } from "@/components/notes/use-note-ui-variant";
 import { VERSE_EXPAND_TRANSITION } from "./note-animation-config";
+
+/** Candlelight: verse row lift shadow — lighter than note card `cl-shadow` (spec stage 6). */
+const VERSE_ROW_CANDLELIGHT_EXPANDED_SHADOW =
+  "0 1px 2px rgba(0, 0, 0, 0.05), 0 4px 14px rgba(0, 0, 0, 0.05), 0 10px 28px rgba(0, 0, 0, 0.03)";
 
 export interface VerseSelectionState {
   isSelected: boolean;
@@ -115,6 +120,8 @@ export const VerseRowLeft = memo(function VerseRowLeft({
   handlers,
   variant = "default",
 }: VerseRowLeftProps) {
+  const { variant: noteUiVariant } = useNoteUiVariant();
+  const isCandlelight = noteUiVariant === "candlelight";
   const { isSelected, isInSelectionRange, isPassageSelection } = selection;
   const { hasOwnNote, isPassageAnchor, isInPassageRange } = noteIndicator;
   const { isPassageRangeActive, isNoteBubbleHovered } = hover;
@@ -255,9 +262,24 @@ export const VerseRowLeft = memo(function VerseRowLeft({
       onMouseEnter={() => onMouseEnter(verseNumber)}
       onMouseLeave={onMouseLeave}
     >
+      {/* Candlelight: shadow on a sibling layer so Tailwind `ring-*` on this row
+          (also box-shadow) is not overridden by Framer's inline boxShadow. */}
+      {isCandlelight ? (
+        <motion.div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 z-0 rounded-sm"
+          initial={false}
+          animate={{
+            boxShadow: isExpanded
+              ? VERSE_ROW_CANDLELIGHT_EXPANDED_SHADOW
+              : "none",
+          }}
+          transition={VERSE_EXPAND_TRANSITION}
+        />
+      ) : null}
       {/* Plain div — no layout="position" needed since the parent no longer
           uses scale-based projection. */}
-      <div className="flex h-full items-center">
+      <div className="relative z-[1] flex h-full items-center">
         <div className="flex w-full gap-2">
           <motion.span
             animate={{ paddingTop: sizes.verseNumberPaddingTop }}
