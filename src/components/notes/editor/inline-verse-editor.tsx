@@ -46,6 +46,8 @@ interface InlineVerseEditorProps {
   currentChapter?: CurrentChapter;
   placeholder?: string;
   className?: string;
+  /** Controls editor chrome style: "candlelight" for inline cards, "dialog" for dialog presentations. */
+  editorChrome?: "candlelight" | "dialog";
   tourId?: string;
   tutorialPreviewText?: string;
   tutorialAnimateText?: boolean;
@@ -545,12 +547,16 @@ export function InlineVerseEditor({
   currentChapter,
   placeholder = "Write your note...",
   className,
+  editorChrome: editorChromeProp,
   tourId,
   tutorialPreviewText,
   tutorialAnimateText = false,
   tutorialPreviewQuery,
   onChange,
 }: InlineVerseEditorProps) {
+  const editorChrome = editorChromeProp ?? "candlelight";
+  const isCandlelight = editorChrome === "candlelight";
+
   const wrapperRef = useRef<HTMLDivElement>(null);
   const navigateToVerse = useVerseLinkNavigation(currentChapter);
   const editorRef = useRef<HTMLDivElement>(null);
@@ -914,12 +920,22 @@ export function InlineVerseEditor({
   return (
     <div ref={wrapperRef} className={cn("relative", className)}>
       {!isFocused && isEmpty && !showTutorialText ? (
-        <div className="pointer-events-none absolute left-3 top-2.5 text-sm text-muted-foreground">
+        <div
+          className={cn(
+            "pointer-events-none absolute text-sm text-muted-foreground",
+            "left-3 top-2.5",
+          )}
+        >
           {placeholder}
         </div>
       ) : null}
       {showTutorialText ? (
-        <div className="pointer-events-none absolute inset-x-3 top-2.5 z-10 whitespace-pre-wrap text-sm leading-relaxed text-foreground">
+        <div
+          className={cn(
+            "pointer-events-none absolute z-10 whitespace-pre-wrap text-sm leading-relaxed text-foreground",
+            "inset-x-3 top-2.5",
+          )}
+        >
           {displayedTutorialText}
           {isTutorialLinkStep ? (
             <>
@@ -947,8 +963,17 @@ export function InlineVerseEditor({
         role="textbox"
         aria-multiline="true"
         className={cn(
-          "min-h-[96px] rounded-md border bg-background px-3 py-2.5 text-sm leading-relaxed outline-hidden whitespace-pre-wrap",
-          "focus:border-ring focus:ring-ring/50 focus:ring-[3px]",
+          "min-h-[96px] text-sm leading-relaxed whitespace-pre-wrap",
+          isCandlelight
+            ? cn(
+                "rounded-md border-0 bg-muted/30 px-3 py-2.5 outline-hidden dark:bg-muted/20",
+                "cl-well transition-colors duration-150",
+                "focus:bg-muted/40 focus:outline-none focus:ring-0 dark:focus:bg-muted/25",
+              )
+            : cn(
+                "rounded-md border bg-background px-3 py-2.5 outline-hidden",
+                "focus:border-ring focus:ring-ring/50 focus:ring-[3px]",
+              ),
         )}
         {...(tourId ? { "data-tour-id": tourId } : {})}
         onFocus={() => setIsFocused(true)}

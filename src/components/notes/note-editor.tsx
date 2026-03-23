@@ -16,6 +16,7 @@ import {
 } from "@/lib/note-inline-content";
 import { InlineVerseEditor } from "@/components/notes/editor/inline-verse-editor";
 import { useNoteEditorTour } from "@/components/tutorial/use-note-editor-tour";
+import { formatCommandOrControlShortcut } from "@/lib/keyboard-shortcuts";
 import { api } from "../../../convex/_generated/api";
 
 interface CurrentChapter {
@@ -93,7 +94,14 @@ export function NoteEditor({
         tags.some((t, i) => t !== normalizedInitialTags[i]);
       onDirtyChange(bodyChanged || tagsChanged);
     }
-  }, [body, tags, onDirtyChange, isNewNote, initialEditorBody, normalizedInitialTags]);
+  }, [
+    body,
+    tags,
+    onDirtyChange,
+    isNewNote,
+    initialEditorBody,
+    normalizedInitialTags,
+  ]);
 
   const handleSave = useCallback(async () => {
     const content = noteBodyToPlainText(body).trim();
@@ -131,6 +139,7 @@ export function NoteEditor({
   const isDialogPresentation = presentation === "dialog";
   const plainText = noteBodyToPlainText(body).trim();
   const showEditorHeaderRow = !isPassage || !isDialogPresentation;
+  const isCandlelightCard = !isDialogPresentation && presentation === "card";
 
   return (
     <div
@@ -139,10 +148,10 @@ export function NoteEditor({
         isDialogPresentation
           ? "px-1 pb-1"
           : cn(
-              "rounded-lg p-2.5 shadow-sm",
+              "rounded-lg p-2.5 shadow-none",
               isPassage
-                ? "border-l-2 border border-amber-200 bg-amber-50/80 dark:bg-amber-900/20 dark:border-amber-700/50 border-l-amber-400 dark:border-l-amber-600/70"
-                : "border bg-card",
+                ? "bg-amber-50/90 dark:bg-amber-900/22 cl-depth-3-amber cl-transition cl-editor-lift-amber cl-focus-bloom"
+                : "bg-card cl-depth-3 cl-transition cl-editor-lift cl-focus-bloom",
             ),
       )}
       onKeyDown={handleKeyDown}
@@ -181,6 +190,7 @@ export function NoteEditor({
         }
         onChange={handleEditorChange}
         className={cn(isDialogPresentation ? "min-h-[180px]" : "min-h-[96px]")}
+        editorChrome={isDialogPresentation ? "dialog" : "candlelight"}
         tourId={tour.bodyTourId}
         tutorialPreviewText={tour.tutorialPreviewText}
         tutorialAnimateText={tour.tutorialAnimateText}
@@ -205,13 +215,24 @@ export function NoteEditor({
             "text-xs",
             isPassage && "border-amber-300 dark:border-amber-600/50",
           )}
+          inputClassName={cn(
+            isCandlelightCard &&
+              cn(
+                "border-0 border-b rounded-none bg-transparent px-0 h-7",
+                "border-border/50 focus:border-border/80",
+                "focus-visible:ring-0 focus-visible:ring-offset-0",
+                "placeholder:text-muted-foreground/50",
+                isPassage &&
+                  "border-amber-300/60 focus:border-amber-400/70",
+              ),
+          )}
           tourId={tour.tagsTourId}
           tutorialPreviewTags={tour.tutorialPreviewTags}
           tutorialAnimatePreview={tour.tutorialAnimateTagPreview}
         />
       </div>
 
-      <div className="flex justify-end gap-2">
+      <div className="flex gap-2 justify-end">
         {!isDialogPresentation && (
           <TooltipButton
             variant="ghost"
@@ -223,6 +244,7 @@ export function NoteEditor({
           </TooltipButton>
         )}
         <TooltipButton
+          variant="default"
           size="sm"
           onClick={() => {
             void handleSave();
@@ -233,16 +255,15 @@ export function NoteEditor({
               ? "Enter content to save"
               : isSaving
                 ? "Saving note..."
-                : "Save note (⌘Enter)"
+                : `Save note (${formatCommandOrControlShortcut("Enter")})`
           }
         >
           {isSaving ? "Saving..." : "Save"}
         </TooltipButton>
       </div>
 
-      <p className="text-xs text-muted-foreground">
-        {/(Mac|iPhone|iPad)/i.test(navigator.userAgent) ? "Cmd" : "Ctrl"}+Enter
-        to save
+      <p className="text-right text-xs text-muted-foreground">
+        {formatCommandOrControlShortcut("Enter")} to save
       </p>
     </div>
   );

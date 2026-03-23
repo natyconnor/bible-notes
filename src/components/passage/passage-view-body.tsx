@@ -12,6 +12,7 @@ import {
   CROSSFADE_TRANSITION,
 } from "./note-animation-config";
 import type { PassageNotesInteraction } from "./hooks/use-passage-notes-interaction";
+import { cn } from "@/lib/utils";
 
 type PassageViewMode = "compose" | "read";
 
@@ -116,20 +117,21 @@ export function PassageViewBody({
   } = passageNotesInteraction;
 
   return (
-    <ScrollArea
-      className="flex-1 min-h-0 overflow-hidden"
-      viewportRef={viewportRef}
-    >
-      <motion.div
-        key={passageKey}
-        initial={{ opacity: 0, y: 8 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.2, ease: "easeOut" }}
-        ref={containerRef}
-        className={containerClass}
-        onMouseUp={handleMouseUp}
-        onMouseLeave={handleMouseUp}
+    <div className="relative flex-1 min-h-0 overflow-hidden">
+      <ScrollArea
+        className={cn("h-full min-h-0 overflow-hidden")}
+        viewportRef={viewportRef}
       >
+        <motion.div
+          key={passageKey}
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.2, ease: "easeOut" }}
+          ref={containerRef}
+          className={containerClass}
+          onMouseUp={handleMouseUp}
+          onMouseLeave={handleMouseUp}
+        >
         <div>
           <AnimatePresence initial={false} mode="popLayout">
             {filteredVerses.map((item) => {
@@ -192,7 +194,7 @@ export function PassageViewBody({
                   initial={
                     isReentering
                       ? { opacity: 0 }
-                      : { height: 0, opacity: 0 }
+                      : { height: 0, opacity: 0, overflow: "hidden" }
                   }
                   animate={
                     isReentering
@@ -207,7 +209,6 @@ export function PassageViewBody({
                   transition={
                     isReentering ? CROSSFADE_TRANSITION : NOTE_ENTER_TRANSITION
                   }
-                  style={isReentering ? undefined : { overflow: "hidden" }}
                 >
                   <VerseRowWithNotes
                     verseNumber={item.verseNumber}
@@ -285,6 +286,8 @@ export function PassageViewBody({
           </div>
         </div>
       </motion.div>
-    </ScrollArea>
+      </ScrollArea>
+      <div className="cl-vignette" aria-hidden />
+    </div>
   );
 }

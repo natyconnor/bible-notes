@@ -1,4 +1,4 @@
-import { memo, useCallback, useRef, type RefObject } from "react";
+import { memo, useCallback, useEffect, useRef, useState, type RefObject } from "react";
 import { motion } from "framer-motion";
 import { ChevronUp, Plus } from "lucide-react";
 import {
@@ -122,6 +122,40 @@ export const VerseRowLeft = memo(function VerseRowLeft({
   const shouldFlipTooltipBelow = verseNumber <= 2;
   const { onAddNote, onMouseDown, onMouseEnter, onMouseLeave } = handlers;
 
+  const glintRef = useRef<{ x: number; y: number } | null>(null);
+  const [glintPos, setGlintPos] = useState<{ x: number; y: number } | null>(null);
+  const warmTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [isWarmed, setIsWarmed] = useState(false);
+
+  const showGlint =
+    !isFocusTarget &&
+    !isNoteBubbleHovered &&
+    !isPassageRangeActive &&
+    (isExpanded || (!isSelected && !isInSelectionRange));
+
+  const handleGlintMove = useCallback(
+    (e: React.MouseEvent<HTMLDivElement>) => {
+      if (!showGlint) return;
+      const rect = e.currentTarget.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      glintRef.current = { x, y };
+      setGlintPos({ x, y });
+    },
+    [showGlint],
+  );
+
+  const handleGlintLeave = useCallback(() => {
+    glintRef.current = null;
+    setGlintPos(null);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (warmTimerRef.current) clearTimeout(warmTimerRef.current);
+    };
+  }, []);
+
   const sizes = isExpanded
     ? variant === "groupedPassage" ? GROUPED_EXPANDED : EXPANDED
     : COLLAPSED;
@@ -204,18 +238,27 @@ export const VerseRowLeft = memo(function VerseRowLeft({
         paddingBottom: sizes.paddingBottom,
         paddingLeft: sizes.paddingLeft,
         paddingRight: sizes.paddingRight,
+        y: isExpanded ? -3 : 0,
       }}
       transition={VERSE_EXPAND_TRANSITION}
       data-verse-number={verseNumber}
       {...(rowTourId ? { "data-tour-id": rowTourId } : {})}
+      style={
+        showGlint && glintPos
+          ? { "--specular-x": `${glintPos.x}px` } as React.CSSProperties
+          : undefined
+      }
       className={cn(
         "group relative h-full rounded-sm transition-[color,background-color,border-color,box-shadow] duration-200 ease-out",
+        !isExpanded && "cl-verse-glint cl-verse-specular",
         isExpanded ? "cursor-text" : "min-h-10 select-none cursor-pointer",
         isSelected &&
           isPassageSelection &&
+          !isExpanded &&
           "bg-amber-100/80 dark:bg-amber-800/30 ring-1 ring-amber-400/40 dark:ring-amber-500/30",
         isSelected &&
           !isPassageSelection &&
+          !isExpanded &&
           "bg-primary/10 ring-1 ring-primary/20",
         isInSelectionRange &&
           !isSelected &&
@@ -238,10 +281,8 @@ export const VerseRowLeft = memo(function VerseRowLeft({
           "bg-amber-50/60 dark:bg-amber-800/20",
         !isSelected && !isInSelectionRange && !isExpanded && "hover:bg-muted",
         isExpanded &&
-          !isSelected &&
-          !isInSelectionRange &&
           variant !== "groupedPassage" &&
-          "bg-stone-50/80 dark:bg-stone-900/20",
+          "bg-primary/10 dark:bg-primary/15 rounded-lg cl-depth-2 cl-transition cl-flicker",
       )}
       onMouseDown={
         isExpanded
@@ -252,12 +293,48 @@ export const VerseRowLeft = memo(function VerseRowLeft({
             }
       }
       onMouseUp={isExpanded ? onTextMouseUp : undefined}
-      onMouseEnter={() => onMouseEnter(verseNumber)}
-      onMouseLeave={onMouseLeave}
+      onMouseMove={handleGlintMove}
+      onMouseEnter={() => {
+        onMouseEnter(verseNumber);
+        if (showGlint) {
+          warmTimerRef.current = setTimeout(() => setIsWarmed(true), 800);
+        }
+      }}
+      onMouseLeave={() => {
+        onMouseLeave();
+        handleGlintLeave();
+        if (warmTimerRef.current) {
+          clearTimeout(warmTimerRef.current);
+          warmTimerRef.current = null;
+        }
+        setIsWarmed(false);
+      }}
     >
-      {/* Plain div — no layout="position" needed since the parent no longer
-          uses scale-based projection. */}
-      <div className="flex h-full items-center">
+      {showGlint && (
+        <>
+          <div
+            className="absolute inset-0 pointer-events-none rounded-[inherit] overflow-hidden"
+            style={{
+              backgroundImage: glintPos
+                ? `radial-gradient(ellipse ${isExpanded ? "360px 240px" : "220px 140px"} at ${glintPos.x}px ${glintPos.y}px, var(--cl-glint), transparent 70%)`
+                : undefined,
+              opacity: glintPos ? 1 : 0,
+              transition: glintPos ? "opacity 150ms ease-out" : "opacity 200ms ease-out",
+            }}
+          />
+          <div
+            className="absolute inset-0 pointer-events-none rounded-[inherit] overflow-hidden"
+            style={{
+              backgroundImage: glintPos
+                ? `radial-gradient(ellipse ${isExpanded ? "500px 340px" : "320px 210px"} at ${glintPos.x}px ${glintPos.y}px, var(--cl-glint-warm), transparent 70%)`
+                : undefined,
+              opacity: isWarmed ? 1 : 0,
+              transition: "opacity 2.5s ease-out",
+            }}
+          />
+        </>
+      )}
+      <div className="relative flex h-full items-center">
         <div className="flex w-full gap-2">
           <motion.span
             animate={{ paddingTop: sizes.verseNumberPaddingTop }}
@@ -304,13 +381,13 @@ export const VerseRowLeft = memo(function VerseRowLeft({
                 </span>
                 <span className="mt-1 flex min-w-[6px] flex-col items-center gap-0.5">
                   {hasOwnNote && (
-                    <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-primary/60" />
+                    <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-primary/60 cl-ember-single" />
                   )}
                   {isPassageAnchor && (
-                    <span className="h-1.5 w-1.5 shrink-0 rounded-sm bg-amber-400/80 dark:bg-amber-400/50" />
+                    <span className="h-1.5 w-1.5 shrink-0 rounded-sm bg-amber-400/80 dark:bg-amber-400/50 cl-ember-passage" />
                   )}
                   {isInPassageRange && !isPassageAnchor && (
-                    <span className="mt-0.5 h-0.5 w-2 shrink-0 rounded bg-amber-300/70 dark:bg-amber-500/40" />
+                    <span className="mt-0.5 h-0.5 w-2 shrink-0 rounded bg-amber-300/70 dark:bg-amber-500/40 cl-ember-range" />
                   )}
                 </span>
               </>

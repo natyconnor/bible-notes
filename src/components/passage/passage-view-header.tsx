@@ -1,3 +1,5 @@
+"use client";
+
 import { BookOpen, Pencil } from "lucide-react";
 import { ChapterHeader } from "@/components/bible/chapter-header";
 import { Button } from "@/components/ui/button";
@@ -36,7 +38,8 @@ export function PassageViewHeader({
   return (
     <div
       className={cn(
-        "shrink-0 bg-background transition-shadow duration-200",
+        "shrink-0 transition-[box-shadow,border-color] duration-200",
+        "bg-background",
         isScrolled && "shadow-sm",
       )}
       data-passage-dismiss-exempt

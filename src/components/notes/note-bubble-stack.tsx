@@ -16,8 +16,8 @@ export function NoteBubbleStack({
 }: NoteBubbleStackProps) {
   return (
     <div className="relative cursor-pointer" onClick={onClick}>
-      <StackedCardBackground count={count} />
-      <div className="relative border rounded-lg p-3 bg-card transition-all hover:shadow-sm">
+      <StackedCardBackground count={count} isCandlelight />
+      <div className="relative p-3 overflow-visible border rounded-lg bg-card transition-all hover:shadow-sm">
         <div className="flex items-center justify-between mb-1">
           <Badge variant="secondary" className="text-xs font-normal">
             {verseLabel}

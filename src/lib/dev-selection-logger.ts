@@ -1,5 +1,5 @@
 /**
- * Dev-only: logs Selection API state to the console for diagnosing verse text
+ * Dev-only: logs Selection API state to the dev log overlay for diagnosing verse text
  * selection glitches.
  *
  * Enable (pick one):
@@ -11,6 +11,8 @@
  * Disable:
  *   localStorage.removeItem("berean:debugSelection")
  */
+
+import { devLog } from "@/lib/dev-log";
 
 const STORAGE_KEY = "berean:debugSelection";
 
@@ -100,11 +102,9 @@ export function initDevSelectionLogger(): void {
   if (!import.meta.env.DEV) return;
   if (!debugSelectionEnabled()) return;
 
-  console.info(
-    "%c[berean:selection]%c logging on — copy console output when the glitch happens. Off: localStorage.removeItem(%s)",
-    "color:#0a0;font-weight:bold",
-    "color:inherit;font-weight:inherit",
-    JSON.stringify(STORAGE_KEY),
+  devLog.info(
+    "selection",
+    `logging on — copy dev log when the glitch happens. Off: localStorage.removeItem(${JSON.stringify(STORAGE_KEY)})`,
   );
 
   const flush = (): void => {
@@ -112,7 +112,7 @@ export function initDevSelectionLogger(): void {
     if (!sel || sel.rangeCount === 0) {
       if (!lastCollapsed) {
         seq += 1;
-        console.log("[berean:selection]", { seq, kind: "empty" });
+        devLog.debug("selection", { seq, kind: "empty" });
         lastCollapsed = true;
       }
       return;
@@ -124,7 +124,7 @@ export function initDevSelectionLogger(): void {
     if (collapsed) {
       if (!lastCollapsed) {
         seq += 1;
-        console.log("[berean:selection]", { seq, kind: "collapsed" });
+        devLog.debug("selection", { seq, kind: "collapsed" });
       }
       lastCollapsed = true;
       return;
@@ -138,7 +138,7 @@ export function initDevSelectionLogger(): void {
     const startVerse = verseNumberFromNode(range.startContainer);
     const endVerse = verseNumberFromNode(range.endContainer);
 
-    console.log("[berean:selection]", {
+    devLog.debug("selection", {
       seq,
       kind: "range",
       tMs: Math.round(performance.now()),

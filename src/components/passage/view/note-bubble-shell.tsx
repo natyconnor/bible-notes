@@ -1,3 +1,5 @@
+"use client";
+
 import type { ReactNode } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { NOTE_ENTER_TRANSITION } from "../note-animation-config";
@@ -23,18 +25,10 @@ export function NoteBubbleShell({
     <AnimatePresence initial={false} mode="popLayout">
       <motion.div
         key={state}
-        initial={isExpanded ? { opacity: 0, height: 0 } : { opacity: 0 }}
-        animate={isExpanded ? { opacity: 1, height: "auto" } : { opacity: 1 }}
+        initial={isExpanded ? { opacity: 0 } : { opacity: 0 }}
+        animate={isExpanded ? { opacity: 1 } : { opacity: 1 }}
         exit={{ opacity: 0 }}
-        transition={
-          isExpanded
-            ? {
-                opacity: NOTE_ENTER_TRANSITION,
-                height: { duration: 0.22, ease: [0.22, 1, 0.36, 1] },
-              }
-            : NOTE_ENTER_TRANSITION
-        }
-        style={isExpanded ? { overflow: "hidden" } : undefined}
+        transition={NOTE_ENTER_TRANSITION}
       >
         {state === "pill"
           ? pill

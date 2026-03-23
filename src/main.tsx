@@ -5,6 +5,7 @@ import { ConvexReactClient } from "convex/react";
 import { ConvexAuthProvider } from "@convex-dev/auth/react";
 import { ConvexQueryCacheProvider } from "convex-helpers/react/cache";
 import { routeTree } from "./routeTree.gen";
+import { DevLogRoot } from "@/components/dev/dev-log-root";
 import { initDevSelectionLogger } from "./lib/dev-selection-logger";
 import "./index.css";
 
@@ -27,6 +28,7 @@ createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <ConvexAuthProvider client={convex}>
       <ConvexQueryCacheProvider>
+        {import.meta.env.DEV ? <DevLogRoot /> : null}
         <RouterProvider router={router} />
       </ConvexQueryCacheProvider>
     </ConvexAuthProvider>

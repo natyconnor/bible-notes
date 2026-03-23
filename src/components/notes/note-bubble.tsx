@@ -15,7 +15,6 @@ import {
   NoteContent,
   type CurrentChapter,
 } from "./view/note-card-primitives";
-
 interface NoteBubbleProps {
   noteId: string;
   content: string;
@@ -46,11 +45,13 @@ export const NoteBubble = memo(function NoteBubble({
   return (
     <div
       className={cn(
-        "group relative border rounded-lg p-3 transition-all cursor-pointer",
-        isPassage
-          ? "bg-amber-50/80 border-amber-200 dark:bg-amber-900/20 dark:border-amber-700/50"
-          : "bg-card border-border",
-        isExpanded && "shadow-md",
+        "group relative p-3 cursor-pointer overflow-visible rounded-lg transition-all",
+        isPassage ? "bg-amber-50/90 dark:bg-amber-900/22" : "bg-card",
+        isExpanded
+          ? isPassage
+            ? "cl-depth-3-amber cl-transition shadow-none"
+            : "cl-depth-3 cl-transition shadow-none"
+          : "cl-depth-1 cl-transition shadow-none",
       )}
       onClick={() => !isExpanded && onExpand()}
     >

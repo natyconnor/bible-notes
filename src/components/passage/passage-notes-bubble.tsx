@@ -80,10 +80,6 @@ export const PassageNotesBubble = memo(function PassageNotesBubble({
   const shouldShowExpanded = isOpen || isReadMode || isEditingWithinGroup;
 
   const previewLength = compact ? 34 : 100;
-  const preview =
-    notes[0].content.length > previewLength
-      ? notes[0].content.slice(0, previewLength) + "..."
-      : notes[0].content;
 
   const bubbleState: BubbleState =
     isPill && !isEditingWithinGroup
@@ -106,7 +102,8 @@ export const PassageNotesBubble = memo(function PassageNotesBubble({
       collapsed={
         <CollapsedPassageBubble
           notes={notes}
-          preview={preview}
+          previewLength={previewLength}
+          currentChapter={currentChapter}
           compact={compact}
           isGlowing={isGlowing}
           onOpen={onOpen}
@@ -120,8 +117,8 @@ export const PassageNotesBubble = memo(function PassageNotesBubble({
           data-note-surface
           className={
             isReadMode
-              ? "space-y-3 rounded-xl border border-amber-200 bg-amber-50/30 dark:bg-amber-900/20 dark:border-amber-700/50 p-3"
-              : "min-h-[96px] space-y-1.5 rounded-lg border border-amber-200 bg-amber-50/40 dark:bg-amber-900/15 dark:border-amber-700/50 p-2.5"
+              ? "space-y-3 rounded-xl bg-amber-50/25 dark:bg-amber-900/14 p-3"
+              : "min-h-[96px] space-y-1.5 rounded-lg bg-amber-50/30 dark:bg-amber-900/12 p-2.5"
           }
           onClick={(e) => e.stopPropagation()}
           onMouseEnter={onMouseEnter}
@@ -138,7 +135,7 @@ export const PassageNotesBubble = memo(function PassageNotesBubble({
               <Tooltip>
                 <TooltipTrigger asChild>
                   <button
-                    className="flex items-center gap-1 text-xs text-primary hover:text-primary/80 font-medium transition-colors"
+                    className="flex items-center gap-1 text-xs font-medium transition-colors text-primary hover:text-primary/80"
                     onClick={onAddNote}
                   >
                     <Plus className="h-3 w-3" />
@@ -210,7 +207,8 @@ export const PassageNotesBubble = memo(function PassageNotesBubble({
 
 function CollapsedPassageBubble({
   notes,
-  preview,
+  previewLength,
+  currentChapter,
   compact,
   isGlowing,
   onOpen,
@@ -219,7 +217,8 @@ function CollapsedPassageBubble({
   onMouseLeave,
 }: {
   notes: PassageNote[];
-  preview: string;
+  previewLength: number;
+  currentChapter?: CurrentChapter;
   compact: boolean;
   isGlowing: boolean;
   onOpen: () => void;
@@ -230,12 +229,11 @@ function CollapsedPassageBubble({
   return (
     <div
       className={cn(
-        "group relative text-sm",
-        "rounded-lg border-l-2 border text-sm transition-colors",
-        "border-l-amber-400 border-amber-200 bg-amber-50/80 dark:bg-amber-900/20 dark:border-amber-700/50 dark:border-l-amber-600/70",
-        "hover:shadow-sm hover:bg-amber-50 dark:hover:bg-amber-800/25",
-        isGlowing &&
-          "animate-pulse-subtle ring-1 ring-amber-400/50 shadow-sm shadow-amber-200/60 dark:shadow-amber-950/60",
+        "group relative text-sm transition-colors rounded-lg",
+        "bg-amber-50/90 dark:bg-amber-900/22",
+        "cl-depth-1 cl-transition shadow-none",
+        "hover:bg-amber-50 dark:hover:bg-amber-800/25",
+        isGlowing && "cl-glow-pulse",
       )}
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
@@ -276,14 +274,16 @@ function CollapsedPassageBubble({
               </Badge>
             )}
           </div>
-          <p
+          <NoteContent
+            content={notes[0].content}
+            body={notes[0].body}
+            truncateAt={previewLength}
+            currentChapter={currentChapter}
             className={cn(
-              "text-muted-foreground leading-relaxed",
+              "text-muted-foreground",
               compact ? "line-clamp-1 text-[10px]" : "line-clamp-2",
             )}
-          >
-            {preview}
-          </p>
+          />
           {!compact && notes[0].tags.length > 0 && (
             <NoteTagList
               tags={notes[0].tags}
@@ -363,11 +363,12 @@ function ExpandedPassageNote({
   const isReading = density === "reading";
   return (
     <div
-      className={
+      className={cn(
         isReading
-          ? "rounded-lg border border-amber-200/70 bg-amber-50/60 dark:bg-amber-900/18 dark:border-amber-700/45 px-4 py-3"
-          : "rounded-md border border-amber-200/70 bg-amber-50/60 dark:bg-amber-900/18 dark:border-amber-700/45 px-3 py-2 text-sm"
-      }
+          ? "rounded-lg bg-amber-50/90 dark:bg-amber-900/22 px-4 py-3"
+          : "rounded-md bg-amber-50/90 dark:bg-amber-900/22 px-3 py-2 text-sm",
+        "cl-depth-3-amber cl-transition shadow-none",
+      )}
     >
       <div className="flex items-start justify-between gap-2">
         <NoteContent

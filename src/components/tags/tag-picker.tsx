@@ -36,6 +36,7 @@ interface TagPickerProps {
   showSuggestionsOnFocus?: boolean;
   maxSuggestions?: number;
   selectedTagBadgeClassName?: string;
+  inputClassName?: string;
   tourId?: string;
   tutorialPreviewTags?: string[];
   tutorialAnimatePreview?: boolean;
@@ -54,6 +55,7 @@ export function TagPicker({
   showSuggestionsOnFocus = true,
   maxSuggestions = DEFAULT_MAX_SUGGESTIONS,
   selectedTagBadgeClassName,
+  inputClassName,
   tourId,
   tutorialPreviewTags = [],
   tutorialAnimatePreview = false,
@@ -269,7 +271,7 @@ export function TagPicker({
               setHighlightedSuggestion(0);
             }
           }}
-          className="h-8 text-sm"
+          className={cn("h-8 text-sm", inputClassName)}
         />
 
         {isFocused && suggestions.length > 0 && (

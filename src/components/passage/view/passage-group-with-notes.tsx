@@ -149,6 +149,7 @@ export const PassageGroupWithNotes = memo(function PassageGroupWithNotes({
           isReadMode
             ? "grid-cols-[minmax(360px,1fr)_minmax(520px,1.4fr)] gap-6"
             : "grid-cols-[minmax(0,1.1fr)_minmax(360px,440px)] gap-5",
+          "transition-[margin] duration-280 ease-[cubic-bezier(0.22,1,0.36,1)] my-3",
         )}
         data-note-surface
       >
@@ -163,13 +164,7 @@ export const PassageGroupWithNotes = memo(function PassageGroupWithNotes({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={CROSSFADE_TRANSITION}
-            className={cn(
-              "rounded-lg",
-              "border border-amber-200/70 dark:border-amber-700/40",
-              "bg-amber-50/40 dark:bg-amber-950/20",
-              "ring-1 ring-amber-300/30 dark:ring-amber-600/20",
-              "shadow-sm shadow-amber-100/60 dark:shadow-amber-950/30",
-            )}
+            className="rounded-lg bg-amber-100/60 dark:bg-amber-900/20 cl-depth-2 cl-transition"
           >
             {verses.map((verse, index) => (
               <VerseTextPane

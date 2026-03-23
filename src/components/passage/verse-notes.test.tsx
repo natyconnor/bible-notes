@@ -1,8 +1,8 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
-import { VerseNotes } from "./verse-notes";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { VerseNotes } from "./verse-notes";
 import type { Id } from "../../../convex/_generated/dataModel";
 import type { NoteWithRef } from "@/components/notes/model/note-model";
 

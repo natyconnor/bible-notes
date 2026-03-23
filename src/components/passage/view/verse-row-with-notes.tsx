@@ -252,6 +252,9 @@ export const VerseRowWithNotes = memo(function VerseRowWithNotes({
         isReadMode
           ? "grid grid-cols-[minmax(360px,1fr)_minmax(520px,1.4fr)] gap-6 items-start"
           : "grid grid-cols-[minmax(0,1.1fr)_minmax(360px,440px)] gap-5 items-start",
+        isExpanded && "min-h-[240px]",
+        "transition-[margin] duration-280 ease-[cubic-bezier(0.22,1,0.36,1)]",
+        isExpanded && "my-3",
       )}
     >
       <motion.div

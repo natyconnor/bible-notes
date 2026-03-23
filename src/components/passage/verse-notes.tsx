@@ -18,6 +18,7 @@ import {
   HoverEditButton,
   NoteContent,
 } from "@/components/notes/view/note-card-primitives";
+import { cn } from "@/lib/utils";
 import { NoteBubbleShell, type BubbleState } from "./view/note-bubble-shell";
 import { LAYOUT_CORRECTION_TRANSITION } from "./note-animation-config";
 
@@ -119,7 +120,7 @@ export const VerseNotes = memo(function VerseNotes({
               <Tooltip>
                 <TooltipTrigger asChild>
                   <button
-                    className="flex items-center gap-1 text-xs text-primary hover:text-primary/80 font-medium transition-colors"
+                    className="flex items-center gap-1 text-xs font-medium transition-colors text-primary hover:text-primary/80"
                     onClick={onAddNote}
                   >
                     <Plus className="h-3 w-3" />
@@ -210,7 +211,7 @@ function CollapsedBubble({
       <button
         type="button"
         data-note-trigger
-        className="w-full cursor-pointer rounded-lg border border-border bg-card px-2.5 py-1.5 text-left text-[13px] transition-all hover:shadow-sm"
+        className="w-full cursor-pointer px-2.5 py-1.5 text-left transition-colors rounded-lg text-[13px] bg-card cl-depth-1 cl-transition shadow-none"
         onClick={onClick}
       >
         <NoteContent
@@ -249,14 +250,16 @@ function StackedBubble({
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
     >
-      <StackedCardBackground count={count} variant="muted" />
-      <div className="relative border rounded-lg px-2.5 py-1.5 transition-all hover:shadow-sm text-xs bg-card border-border">
+      <StackedCardBackground count={count} variant="muted" isCandlelight />
+      <div className="relative px-2.5 py-1.5 text-xs transition-colors rounded-lg bg-card cl-depth-1 cl-transition shadow-none">
         <div className="flex items-center justify-between mb-0.5">
           <Badge variant="outline" className="text-[10px] px-1.5 py-0">
             {count} notes
           </Badge>
         </div>
-        <p className="text-muted-foreground line-clamp-1 text-xs">{preview}</p>
+        <p className="text-muted-foreground line-clamp-1 text-xs">
+          {preview}
+        </p>
       </div>
     </button>
   );
@@ -302,13 +305,13 @@ function ExpandedBubble({
   onDelete: () => void;
 }) {
   const isReading = density === "reading";
+
   return (
     <div
-      className={
-        isReading
-          ? "border rounded-xl px-4 py-3 shadow-sm bg-card border-border"
-          : "border rounded-lg px-3 py-2.5 shadow-sm text-sm bg-card/95 border-border/90"
-      }
+      className={cn(
+        isReading ? "rounded-xl px-4 py-3" : "rounded-lg px-3 py-2.5 text-sm",
+        "bg-card shadow-none cl-depth-3 cl-transition",
+      )}
     >
       <div className="flex items-start justify-between gap-2">
         <NoteContent
