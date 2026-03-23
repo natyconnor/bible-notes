@@ -1,7 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
-import { NoteUiVariantProvider } from "@/components/notes/note-ui-variant-provider";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { VerseNotes } from "./verse-notes";
 import type { Id } from "../../../convex/_generated/dataModel";
@@ -30,19 +29,17 @@ describe("VerseNotes", () => {
     const onOpen = vi.fn();
 
     render(
-      <NoteUiVariantProvider>
-        <TooltipProvider>
-          <VerseNotes
-            notes={[baseNote]}
-            isOpen={false}
-            onOpen={onOpen}
-            onClose={vi.fn()}
-            onEdit={vi.fn()}
-            onDelete={vi.fn()}
-            onAddNote={vi.fn()}
-          />
-        </TooltipProvider>
-      </NoteUiVariantProvider>,
+      <TooltipProvider>
+        <VerseNotes
+          notes={[baseNote]}
+          isOpen={false}
+          onOpen={onOpen}
+          onClose={vi.fn()}
+          onEdit={vi.fn()}
+          onDelete={vi.fn()}
+          onAddNote={vi.fn()}
+        />
+      </TooltipProvider>,
     );
 
     await user.tab();
@@ -56,28 +53,26 @@ describe("VerseNotes", () => {
     const onOpen = vi.fn();
 
     render(
-      <NoteUiVariantProvider>
-        <TooltipProvider>
-          <VerseNotes
-            notes={[
-              baseNote,
-              {
-                ...baseNote,
-                noteId: "note-2" as Id<"notes">,
-                content: "Another note",
-                tags: ["tag-b"],
-                createdAt: 2,
-              },
-            ]}
-            isOpen={false}
-            onOpen={onOpen}
-            onClose={vi.fn()}
-            onEdit={vi.fn()}
-            onDelete={vi.fn()}
-            onAddNote={vi.fn()}
-          />
-        </TooltipProvider>
-      </NoteUiVariantProvider>,
+      <TooltipProvider>
+        <VerseNotes
+          notes={[
+            baseNote,
+            {
+              ...baseNote,
+              noteId: "note-2" as Id<"notes">,
+              content: "Another note",
+              tags: ["tag-b"],
+              createdAt: 2,
+            },
+          ]}
+          isOpen={false}
+          onOpen={onOpen}
+          onClose={vi.fn()}
+          onEdit={vi.fn()}
+          onDelete={vi.fn()}
+          onAddNote={vi.fn()}
+        />
+      </TooltipProvider>,
     );
 
     await user.tab();

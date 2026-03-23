@@ -4,7 +4,6 @@ import { describe, expect, it, vi } from "vitest";
 import { VerseRowWithNotes } from "./verse-row-with-notes";
 import type { HighlightRange } from "@/lib/highlight-utils";
 import type { Id } from "../../../../convex/_generated/dataModel";
-import { NoteUiVariantProvider } from "@/components/notes/note-ui-variant-provider";
 import { TooltipProvider } from "@/components/ui/tooltip";
 
 const VERSE_TEXT = "In the beginning";
@@ -75,11 +74,9 @@ function clickMark(mark: HTMLElement) {
 
 function renderVerseRow(props: ReturnType<typeof defaultProps>) {
   return render(
-    <NoteUiVariantProvider>
-      <TooltipProvider>
-        <VerseRowWithNotes {...props} />
-      </TooltipProvider>
-    </NoteUiVariantProvider>,
+    <TooltipProvider>
+      <VerseRowWithNotes {...props} />
+    </TooltipProvider>,
   );
 }
 

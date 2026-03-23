@@ -5,7 +5,6 @@ import { TabItem } from "./tab-item";
 import { LogOut, Search, Settings, TableOfContents, X } from "lucide-react";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { SearchDialog } from "@/components/notes/search-dialog";
-import { NoteUiVariantMenu } from "./note-ui-variant-menu";
 import { ThemeDropdown } from "./theme-dropdown";
 import { PassageNavigator } from "@/components/bible/passage-navigator";
 import { useAuthActions } from "@convex-dev/auth/react";
@@ -174,7 +173,6 @@ export function TabBar() {
             <span className="pointer-events-none absolute -inset-1 animate-pulse rounded-full ring-2 ring-sky-400" />
           )}
         </div>
-        <NoteUiVariantMenu />
         <ThemeDropdown />
         <TooltipButton
           variant="ghost"

@@ -3,7 +3,6 @@
 import { BookOpen, Pencil } from "lucide-react";
 import { ChapterHeader } from "@/components/bible/chapter-header";
 import { Button } from "@/components/ui/button";
-import { useNoteUiVariant } from "@/components/notes/use-note-ui-variant";
 import { cn } from "@/lib/utils";
 
 type PassageViewMode = "compose" | "read";
@@ -36,19 +35,12 @@ export function PassageViewHeader({
   setViewModeWithNotesReset,
   setNoteVisibility,
 }: PassageViewHeaderProps) {
-  const { variant: noteUiVariant } = useNoteUiVariant();
-  const isManuscript = noteUiVariant === "manuscript";
   return (
     <div
       className={cn(
         "shrink-0 transition-[box-shadow,border-color] duration-200",
-        isManuscript
-          ? cn(
-              "bg-transparent",
-              isScrolled &&
-                "border-b border-stone-300/35 dark:border-stone-600/25",
-            )
-          : cn("bg-background", isScrolled && "shadow-sm"),
+        "bg-background",
+        isScrolled && "shadow-sm",
       )}
       data-passage-dismiss-exempt
     >

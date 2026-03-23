@@ -15,16 +15,9 @@ import {
   type NoteBody,
 } from "@/lib/note-inline-content";
 import { InlineVerseEditor } from "@/components/notes/editor/inline-verse-editor";
-import { useNoteUiVariant } from "@/components/notes/use-note-ui-variant";
 import { useNoteEditorTour } from "@/components/tutorial/use-note-editor-tour";
-import {
-  formatCommandOrControlShortcut,
-  isApplePlatform,
-} from "@/lib/keyboard-shortcuts";
+import { formatCommandOrControlShortcut } from "@/lib/keyboard-shortcuts";
 import { api } from "../../../convex/_generated/api";
-
-const SAVE_SHORTCUT_KBD_CLASS =
-  "rounded border bg-muted px-1 py-0 text-[10px] font-medium leading-none text-muted-foreground";
 
 interface CurrentChapter {
   book: string;
@@ -68,7 +61,6 @@ export function NoteEditor({
   const catalog = useQuery(api.tags.listCatalog);
   const resolveTagStyle = useStarterTagBadgeStyle();
   const tour = useNoteEditorTour();
-  const { variant: noteUiVariant } = useNoteUiVariant();
 
   const availableTags = useMemo(
     () => (catalog ?? []).map((entry) => entry.tag),
@@ -147,19 +139,7 @@ export function NoteEditor({
   const isDialogPresentation = presentation === "dialog";
   const plainText = noteBodyToPlainText(body).trim();
   const showEditorHeaderRow = !isPassage || !isDialogPresentation;
-  const isMarginCard =
-    noteUiVariant === "margin" &&
-    !isDialogPresentation &&
-    presentation === "card";
-  const isManuscriptCard =
-    noteUiVariant === "manuscript" &&
-    !isDialogPresentation &&
-    presentation === "card";
-  const isCandlelightCard =
-    noteUiVariant === "candlelight" &&
-    !isDialogPresentation &&
-    presentation === "card";
-  const useWarmCardFooter = isMarginCard || isManuscriptCard;
+  const isCandlelightCard = !isDialogPresentation && presentation === "card";
 
   return (
     <div
@@ -167,30 +147,12 @@ export function NoteEditor({
         "space-y-3",
         isDialogPresentation
           ? "px-1 pb-1"
-          : isManuscriptCard
-            ? cn(
-                "rounded-md border-0 p-3 ms-manuscript-editor ink-rule-bottom ms-ink-group",
-              )
-            : isMarginCard
-              ? cn(
-                  "rounded-lg p-3 shadow-sm note-grain",
-                  isPassage
-                    ? "border-l-2 border-l-amber-400 bg-stone-50/60 dark:border-l-amber-600/70 dark:bg-stone-950/40"
-                    : "border-l-2 border-l-transparent bg-stone-50/60 focus-within:border-l-stone-400/60 dark:bg-stone-950/40 dark:focus-within:border-l-stone-500/50 transition-[border-left-color] duration-150",
-                )
-              : isCandlelightCard
-                ? cn(
-                    "rounded-lg p-2.5 shadow-none",
-                    isPassage
-                      ? "bg-amber-50/90 dark:bg-amber-900/22 cl-depth-3-amber cl-transition cl-editor-lift-amber cl-focus-bloom"
-                      : "bg-card cl-depth-3 cl-transition cl-editor-lift cl-focus-bloom",
-                  )
-                : cn(
-                    "rounded-lg p-2.5 shadow-sm",
-                    isPassage
-                      ? "border-l-2 border border-amber-200 bg-amber-50/80 dark:bg-amber-900/20 dark:border-amber-700/50 border-l-amber-400 dark:border-l-amber-600/70"
-                      : "border bg-card",
-                  ),
+          : cn(
+              "rounded-lg p-2.5 shadow-none",
+              isPassage
+                ? "bg-amber-50/90 dark:bg-amber-900/22 cl-depth-3-amber cl-transition cl-editor-lift-amber cl-focus-bloom"
+                : "bg-card cl-depth-3 cl-transition cl-editor-lift cl-focus-bloom",
+            ),
       )}
       onKeyDown={handleKeyDown}
     >
@@ -228,7 +190,7 @@ export function NoteEditor({
         }
         onChange={handleEditorChange}
         className={cn(isDialogPresentation ? "min-h-[180px]" : "min-h-[96px]")}
-        editorChrome={isDialogPresentation ? "classic" : noteUiVariant}
+        editorChrome={isDialogPresentation ? "dialog" : "candlelight"}
         tourId={tour.bodyTourId}
         tutorialPreviewText={tour.tutorialPreviewText}
         tutorialAnimateText={tour.tutorialAnimateText}
@@ -270,35 +232,20 @@ export function NoteEditor({
         />
       </div>
 
-      <div
-        className={cn(
-          "flex gap-2",
-          useWarmCardFooter ? "items-center justify-end" : "justify-end",
+      <div className="flex gap-2 justify-end">
+        {!isDialogPresentation && (
+          <TooltipButton
+            variant="ghost"
+            size="sm"
+            onClick={onCancel}
+            tooltip="Cancel (Esc)"
+          >
+            Cancel
+          </TooltipButton>
         )}
-      >
-        {!isDialogPresentation &&
-          (useWarmCardFooter ? (
-            <button
-              type="button"
-              className="text-sm text-muted-foreground hover:text-foreground underline-offset-4 hover:underline"
-              onClick={onCancel}
-            >
-              Cancel
-            </button>
-          ) : (
-            <TooltipButton
-              variant="ghost"
-              size="sm"
-              onClick={onCancel}
-              tooltip="Cancel (Esc)"
-            >
-              Cancel
-            </TooltipButton>
-          ))}
         <TooltipButton
-          variant={useWarmCardFooter ? "secondary" : "default"}
+          variant="default"
           size="sm"
-          className={cn(useWarmCardFooter && "text-xs font-medium")}
           onClick={() => {
             void handleSave();
           }}
@@ -315,26 +262,9 @@ export function NoteEditor({
         </TooltipButton>
       </div>
 
-      {useWarmCardFooter ? (
-        <p className="flex flex-wrap items-center justify-end gap-1 text-xs text-muted-foreground">
-          {isApplePlatform() ? (
-            <>
-              <kbd className={SAVE_SHORTCUT_KBD_CLASS}>⌘</kbd>
-              <kbd className={SAVE_SHORTCUT_KBD_CLASS}>Enter</kbd>
-            </>
-          ) : (
-            <>
-              <kbd className={SAVE_SHORTCUT_KBD_CLASS}>Ctrl</kbd>
-              <kbd className={SAVE_SHORTCUT_KBD_CLASS}>Enter</kbd>
-            </>
-          )}
-          <span>to save</span>
-        </p>
-      ) : (
-        <p className="text-right text-xs text-muted-foreground">
-          {formatCommandOrControlShortcut("Enter")} to save
-        </p>
-      )}
+      <p className="text-right text-xs text-muted-foreground">
+        {formatCommandOrControlShortcut("Enter")} to save
+      </p>
     </div>
   );
 }

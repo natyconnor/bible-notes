@@ -15,8 +15,6 @@ import {
   NoteContent,
   type CurrentChapter,
 } from "./view/note-card-primitives";
-import { useNoteUiVariant } from "@/components/notes/use-note-ui-variant";
-
 interface NoteBubbleProps {
   noteId: string;
   content: string;
@@ -41,42 +39,19 @@ export const NoteBubble = memo(function NoteBubble({
   onEdit,
   onDelete,
 }: NoteBubbleProps) {
-  const { variant: noteUiVariant } = useNoteUiVariant();
-  const isMargin = noteUiVariant === "margin";
-  const isManuscript = noteUiVariant === "manuscript";
-  const isCandlelight = noteUiVariant === "candlelight";
   const isPassage = isPassageNote(verseRef);
   const variant = isPassage ? "passage" : "default";
 
   return (
     <div
       className={cn(
-        "group relative p-3 cursor-pointer transition-colors overflow-visible",
-        isManuscript
-          ? cn(
-              "rounded-md border-0",
-              "ms-note-hit",
-              isExpanded && "ink-rule-bottom ms-ink-group",
-            )
-          : cn(
-              "rounded-lg transition-all",
-              !isCandlelight && "border",
-              isPassage
-                ? isCandlelight
-                  ? "bg-amber-50/90 dark:bg-amber-900/22"
-                  : "bg-amber-50/80 border-amber-200 dark:bg-amber-900/20 dark:border-amber-700/50"
-                : "bg-card",
-              isPassage && !isCandlelight && "border-amber-200 dark:border-amber-700/50",
-              !isPassage && !isCandlelight && "border-border",
-              isMargin && "note-grain",
-              isCandlelight &&
-                (isExpanded
-                  ? isPassage
-                    ? "cl-depth-3-amber cl-transition shadow-none"
-                    : "cl-depth-3 cl-transition shadow-none"
-                  : "cl-depth-1 cl-transition shadow-none"),
-              isExpanded && !isCandlelight && "shadow-md",
-            ),
+        "group relative p-3 cursor-pointer overflow-visible rounded-lg transition-all",
+        isPassage ? "bg-amber-50/90 dark:bg-amber-900/22" : "bg-card",
+        isExpanded
+          ? isPassage
+            ? "cl-depth-3-amber cl-transition shadow-none"
+            : "cl-depth-3 cl-transition shadow-none"
+          : "cl-depth-1 cl-transition shadow-none",
       )}
       onClick={() => !isExpanded && onExpand()}
     >
@@ -149,11 +124,7 @@ export const NoteBubble = memo(function NoteBubble({
         body={body}
         truncateAt={isExpanded ? undefined : 150}
         currentChapter={currentChapter}
-        uiVariant={noteUiVariant}
-        className={cn(
-          "text-sm",
-          !isExpanded && isManuscript && "text-[15px] leading-snug",
-        )}
+        className="text-sm"
       />
 
       <NoteTagList tags={tags} variant={variant} size="sm" className="mt-2" />

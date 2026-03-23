@@ -45,10 +45,6 @@ vi.mock("./tab-item", () => ({
   ),
 }));
 
-vi.mock("./note-ui-variant-menu", () => ({
-  NoteUiVariantMenu: () => <div data-testid="note-ui-variant-menu" />,
-}));
-
 vi.mock("./theme-dropdown", () => ({
   ThemeDropdown: () => <div data-testid="theme-dropdown" />,
 }));

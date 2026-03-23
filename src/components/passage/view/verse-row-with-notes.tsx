@@ -10,7 +10,6 @@ import type { NoteBody } from "@/lib/note-inline-content";
 import type { VerseRef } from "@/lib/verse-ref-utils";
 import type { NoteWithRef } from "@/components/notes/model/note-model";
 import type { HighlightRange } from "@/lib/highlight-utils";
-import { useNoteUiVariant } from "@/components/notes/use-note-ui-variant";
 import {
   LAYOUT_CORRECTION_TRANSITION,
   NOTE_ENTER_TRANSITION,
@@ -137,8 +136,6 @@ export const VerseRowWithNotes = memo(function VerseRowWithNotes({
   addNoteTourId,
   rowTourId,
 }: VerseRowWithNotesProps) {
-  const { variant: noteUiVariant } = useNoteUiVariant();
-  const isCandlelight = noteUiVariant === "candlelight";
   const isReadMode = viewMode === "read";
   const useDialogEditors = editorMode === "dialog";
   const shouldShowInlineEditors = !useDialogEditors;
@@ -256,8 +253,8 @@ export const VerseRowWithNotes = memo(function VerseRowWithNotes({
           ? "grid grid-cols-[minmax(360px,1fr)_minmax(520px,1.4fr)] gap-6 items-start"
           : "grid grid-cols-[minmax(0,1.1fr)_minmax(360px,440px)] gap-5 items-start",
         isExpanded && "min-h-[240px]",
-        isCandlelight && "transition-[margin] duration-280 ease-[cubic-bezier(0.22,1,0.36,1)]",
-        isCandlelight && isExpanded && "my-3",
+        "transition-[margin] duration-280 ease-[cubic-bezier(0.22,1,0.36,1)]",
+        isExpanded && "my-3",
       )}
     >
       <motion.div

@@ -46,6 +46,7 @@
 }
 
 :root {
+  --cl-grain-svg: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.55' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
   --radius: 0.625rem;
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
@@ -244,147 +245,7 @@
   animation-delay: var(--slide-delay, 0ms);
 }
 
-/* Paper grain — Margin variant note card surfaces (see docs/note-margin-depth-spec.md).
-   Opacity bumped for visibility while tuning; dial down toward ~0.03 light / ~0.05 dark when happy. */
-.note-grain {
-  position: relative;
-}
-.note-grain::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  border-radius: inherit;
-  pointer-events: none;
-  opacity: 0.2;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
-  background-size: 180px 180px;
-}
-.dark .note-grain::after {
-  opacity: 0.2;
-}
-/* Keep in-flow content above the grain layer */
-.note-grain > * {
-  position: relative;
-  z-index: 1;
-}
-
-/* Manuscript variant — whole-app paper field (see docs/note-manuscript-variant-spec.md) */
-.app-paper {
-  position: relative;
-  background:
-    radial-gradient(
-      circle at 50% 0%,
-      rgba(255, 248, 235, 0.65),
-      transparent 42%
-    ),
-    linear-gradient(
-      to bottom,
-      rgba(120, 90, 50, 0.03),
-      rgba(120, 90, 50, 0.012)
-    ),
-    var(--background);
-}
-
-.app-paper::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  z-index: 0;
-  opacity: 0.038;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
-  background-size: 220px 220px;
-}
-
-.dark .app-paper {
-  background:
-    radial-gradient(
-      circle at 50% 0%,
-      oklch(0.22 0.02 75 / 0.35),
-      transparent 45%
-    ),
-    linear-gradient(
-      to bottom,
-      oklch(0.18 0.015 75 / 0.4),
-      oklch(0.14 0.01 75 / 0.25)
-    ),
-    var(--background);
-}
-
-.dark .app-paper::before {
-  opacity: 0.055;
-}
-
-.app-paper > * {
-  position: relative;
-  z-index: 1;
-}
-
-/* Manuscript bottom ink — theme primary (no left rule; avoids L-corner) */
-.ink-rule-bottom {
-  position: relative;
-}
-
-.ink-rule-bottom::after {
-  content: "";
-  display: block;
-  margin-top: 0.65rem;
-  height: 1px;
-  background: linear-gradient(
-    90deg,
-    color-mix(in oklch, var(--primary) 42%, transparent),
-    transparent 88%
-  );
-  opacity: 0.62;
-  transition: opacity 0.2s ease;
-}
-
-.dark .ink-rule-bottom::after {
-  background: linear-gradient(
-    90deg,
-    color-mix(in oklch, var(--primary) 52%, transparent),
-    transparent 88%
-  );
-  opacity: 0.58;
-}
-
-.ms-ink-group:hover .ink-rule-bottom::after,
-.ms-ink-group:focus-within .ink-rule-bottom::after {
-  opacity: 1;
-}
-
-/* Manuscript hit targets: fading bottom stroke on hover when no static footer rule */
-.ms-note-hit {
-  position: relative;
-}
-
-.ms-note-hit:not(.ink-rule-bottom)::before {
-  content: "";
-  position: absolute;
-  left: 0;
-  right: 8%;
-  bottom: 0;
-  height: 1px;
-  background: linear-gradient(
-    90deg,
-    color-mix(in oklch, var(--primary) 48%, transparent),
-    transparent 92%
-  );
-  opacity: 0;
-  transition: opacity 0.2s ease;
-  pointer-events: none;
-}
-
-.ms-note-hit:not(.ink-rule-bottom):is(:hover, :focus-visible)::before {
-  opacity: 1;
-}
-
-.ms-manuscript-editor.ink-rule-bottom:focus-within::after {
-  opacity: 1;
-}
-
-/* Candlelight — theme tokens when variant is active (see docs/note-candlelight-v2-spec.md) */
+/* Candlelight — theme tokens (see docs/note-candlelight-v2-spec.md) */
 .cl-theme {
   --background: oklch(0.98 0.007 75);
   --card: oklch(1 0 0);
@@ -755,11 +616,11 @@
   }
 }
 
-.cl-flicker:hover {
+.cl-flicker {
   animation: cl-depth-2-flicker 3.5s ease-in-out infinite;
 }
 
-.dark .cl-flicker:hover {
+.dark .cl-flicker {
   animation: cl-depth-2-flicker-dark 3.5s ease-in-out infinite;
 }
 
@@ -778,9 +639,106 @@
   .cl-ember-range {
     transition: none !important;
   }
-  .cl-flicker:hover {
+  .cl-flicker {
     animation: none !important;
   }
+}
+
+/* Candlelight grain — noise texture overlay (see docs/candlelight-grain-spec.md) */
+
+.cl-grain-full {
+  position: relative;
+}
+.cl-grain-full::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  opacity: var(--cl-grain-intensity, 0.5);
+  background-image: var(--cl-grain-svg);
+  background-color: rgb(175, 145, 80);
+  background-blend-mode: multiply;
+  background-size: 200px 200px;
+}
+.dark .cl-grain-full::before {
+  background-color: rgb(140, 110, 50);
+}
+
+.cl-grain-vignette {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  opacity: var(--cl-grain-intensity, 0.5);
+  background-image: var(--cl-grain-svg);
+  background-color: rgb(175, 145, 80);
+  background-blend-mode: multiply;
+  background-size: 200px 200px;
+  mask-image: radial-gradient(
+    ellipse 80% 65% at 50% 25%,
+    transparent 38%,
+    black 100%
+  );
+  -webkit-mask-image: radial-gradient(
+    ellipse 80% 65% at 50% 25%,
+    transparent 38%,
+    black 100%
+  );
+}
+.dark .cl-grain-vignette {
+  background-color: rgb(140, 110, 50);
+}
+
+@keyframes cl-grain-shift {
+  0%   { background-position: 0 0; }
+  20%  { background-position: -47px -31px; }
+  40%  { background-position: 23px -58px; }
+  60%  { background-position: -68px 14px; }
+  80%  { background-position: 41px 37px; }
+  100% { background-position: 0 0; }
+}
+
+.cl-grain-animate.cl-grain-full::before,
+.cl-grain-animate .cl-grain-vignette {
+  animation: cl-grain-shift 0.8s steps(5) infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cl-grain-animate.cl-grain-full::before,
+  .cl-grain-animate .cl-grain-vignette {
+    animation: none !important;
+  }
+}
+
+.cl-grain-lightfalloff .cl-grain-vignette {
+  mask-image: radial-gradient(
+    ellipse 60% 50% at var(--cl-light-x, 50%) var(--cl-light-y, 25%),
+    rgba(0,0,0,0.55) 20%,
+    rgba(0,0,0,0.72) 50%,
+    rgba(0,0,0,0.88) 100%
+  );
+  -webkit-mask-image: radial-gradient(
+    ellipse 60% 50% at var(--cl-light-x, 50%) var(--cl-light-y, 25%),
+    rgba(0,0,0,0.55) 20%,
+    rgba(0,0,0,0.72) 50%,
+    rgba(0,0,0,0.88) 100%
+  );
+}
+
+.cl-grain-lightfalloff.cl-grain-full::before {
+  mask-image: radial-gradient(
+    ellipse 70% 55% at var(--cl-light-x, 50%) var(--cl-light-y, 25%),
+    rgba(0,0,0,0.55) 25%,
+    rgba(0,0,0,0.72) 55%,
+    rgba(0,0,0,0.88) 100%
+  );
+  -webkit-mask-image: radial-gradient(
+    ellipse 70% 55% at var(--cl-light-x, 50%) var(--cl-light-y, 25%),
+    rgba(0,0,0,0.55) 25%,
+    rgba(0,0,0,0.72) 55%,
+    rgba(0,0,0,0.88) 100%
+  );
 }
 
 @layer base {

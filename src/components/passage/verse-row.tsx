@@ -12,7 +12,6 @@ import {
   type HighlightRange,
 } from "@/lib/highlight-utils";
 import { getHighlightColor } from "@/lib/highlight-colors";
-import { useNoteUiVariant } from "@/components/notes/use-note-ui-variant";
 import { VERSE_EXPAND_TRANSITION } from "./note-animation-config";
 
 export interface VerseSelectionState {
@@ -116,8 +115,6 @@ export const VerseRowLeft = memo(function VerseRowLeft({
   handlers,
   variant = "default",
 }: VerseRowLeftProps) {
-  const { variant: noteUiVariant } = useNoteUiVariant();
-  const isCandlelight = noteUiVariant === "candlelight";
   const { isSelected, isInSelectionRange, isPassageSelection } = selection;
   const { hasOwnNote, isPassageAnchor, isInPassageRange } = noteIndicator;
   const { isPassageRangeActive, isNoteBubbleHovered } = hover;
@@ -131,7 +128,6 @@ export const VerseRowLeft = memo(function VerseRowLeft({
   const [isWarmed, setIsWarmed] = useState(false);
 
   const showGlint =
-    isCandlelight &&
     !isFocusTarget &&
     !isNoteBubbleHovered &&
     !isPassageRangeActive &&
@@ -242,7 +238,7 @@ export const VerseRowLeft = memo(function VerseRowLeft({
         paddingBottom: sizes.paddingBottom,
         paddingLeft: sizes.paddingLeft,
         paddingRight: sizes.paddingRight,
-        ...(isCandlelight && { y: isExpanded ? -3 : 0 }),
+        y: isExpanded ? -3 : 0,
       }}
       transition={VERSE_EXPAND_TRANSITION}
       data-verse-number={verseNumber}
@@ -254,15 +250,15 @@ export const VerseRowLeft = memo(function VerseRowLeft({
       }
       className={cn(
         "group relative h-full rounded-sm transition-[color,background-color,border-color,box-shadow] duration-200 ease-out",
-        isCandlelight && !isExpanded && "cl-verse-glint cl-verse-specular",
+        !isExpanded && "cl-verse-glint cl-verse-specular",
         isExpanded ? "cursor-text" : "min-h-10 select-none cursor-pointer",
         isSelected &&
           isPassageSelection &&
-          !(isCandlelight && isExpanded) &&
+          !isExpanded &&
           "bg-amber-100/80 dark:bg-amber-800/30 ring-1 ring-amber-400/40 dark:ring-amber-500/30",
         isSelected &&
           !isPassageSelection &&
-          !(isCandlelight && isExpanded) &&
+          !isExpanded &&
           "bg-primary/10 ring-1 ring-primary/20",
         isInSelectionRange &&
           !isSelected &&
@@ -285,14 +281,6 @@ export const VerseRowLeft = memo(function VerseRowLeft({
           "bg-amber-50/60 dark:bg-amber-800/20",
         !isSelected && !isInSelectionRange && !isExpanded && "hover:bg-muted",
         isExpanded &&
-          !isSelected &&
-          !isInSelectionRange &&
-          variant !== "groupedPassage" &&
-          !isCandlelight &&
-          // Theme tokens (not fixed stone) so e.g. Forest Sage reads green like selection
-          "bg-primary/10 ring-1 ring-primary/20",
-        isExpanded &&
-          isCandlelight &&
           variant !== "groupedPassage" &&
           "bg-primary/10 dark:bg-primary/15 rounded-lg cl-depth-2 cl-transition cl-flicker",
       )}
@@ -393,22 +381,13 @@ export const VerseRowLeft = memo(function VerseRowLeft({
                 </span>
                 <span className="mt-1 flex min-w-[6px] flex-col items-center gap-0.5">
                   {hasOwnNote && (
-                    <span className={cn(
-                      "h-1.5 w-1.5 shrink-0 rounded-full bg-primary/60",
-                      isCandlelight && "cl-ember-single",
-                    )} />
+                    <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-primary/60 cl-ember-single" />
                   )}
                   {isPassageAnchor && (
-                    <span className={cn(
-                      "h-1.5 w-1.5 shrink-0 rounded-sm bg-amber-400/80 dark:bg-amber-400/50",
-                      isCandlelight && "cl-ember-passage",
-                    )} />
+                    <span className="h-1.5 w-1.5 shrink-0 rounded-sm bg-amber-400/80 dark:bg-amber-400/50 cl-ember-passage" />
                   )}
                   {isInPassageRange && !isPassageAnchor && (
-                    <span className={cn(
-                      "mt-0.5 h-0.5 w-2 shrink-0 rounded bg-amber-300/70 dark:bg-amber-500/40",
-                      isCandlelight && "cl-ember-range",
-                    )} />
+                    <span className="mt-0.5 h-0.5 w-2 shrink-0 rounded bg-amber-300/70 dark:bg-amber-500/40 cl-ember-range" />
                   )}
                 </span>
               </>

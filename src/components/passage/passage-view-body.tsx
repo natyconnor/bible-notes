@@ -12,7 +12,6 @@ import {
   CROSSFADE_TRANSITION,
 } from "./note-animation-config";
 import type { PassageNotesInteraction } from "./hooks/use-passage-notes-interaction";
-import { useNoteUiVariant } from "@/components/notes/use-note-ui-variant";
 import { cn } from "@/lib/utils";
 
 type PassageViewMode = "compose" | "read";
@@ -116,9 +115,6 @@ export function PassageViewBody({
     notifyEditorDirty,
     startCreatingPassageNote,
   } = passageNotesInteraction;
-
-  const { variant: noteUiVariant } = useNoteUiVariant();
-  const isCandlelight = noteUiVariant === "candlelight";
 
   return (
     <div className="relative flex-1 min-h-0 overflow-hidden">
@@ -291,7 +287,7 @@ export function PassageViewBody({
         </div>
       </motion.div>
       </ScrollArea>
-      {isCandlelight ? <div className="cl-vignette" aria-hidden /> : null}
+      <div className="cl-vignette" aria-hidden />
     </div>
   );
 }

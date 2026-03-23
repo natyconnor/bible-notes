@@ -8,7 +8,6 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { NoteEditor } from "@/components/notes/note-editor";
-import { useNoteUiVariant } from "@/components/notes/use-note-ui-variant";
 import type { Id } from "../../../convex/_generated/dataModel";
 import type { NoteWithRef } from "@/components/notes/model/note-model";
 import type { NoteBody } from "@/lib/note-inline-content";
@@ -67,9 +66,6 @@ export const VerseNotes = memo(function VerseNotes({
   onMouseEnter,
   onMouseLeave,
 }: VerseNotesProps) {
-  const { variant: noteUiVariant } = useNoteUiVariant();
-  const isMargin = noteUiVariant === "margin";
-  const isManuscript = noteUiVariant === "manuscript";
   if (notes.length === 0) return null;
   const isReadMode = viewMode === "read";
   const supportsInlineEditing = !!onSaveEdit && !!onCancelEdit;
@@ -124,12 +120,7 @@ export const VerseNotes = memo(function VerseNotes({
               <Tooltip>
                 <TooltipTrigger asChild>
                   <button
-                    className={cn(
-                      "flex items-center gap-1 text-xs font-medium transition-colors",
-                      isMargin || isManuscript
-                        ? "text-muted-foreground hover:text-foreground"
-                        : "text-primary hover:text-primary/80",
-                    )}
+                    className="flex items-center gap-1 text-xs font-medium transition-colors text-primary hover:text-primary/80"
                     onClick={onAddNote}
                   >
                     <Plus className="h-3 w-3" />
@@ -211,10 +202,6 @@ function CollapsedBubble({
   onMouseEnter?: () => void;
   onMouseLeave?: () => void;
 }) {
-  const { variant: noteUiVariant } = useNoteUiVariant();
-  const isMargin = noteUiVariant === "margin";
-  const isManuscript = noteUiVariant === "manuscript";
-  const isCandlelight = noteUiVariant === "candlelight";
   return (
     <div
       className="group relative"
@@ -224,26 +211,7 @@ function CollapsedBubble({
       <button
         type="button"
         data-note-trigger
-        className={cn(
-          "w-full cursor-pointer px-2.5 py-1.5 text-left transition-colors",
-          isManuscript
-            ? cn(
-                "rounded-md border-0 relative overflow-visible text-sm",
-                "ms-note-hit",
-              )
-            : cn(
-                "rounded-lg text-[13px]",
-                !isCandlelight && "transition-all hover:shadow-sm",
-                isMargin
-                  ? "note-grain border bg-stone-50/60 dark:bg-stone-950/40 border-stone-200/70 dark:border-stone-800/60 hover:bg-stone-50/80"
-                  : cn(
-                      "bg-card",
-                      !isCandlelight && "border border-border",
-                      isCandlelight &&
-                        "cl-depth-1 cl-transition shadow-none",
-                    ),
-              ),
-        )}
+        className="w-full cursor-pointer px-2.5 py-1.5 text-left transition-colors rounded-lg text-[13px] bg-card cl-depth-1 cl-transition shadow-none"
         onClick={onClick}
       >
         <NoteContent
@@ -251,11 +219,7 @@ function CollapsedBubble({
           body={note.body}
           truncateAt={100}
           currentChapter={currentChapter}
-          uiVariant={noteUiVariant}
-          className={cn(
-            "text-muted-foreground line-clamp-2",
-            isManuscript && "text-[15px] leading-snug",
-          )}
+          className="text-muted-foreground line-clamp-2"
         />
         <NoteTagList tags={note.tags} className="mt-1" />
       </button>
@@ -277,10 +241,6 @@ function StackedBubble({
   onMouseEnter?: () => void;
   onMouseLeave?: () => void;
 }) {
-  const { variant: noteUiVariant } = useNoteUiVariant();
-  const isMargin = noteUiVariant === "margin";
-  const isManuscript = noteUiVariant === "manuscript";
-  const isCandlelight = noteUiVariant === "candlelight";
   return (
     <button
       type="button"
@@ -290,45 +250,14 @@ function StackedBubble({
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
     >
-      {!isMargin && !isManuscript && (
-        <StackedCardBackground
-          count={count}
-          variant="muted"
-          isCandlelight={isCandlelight}
-        />
-      )}
-      <div
-        className={cn(
-          "relative px-2.5 py-1.5 text-xs transition-colors",
-          isManuscript
-            ? cn("rounded-md border-0 overflow-visible", "ms-note-hit")
-            : cn(
-                "rounded-lg",
-                !isCandlelight && "border transition-all hover:shadow-sm",
-                isMargin
-                  ? "bg-stone-50/60 dark:bg-stone-950/40 border-stone-200/70 dark:border-stone-800/60 border"
-                  : cn(
-                      "bg-card",
-                      !isCandlelight && "border border-border",
-                      isCandlelight &&
-                        "cl-depth-1 cl-transition shadow-none",
-                    ),
-              ),
-        )}
-      >
+      <StackedCardBackground count={count} variant="muted" isCandlelight />
+      <div className="relative px-2.5 py-1.5 text-xs transition-colors rounded-lg bg-card cl-depth-1 cl-transition shadow-none">
         <div className="flex items-center justify-between mb-0.5">
           <Badge variant="outline" className="text-[10px] px-1.5 py-0">
             {count} notes
           </Badge>
         </div>
-        <p
-          className={cn(
-            "text-muted-foreground line-clamp-1",
-            isManuscript ? "text-sm" : "text-xs",
-            (isMargin || isManuscript) &&
-              "font-serif tracking-[0.01em] dark:font-normal",
-          )}
-        >
+        <p className="text-muted-foreground line-clamp-1 text-xs">
           {preview}
         </p>
       </div>
@@ -375,38 +304,13 @@ function ExpandedBubble({
   onEdit: () => void;
   onDelete: () => void;
 }) {
-  const { variant: noteUiVariant } = useNoteUiVariant();
-  const isCandlelight = noteUiVariant === "candlelight";
   const isReading = density === "reading";
-  const marginSurface =
-    noteUiVariant === "margin"
-      ? isReading
-        ? "border rounded-xl px-4 py-3 shadow-sm bg-stone-50/70 dark:bg-stone-950/35 border-stone-200/80 dark:border-stone-800/80"
-        : "border rounded-lg px-3 py-2.5 shadow-sm text-sm bg-stone-50/70 dark:bg-stone-950/35 border-stone-200/80 dark:border-stone-800/80"
-      : null;
-  const manuscriptSurface =
-    noteUiVariant === "manuscript"
-      ? isReading
-        ? "rounded-md px-4 py-3 ink-rule-bottom ms-note-hit ms-ink-group relative overflow-visible"
-        : "rounded-md px-3 py-2.5 text-sm ink-rule-bottom ms-note-hit ms-ink-group relative overflow-visible"
-      : null;
-
-  const classicSurface = isReading
-    ? "border rounded-xl px-4 py-3 shadow-sm bg-card border-border"
-    : "border rounded-lg px-3 py-2.5 shadow-sm text-sm bg-card/95 border-border/90";
 
   return (
     <div
       className={cn(
-        manuscriptSurface ??
-          marginSurface ??
-          (!isCandlelight ? classicSurface : null),
-        noteUiVariant === "margin" && "note-grain",
-        isCandlelight &&
-          cn(
-            isReading ? "rounded-xl px-4 py-3" : "rounded-lg px-3 py-2.5 text-sm",
-            "bg-card shadow-none cl-depth-3 cl-transition",
-          ),
+        isReading ? "rounded-xl px-4 py-3" : "rounded-lg px-3 py-2.5 text-sm",
+        "bg-card shadow-none cl-depth-3 cl-transition",
       )}
     >
       <div className="flex items-start justify-between gap-2">
@@ -415,7 +319,6 @@ function ExpandedBubble({
           body={note.body}
           density={density}
           currentChapter={currentChapter}
-          uiVariant={noteUiVariant}
           className={isReading ? "flex-1 text-foreground" : "flex-1"}
         />
         <NoteCardActions onEdit={onEdit} onDelete={onDelete} />

@@ -18,7 +18,6 @@ import {
   NoteContent,
 } from "@/components/notes/view/note-card-primitives";
 import { NoteEditor } from "@/components/notes/note-editor";
-import { useNoteUiVariant } from "@/components/notes/use-note-ui-variant";
 import { NoteBubbleShell, type BubbleState } from "./view/note-bubble-shell";
 import { LAYOUT_CORRECTION_TRANSITION } from "./note-animation-config";
 
@@ -70,10 +69,6 @@ export const PassageNotesBubble = memo(function PassageNotesBubble({
   onMouseEnter,
   onMouseLeave,
 }: PassageNotesBubbleProps) {
-  const { variant: noteUiVariant } = useNoteUiVariant();
-  const isMargin = noteUiVariant === "margin";
-  const isManuscript = noteUiVariant === "manuscript";
-  const isCandlelight = noteUiVariant === "candlelight";
   if (notes.length === 0) return null;
   const isReadMode = viewMode === "read";
   const supportsInlineEditing = !!onSaveEdit && !!onCancelEdit;
@@ -121,17 +116,9 @@ export const PassageNotesBubble = memo(function PassageNotesBubble({
         <div
           data-note-surface
           className={
-            isManuscript
-              ? isReadMode
-                ? "space-y-3 rounded-md p-3"
-                : "min-h-[96px] space-y-1.5 rounded-md p-2.5"
-              : isCandlelight
-                ? isReadMode
-                  ? "space-y-3 rounded-xl bg-amber-50/25 dark:bg-amber-900/14 p-3"
-                  : "min-h-[96px] space-y-1.5 rounded-lg bg-amber-50/30 dark:bg-amber-900/12 p-2.5"
-                : isReadMode
-                  ? "space-y-3 rounded-xl border border-amber-200 bg-amber-50/30 dark:bg-amber-900/20 dark:border-amber-700/50 p-3"
-                  : "min-h-[96px] space-y-1.5 rounded-lg border border-amber-200 bg-amber-50/40 dark:bg-amber-900/15 dark:border-amber-700/50 p-2.5"
+            isReadMode
+              ? "space-y-3 rounded-xl bg-amber-50/25 dark:bg-amber-900/14 p-3"
+              : "min-h-[96px] space-y-1.5 rounded-lg bg-amber-50/30 dark:bg-amber-900/12 p-2.5"
           }
           onClick={(e) => e.stopPropagation()}
           onMouseEnter={onMouseEnter}
@@ -148,12 +135,7 @@ export const PassageNotesBubble = memo(function PassageNotesBubble({
               <Tooltip>
                 <TooltipTrigger asChild>
                   <button
-                    className={cn(
-                      "flex items-center gap-1 text-xs font-medium transition-colors",
-                      isMargin || isManuscript
-                        ? "text-muted-foreground hover:text-foreground"
-                        : "text-primary hover:text-primary/80",
-                    )}
+                    className="flex items-center gap-1 text-xs font-medium transition-colors text-primary hover:text-primary/80"
                     onClick={onAddNote}
                   >
                     <Plus className="h-3 w-3" />
@@ -244,35 +226,14 @@ function CollapsedPassageBubble({
   onMouseEnter?: () => void;
   onMouseLeave?: () => void;
 }) {
-  const { variant: noteUiVariant } = useNoteUiVariant();
-  const isManuscript = noteUiVariant === "manuscript";
-  const isCandlelight = noteUiVariant === "candlelight";
   return (
     <div
       className={cn(
-        "group relative text-sm transition-colors",
-        isManuscript
-          ? cn("rounded-lg border-0 overflow-visible", "ms-note-hit")
-          : cn(
-              "rounded-lg text-sm",
-              !isCandlelight &&
-                "border-l-2 border border-l-amber-400 border-amber-200 bg-amber-50/80 dark:bg-amber-900/20 dark:border-amber-700/50 dark:border-l-amber-600/70 hover:shadow-sm hover:bg-amber-50 dark:hover:bg-amber-800/25",
-              isCandlelight &&
-                cn(
-                  "bg-amber-50/90 dark:bg-amber-900/22",
-                  "cl-depth-1 cl-transition shadow-none",
-                  "hover:bg-amber-50 dark:hover:bg-amber-800/25",
-                ),
-            ),
-        noteUiVariant === "margin" && !isManuscript && "note-grain",
-        isGlowing &&
-          (isCandlelight
-            ? "cl-glow-pulse"
-            : cn(
-                "animate-pulse-subtle ring-1 ring-amber-400/50",
-                !isManuscript &&
-                  "shadow-sm shadow-amber-200/60 dark:shadow-amber-950/60",
-              )),
+        "group relative text-sm transition-colors rounded-lg",
+        "bg-amber-50/90 dark:bg-amber-900/22",
+        "cl-depth-1 cl-transition shadow-none",
+        "hover:bg-amber-50 dark:hover:bg-amber-800/25",
+        isGlowing && "cl-glow-pulse",
       )}
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
@@ -318,15 +279,9 @@ function CollapsedPassageBubble({
             body={notes[0].body}
             truncateAt={previewLength}
             currentChapter={currentChapter}
-            uiVariant={noteUiVariant}
             className={cn(
               "text-muted-foreground",
-              compact
-                ? cn(
-                    "line-clamp-1",
-                    isManuscript ? "text-xs" : "text-[10px]",
-                  )
-                : cn("line-clamp-2", isManuscript && "text-sm"),
+              compact ? "line-clamp-1 text-[10px]" : "line-clamp-2",
             )}
           />
           {!compact && notes[0].tags.length > 0 && (
@@ -405,34 +360,14 @@ function ExpandedPassageNote({
   onEdit: () => void;
   onDelete: () => void;
 }) {
-  const { variant: noteUiVariant } = useNoteUiVariant();
-  const isMargin = noteUiVariant === "margin";
-  const isManuscript = noteUiVariant === "manuscript";
-  const isCandlelight = noteUiVariant === "candlelight";
   const isReading = density === "reading";
   return (
     <div
       className={cn(
-        isManuscript
-          ? isReading
-            ? "rounded-md ink-rule-bottom ms-note-hit ms-ink-group relative overflow-visible px-4 py-3"
-            : "rounded-md ink-rule-bottom ms-note-hit ms-ink-group relative overflow-visible px-3 py-2 text-sm"
-          : isMargin
-            ? isReading
-              ? "rounded-lg bg-amber-50/40 dark:bg-amber-900/15 px-4 py-3"
-              : "rounded-md bg-amber-50/30 dark:bg-amber-900/12 px-3 py-2 text-sm"
-            : isCandlelight
-              ? isReading
-                ? "rounded-lg bg-amber-50/90 dark:bg-amber-900/22 px-4 py-3"
-                : "rounded-md bg-amber-50/90 dark:bg-amber-900/22 px-3 py-2 text-sm"
-              : isReading
-                ? "rounded-lg border border-amber-200/70 bg-amber-50/60 dark:bg-amber-900/18 dark:border-amber-700/45 px-4 py-3"
-                : "rounded-md border border-amber-200/70 bg-amber-50/60 dark:bg-amber-900/18 dark:border-amber-700/45 px-3 py-2 text-sm",
-        isMargin && !isManuscript && "note-grain",
-        isCandlelight &&
-          !isManuscript &&
-          !isMargin &&
-          cn("cl-depth-3-amber cl-transition shadow-none"),
+        isReading
+          ? "rounded-lg bg-amber-50/90 dark:bg-amber-900/22 px-4 py-3"
+          : "rounded-md bg-amber-50/90 dark:bg-amber-900/22 px-3 py-2 text-sm",
+        "cl-depth-3-amber cl-transition shadow-none",
       )}
     >
       <div className="flex items-start justify-between gap-2">
@@ -441,7 +376,6 @@ function ExpandedPassageNote({
           body={note.body}
           density={density}
           currentChapter={currentChapter}
-          uiVariant={noteUiVariant}
           className={isReading ? "flex-1 text-foreground" : "flex-1"}
         />
         <NoteCardActions
