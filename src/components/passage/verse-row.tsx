@@ -1,4 +1,4 @@
-import { memo, useCallback, useRef, type RefObject } from "react";
+import { memo, useCallback, useEffect, useRef, useState, type RefObject } from "react";
 import { motion } from "framer-motion";
 import { ChevronUp, Plus } from "lucide-react";
 import {
@@ -125,6 +125,41 @@ export const VerseRowLeft = memo(function VerseRowLeft({
   const shouldFlipTooltipBelow = verseNumber <= 2;
   const { onAddNote, onMouseDown, onMouseEnter, onMouseLeave } = handlers;
 
+  const glintRef = useRef<{ x: number; y: number } | null>(null);
+  const [glintPos, setGlintPos] = useState<{ x: number; y: number } | null>(null);
+  const warmTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [isWarmed, setIsWarmed] = useState(false);
+
+  const showGlint =
+    isCandlelight &&
+    !isFocusTarget &&
+    !isNoteBubbleHovered &&
+    !isPassageRangeActive &&
+    (isExpanded || (!isSelected && !isInSelectionRange));
+
+  const handleGlintMove = useCallback(
+    (e: React.MouseEvent<HTMLDivElement>) => {
+      if (!showGlint) return;
+      const rect = e.currentTarget.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      glintRef.current = { x, y };
+      setGlintPos({ x, y });
+    },
+    [showGlint],
+  );
+
+  const handleGlintLeave = useCallback(() => {
+    glintRef.current = null;
+    setGlintPos(null);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (warmTimerRef.current) clearTimeout(warmTimerRef.current);
+    };
+  }, []);
+
   const sizes = isExpanded
     ? variant === "groupedPassage" ? GROUPED_EXPANDED : EXPANDED
     : COLLAPSED;
@@ -212,8 +247,14 @@ export const VerseRowLeft = memo(function VerseRowLeft({
       transition={VERSE_EXPAND_TRANSITION}
       data-verse-number={verseNumber}
       {...(rowTourId ? { "data-tour-id": rowTourId } : {})}
+      style={
+        showGlint && glintPos
+          ? { "--specular-x": `${glintPos.x}px` } as React.CSSProperties
+          : undefined
+      }
       className={cn(
         "group relative h-full rounded-sm transition-[color,background-color,border-color,box-shadow] duration-200 ease-out",
+        isCandlelight && !isExpanded && "cl-verse-glint cl-verse-specular",
         isExpanded ? "cursor-text" : "min-h-10 select-none cursor-pointer",
         isSelected &&
           isPassageSelection &&
@@ -253,7 +294,7 @@ export const VerseRowLeft = memo(function VerseRowLeft({
         isExpanded &&
           isCandlelight &&
           variant !== "groupedPassage" &&
-          "bg-primary/10 dark:bg-primary/15 rounded-lg cl-depth-2 cl-transition",
+          "bg-primary/10 dark:bg-primary/15 rounded-lg cl-depth-2 cl-transition cl-flicker",
       )}
       onMouseDown={
         isExpanded
@@ -264,11 +305,47 @@ export const VerseRowLeft = memo(function VerseRowLeft({
             }
       }
       onMouseUp={isExpanded ? onTextMouseUp : undefined}
-      onMouseEnter={() => onMouseEnter(verseNumber)}
-      onMouseLeave={onMouseLeave}
+      onMouseMove={handleGlintMove}
+      onMouseEnter={() => {
+        onMouseEnter(verseNumber);
+        if (showGlint) {
+          warmTimerRef.current = setTimeout(() => setIsWarmed(true), 800);
+        }
+      }}
+      onMouseLeave={() => {
+        onMouseLeave();
+        handleGlintLeave();
+        if (warmTimerRef.current) {
+          clearTimeout(warmTimerRef.current);
+          warmTimerRef.current = null;
+        }
+        setIsWarmed(false);
+      }}
     >
-      {/* Plain div — no layout="position" needed since the parent no longer
-          uses scale-based projection. */}
+      {showGlint && (
+        <>
+          <div
+            className="absolute inset-0 pointer-events-none rounded-[inherit] overflow-hidden"
+            style={{
+              backgroundImage: glintPos
+                ? `radial-gradient(ellipse ${isExpanded ? "360px 240px" : "220px 140px"} at ${glintPos.x}px ${glintPos.y}px, var(--cl-glint), transparent 70%)`
+                : undefined,
+              opacity: glintPos ? 1 : 0,
+              transition: glintPos ? "opacity 150ms ease-out" : "opacity 200ms ease-out",
+            }}
+          />
+          <div
+            className="absolute inset-0 pointer-events-none rounded-[inherit] overflow-hidden"
+            style={{
+              backgroundImage: glintPos
+                ? `radial-gradient(ellipse ${isExpanded ? "500px 340px" : "320px 210px"} at ${glintPos.x}px ${glintPos.y}px, var(--cl-glint-warm), transparent 70%)`
+                : undefined,
+              opacity: isWarmed ? 1 : 0,
+              transition: "opacity 2.5s ease-out",
+            }}
+          />
+        </>
+      )}
       <div className="relative flex h-full items-center">
         <div className="flex w-full gap-2">
           <motion.span
@@ -316,13 +393,22 @@ export const VerseRowLeft = memo(function VerseRowLeft({
                 </span>
                 <span className="mt-1 flex min-w-[6px] flex-col items-center gap-0.5">
                   {hasOwnNote && (
-                    <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-primary/60" />
+                    <span className={cn(
+                      "h-1.5 w-1.5 shrink-0 rounded-full bg-primary/60",
+                      isCandlelight && "cl-ember-single",
+                    )} />
                   )}
                   {isPassageAnchor && (
-                    <span className="h-1.5 w-1.5 shrink-0 rounded-sm bg-amber-400/80 dark:bg-amber-400/50" />
+                    <span className={cn(
+                      "h-1.5 w-1.5 shrink-0 rounded-sm bg-amber-400/80 dark:bg-amber-400/50",
+                      isCandlelight && "cl-ember-passage",
+                    )} />
                   )}
                   {isInPassageRange && !isPassageAnchor && (
-                    <span className="mt-0.5 h-0.5 w-2 shrink-0 rounded bg-amber-300/70 dark:bg-amber-500/40" />
+                    <span className={cn(
+                      "mt-0.5 h-0.5 w-2 shrink-0 rounded bg-amber-300/70 dark:bg-amber-500/40",
+                      isCandlelight && "cl-ember-range",
+                    )} />
                   )}
                 </span>
               </>
