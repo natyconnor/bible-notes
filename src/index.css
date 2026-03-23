@@ -78,26 +78,6 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
-  /*
-   * Candlelight — neutral card shadows (light mode only).
-   * Mid/far layers: warm base + a little foreground so tints follow tinted light themes.
-   * Dark mode ignores these: `.dark .cl-shadow` / `.cl-specular` replace the full stack.
-   */
-  --cl-candlelight-ambient-core: color-mix(
-    in oklch,
-    oklch(0.45 0.055 58) 88%,
-    var(--foreground) 12%
-  );
-  --cl-candlelight-shadow-mid: color-mix(
-    in oklch,
-    var(--cl-candlelight-ambient-core) 7%,
-    transparent
-  );
-  --cl-candlelight-shadow-far: color-mix(
-    in oklch,
-    var(--cl-candlelight-ambient-core) 4%,
-    transparent
-  );
 }
 
 .dark {
@@ -404,86 +384,170 @@
   opacity: 1;
 }
 
-/* Candlelight variant — depth / shadow utilities (see docs/note-candlelight-depth-spec.md) */
-
-/* Three-layer shadow: contact → near-field penumbra → ambient haze */
-.cl-shadow {
-  box-shadow:
-    0 1px 2px rgba(0, 0, 0, 0.07),
-    0 4px 12px var(--cl-candlelight-shadow-mid),
-    0 12px 32px var(--cl-candlelight-shadow-far);
+/* Candlelight — theme tokens when variant is active (see docs/note-candlelight-v2-spec.md) */
+.cl-theme {
+  --background: oklch(0.98 0.007 75);
+  --card: oklch(1 0 0);
+  --cl-text-pool: rgba(50, 35, 15, 0.13);
 }
 
-/* Simulates overhead light catching the card's top face */
-.cl-specular {
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.72),
-    0 1px 2px rgba(0, 0, 0, 0.07),
-    0 4px 12px var(--cl-candlelight-shadow-mid),
-    0 12px 32px var(--cl-candlelight-shadow-far);
+.dark .cl-theme {
+  --background: oklch(0.138 0.005 65);
+  --card: oklch(0.22 0.006 68);
+  --cl-text-pool: rgba(0, 0, 0, 0.22);
 }
 
-/* Deeper shadow when card is raised (focused / active editor) */
-.cl-shadow-lifted {
+/* Candlelight — depth levels (v2 spec) */
+
+.cl-depth-1 {
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.75),
-    0 2px 4px rgba(0, 0, 0, 0.09),
-    0 8px 24px rgba(0, 0, 0, 0.1),
-    0 20px 44px rgba(0, 0, 0, 0.06);
+    0 1px 3px rgba(0, 0, 0, 0.08),
+    0 3px 8px rgba(50, 35, 15, 0.07),
+    0 8px 20px rgba(50, 35, 15, 0.04);
 }
 
-/* Amber ambient bleed for passage notes */
-.cl-shadow-amber {
+.cl-depth-2 {
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.65),
-    0 1px 2px rgba(0, 0, 0, 0.06),
-    0 4px 14px rgba(180, 120, 20, 0.1),
-    0 12px 32px rgba(180, 120, 20, 0.07);
+    inset 0 1px 0 rgba(255, 255, 255, 0.52),
+    0 1px 4px rgba(0, 0, 0, 0.08),
+    0 5px 16px rgba(50, 35, 15, 0.07),
+    0 16px 36px rgba(50, 35, 15, 0.05);
 }
 
-.cl-shadow-amber-lifted {
+.cl-depth-3 {
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.68),
-    0 2px 4px rgba(0, 0, 0, 0.08),
-    0 8px 24px rgba(180, 120, 20, 0.14),
-    0 20px 44px rgba(180, 120, 20, 0.08);
+    inset 0 1px 0 rgba(255, 255, 255, 0.82),
+    0 1px 3px rgba(0, 0, 0, 0.09),
+    0 5px 16px rgba(50, 35, 15, 0.1),
+    0 18px 42px rgba(50, 35, 15, 0.08),
+    0 30px 60px rgba(50, 35, 15, 0.04);
 }
 
-/*
- * Editor lift: resting cl-shadow has 3 layers but lifted state has 4 (inset highlight).
- * Browsers won't interpolate mismatched shadow lists — add a transparent inset on rest so it animates.
- */
-.cl-shadow.cl-lift-on-focus:not(:focus-within) {
+.cl-depth-3-amber {
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0),
-    0 1px 2px rgba(0, 0, 0, 0.07),
-    0 4px 12px var(--cl-candlelight-shadow-mid),
-    0 12px 32px var(--cl-candlelight-shadow-far);
+    inset 0 1px 0 rgba(255, 248, 210, 0.88),
+    0 1px 3px rgba(0, 0, 0, 0.08),
+    0 5px 16px rgba(180, 120, 20, 0.13),
+    0 18px 42px rgba(180, 120, 20, 0.1),
+    0 30px 60px rgba(180, 120, 20, 0.05);
 }
 
-.dark .cl-shadow.cl-lift-on-focus:not(:focus-within) {
+.cl-depth-4 {
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0),
-    0 1px 2px rgba(0, 0, 0, 0.18),
-    0 4px 12px rgba(0, 0, 0, 0.15),
-    0 12px 32px rgba(0, 0, 0, 0.1);
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    0 2px 5px rgba(0, 0, 0, 0.11),
+    0 8px 24px rgba(50, 35, 15, 0.13),
+    0 24px 56px rgba(50, 35, 15, 0.1),
+    0 44px 80px rgba(50, 35, 15, 0.06);
 }
 
-/* Editor card: resting shadow from cl-shadow / cl-shadow-amber; lift when any child is focused */
-.cl-lift-on-focus:focus-within {
+.cl-depth-4-amber {
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.75),
-    0 2px 4px rgba(0, 0, 0, 0.09),
-    0 8px 24px rgba(0, 0, 0, 0.1),
-    0 20px 44px rgba(0, 0, 0, 0.06);
+    inset 0 1px 0 rgba(255, 248, 210, 0.92),
+    0 2px 5px rgba(0, 0, 0, 0.09),
+    0 8px 24px rgba(180, 120, 20, 0.18),
+    0 24px 56px rgba(180, 120, 20, 0.14),
+    0 44px 80px rgba(180, 120, 20, 0.08);
 }
 
-.cl-lift-on-focus-amber:focus-within {
+.cl-editor-lift:focus-within {
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.68),
-    0 2px 4px rgba(0, 0, 0, 0.08),
-    0 8px 24px rgba(180, 120, 20, 0.14),
-    0 20px 44px rgba(180, 120, 20, 0.08);
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    0 2px 5px rgba(0, 0, 0, 0.11),
+    0 8px 24px rgba(50, 35, 15, 0.13),
+    0 24px 56px rgba(50, 35, 15, 0.1),
+    0 44px 80px rgba(50, 35, 15, 0.06);
+}
+
+.cl-editor-lift-amber:focus-within {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 248, 210, 0.92),
+    0 2px 5px rgba(0, 0, 0, 0.09),
+    0 8px 24px rgba(180, 120, 20, 0.18),
+    0 24px 56px rgba(180, 120, 20, 0.14),
+    0 44px 80px rgba(180, 120, 20, 0.08);
+}
+
+.dark .cl-depth-1 {
+  box-shadow:
+    0 1px 3px rgba(0, 0, 0, 0.25),
+    0 3px 8px rgba(0, 0, 0, 0.2),
+    0 8px 20px rgba(0, 0, 0, 0.14);
+}
+
+.dark .cl-depth-2 {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 1px 4px rgba(0, 0, 0, 0.28),
+    0 5px 16px rgba(0, 0, 0, 0.22),
+    0 16px 36px rgba(0, 0, 0, 0.16);
+}
+
+.dark .cl-depth-3 {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 1px 3px rgba(0, 0, 0, 0.3),
+    0 5px 16px rgba(0, 0, 0, 0.26),
+    0 18px 42px rgba(0, 0, 0, 0.2),
+    0 30px 60px rgba(0, 0, 0, 0.12);
+}
+
+.dark .cl-depth-3-amber {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 248, 210, 0.1),
+    0 1px 3px rgba(0, 0, 0, 0.28),
+    0 5px 16px rgba(180, 120, 20, 0.22),
+    0 18px 42px rgba(180, 120, 20, 0.16),
+    0 30px 60px rgba(180, 120, 20, 0.08);
+}
+
+.dark .cl-depth-4 {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.09),
+    0 2px 5px rgba(0, 0, 0, 0.34),
+    0 8px 24px rgba(0, 0, 0, 0.3),
+    0 24px 56px rgba(0, 0, 0, 0.22),
+    0 44px 80px rgba(0, 0, 0, 0.14);
+}
+
+.dark .cl-depth-4-amber {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 248, 210, 0.1),
+    0 2px 5px rgba(0, 0, 0, 0.3),
+    0 8px 24px rgba(180, 120, 20, 0.28),
+    0 24px 56px rgba(180, 120, 20, 0.22),
+    0 44px 80px rgba(180, 120, 20, 0.12);
+}
+
+.dark .cl-editor-lift:focus-within {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.09),
+    0 2px 5px rgba(0, 0, 0, 0.34),
+    0 8px 24px rgba(0, 0, 0, 0.3),
+    0 24px 56px rgba(0, 0, 0, 0.22),
+    0 44px 80px rgba(0, 0, 0, 0.14);
+}
+
+.dark .cl-editor-lift-amber:focus-within {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 248, 210, 0.1),
+    0 2px 5px rgba(0, 0, 0, 0.3),
+    0 8px 24px rgba(180, 120, 20, 0.28),
+    0 24px 56px rgba(180, 120, 20, 0.22),
+    0 44px 80px rgba(180, 120, 20, 0.12);
+}
+
+/* Passage viewport — pool of light (v2 spec) */
+.cl-vignette {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 2;
+  background: radial-gradient(
+    ellipse 80% 65% at 50% 25%,
+    transparent 42%,
+    rgba(12, 8, 3, 0.028) 100%
+  );
 }
 
 /* Applied to the contentEditable in Candlelight — writing area is carved in */
@@ -502,61 +566,6 @@
   );
 }
 
-.dark .cl-shadow {
-  box-shadow:
-    0 1px 2px rgba(0, 0, 0, 0.18),
-    0 4px 12px rgba(0, 0, 0, 0.15),
-    0 12px 32px rgba(0, 0, 0, 0.1);
-}
-
-.dark .cl-specular {
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.08),
-    0 1px 2px rgba(0, 0, 0, 0.18),
-    0 4px 12px rgba(0, 0, 0, 0.15),
-    0 12px 32px rgba(0, 0, 0, 0.1);
-}
-
-.dark .cl-shadow-lifted {
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.09),
-    0 2px 4px rgba(0, 0, 0, 0.22),
-    0 8px 24px rgba(0, 0, 0, 0.2),
-    0 20px 44px rgba(0, 0, 0, 0.14);
-}
-
-.dark .cl-shadow-amber {
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.06),
-    0 1px 2px rgba(0, 0, 0, 0.18),
-    0 4px 14px rgba(180, 120, 20, 0.18),
-    0 12px 32px rgba(180, 120, 20, 0.12);
-}
-
-.dark .cl-shadow-amber-lifted {
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.07),
-    0 2px 4px rgba(0, 0, 0, 0.2),
-    0 8px 24px rgba(180, 120, 20, 0.22),
-    0 20px 44px rgba(180, 120, 20, 0.14);
-}
-
-.dark .cl-lift-on-focus:focus-within {
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.09),
-    0 2px 4px rgba(0, 0, 0, 0.22),
-    0 8px 24px rgba(0, 0, 0, 0.2),
-    0 20px 44px rgba(0, 0, 0, 0.14);
-}
-
-.dark .cl-lift-on-focus-amber:focus-within {
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.07),
-    0 2px 4px rgba(0, 0, 0, 0.2),
-    0 8px 24px rgba(180, 120, 20, 0.22),
-    0 20px 44px rgba(180, 120, 20, 0.14);
-}
-
 .dark .cl-well {
   box-shadow:
     inset 0 2px 8px rgba(0, 0, 0, 0.22),
@@ -571,22 +580,36 @@
   );
 }
 
-.cl-transition {
-  transition:
-    box-shadow 200ms ease-out,
-    background-image 260ms ease-out;
+@keyframes cl-glow-ring {
+  0%, 100% {
+    box-shadow: 0 0 0 1.5px oklch(0.85 0.15 85 / 0.2);
+  }
+  50% {
+    box-shadow: 0 0 0 3.5px oklch(0.85 0.15 85 / 0.32);
+  }
 }
 
-/* Note editor shell: slower shadow ease so lift reads as motion, not a snap */
-.cl-transition-editor-shell {
+.cl-glow-pulse {
+  position: relative;
+}
+
+.cl-glow-pulse::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  animation: cl-glow-ring 2s ease-in-out infinite;
+}
+
+.cl-transition {
   transition:
-    box-shadow 380ms cubic-bezier(0.33, 1, 0.68, 1),
+    box-shadow 220ms cubic-bezier(0.22, 1, 0.36, 1),
     background-image 280ms ease-out;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .cl-transition,
-  .cl-transition-editor-shell {
+  .cl-transition {
     transition: none;
   }
 }

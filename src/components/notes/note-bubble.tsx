@@ -44,6 +44,7 @@ export const NoteBubble = memo(function NoteBubble({
   const { variant: noteUiVariant } = useNoteUiVariant();
   const isMargin = noteUiVariant === "margin";
   const isManuscript = noteUiVariant === "manuscript";
+  const isCandlelight = noteUiVariant === "candlelight";
   const isPassage = isPassageNote(verseRef);
   const variant = isPassage ? "passage" : "default";
 
@@ -58,12 +59,23 @@ export const NoteBubble = memo(function NoteBubble({
               isExpanded && "ink-rule-bottom ms-ink-group",
             )
           : cn(
-              "border rounded-lg transition-all",
+              "rounded-lg transition-all",
+              !isCandlelight && "border",
               isPassage
-                ? "bg-amber-50/80 border-amber-200 dark:bg-amber-900/20 dark:border-amber-700/50"
-                : "bg-card border-border",
+                ? isCandlelight
+                  ? "bg-amber-50/90 dark:bg-amber-900/22"
+                  : "bg-amber-50/80 border-amber-200 dark:bg-amber-900/20 dark:border-amber-700/50"
+                : "bg-card",
+              isPassage && !isCandlelight && "border-amber-200 dark:border-amber-700/50",
+              !isPassage && !isCandlelight && "border-border",
               isMargin && "note-grain",
-              isExpanded && "shadow-md",
+              isCandlelight &&
+                (isExpanded
+                  ? isPassage
+                    ? "cl-depth-3-amber cl-transition shadow-none"
+                    : "cl-depth-3 cl-transition shadow-none"
+                  : "cl-depth-1 cl-transition shadow-none"),
+              isExpanded && !isCandlelight && "shadow-md",
             ),
       )}
       onClick={() => !isExpanded && onExpand()}

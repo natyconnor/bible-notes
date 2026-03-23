@@ -15,10 +15,6 @@ import { getHighlightColor } from "@/lib/highlight-colors";
 import { useNoteUiVariant } from "@/components/notes/use-note-ui-variant";
 import { VERSE_EXPAND_TRANSITION } from "./note-animation-config";
 
-/** Candlelight: verse row lift shadow — lighter than note card `cl-shadow` (spec stage 6). */
-const VERSE_ROW_CANDLELIGHT_EXPANDED_SHADOW =
-  "0 1px 2px rgba(0, 0, 0, 0.05), 0 4px 14px rgba(0, 0, 0, 0.05), 0 10px 28px rgba(0, 0, 0, 0.03)";
-
 export interface VerseSelectionState {
   isSelected: boolean;
   isInSelectionRange: boolean;
@@ -211,6 +207,7 @@ export const VerseRowLeft = memo(function VerseRowLeft({
         paddingBottom: sizes.paddingBottom,
         paddingLeft: sizes.paddingLeft,
         paddingRight: sizes.paddingRight,
+        ...(isCandlelight && { y: isExpanded ? -3 : 0 }),
       }}
       transition={VERSE_EXPAND_TRANSITION}
       data-verse-number={verseNumber}
@@ -220,9 +217,11 @@ export const VerseRowLeft = memo(function VerseRowLeft({
         isExpanded ? "cursor-text" : "min-h-10 select-none cursor-pointer",
         isSelected &&
           isPassageSelection &&
+          !(isCandlelight && isExpanded) &&
           "bg-amber-100/80 dark:bg-amber-800/30 ring-1 ring-amber-400/40 dark:ring-amber-500/30",
         isSelected &&
           !isPassageSelection &&
+          !(isCandlelight && isExpanded) &&
           "bg-primary/10 ring-1 ring-primary/20",
         isInSelectionRange &&
           !isSelected &&
@@ -248,7 +247,13 @@ export const VerseRowLeft = memo(function VerseRowLeft({
           !isSelected &&
           !isInSelectionRange &&
           variant !== "groupedPassage" &&
-          "bg-stone-50/80 dark:bg-stone-900/20",
+          !isCandlelight &&
+          // Theme tokens (not fixed stone) so e.g. Forest Sage reads green like selection
+          "bg-primary/10 ring-1 ring-primary/20",
+        isExpanded &&
+          isCandlelight &&
+          variant !== "groupedPassage" &&
+          "bg-primary/10 dark:bg-primary/15 rounded-lg cl-depth-2 cl-transition",
       )}
       onMouseDown={
         isExpanded
@@ -262,24 +267,9 @@ export const VerseRowLeft = memo(function VerseRowLeft({
       onMouseEnter={() => onMouseEnter(verseNumber)}
       onMouseLeave={onMouseLeave}
     >
-      {/* Candlelight: shadow on a sibling layer so Tailwind `ring-*` on this row
-          (also box-shadow) is not overridden by Framer's inline boxShadow. */}
-      {isCandlelight ? (
-        <motion.div
-          aria-hidden
-          className="pointer-events-none absolute inset-0 z-0 rounded-sm"
-          initial={false}
-          animate={{
-            boxShadow: isExpanded
-              ? VERSE_ROW_CANDLELIGHT_EXPANDED_SHADOW
-              : "none",
-          }}
-          transition={VERSE_EXPAND_TRANSITION}
-        />
-      ) : null}
       {/* Plain div — no layout="position" needed since the parent no longer
           uses scale-based projection. */}
-      <div className="relative z-[1] flex h-full items-center">
+      <div className="relative flex h-full items-center">
         <div className="flex w-full gap-2">
           <motion.span
             animate={{ paddingTop: sizes.verseNumberPaddingTop }}

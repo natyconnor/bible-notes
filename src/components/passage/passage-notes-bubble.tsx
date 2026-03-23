@@ -73,6 +73,7 @@ export const PassageNotesBubble = memo(function PassageNotesBubble({
   const { variant: noteUiVariant } = useNoteUiVariant();
   const isMargin = noteUiVariant === "margin";
   const isManuscript = noteUiVariant === "manuscript";
+  const isCandlelight = noteUiVariant === "candlelight";
   if (notes.length === 0) return null;
   const isReadMode = viewMode === "read";
   const supportsInlineEditing = !!onSaveEdit && !!onCancelEdit;
@@ -124,9 +125,13 @@ export const PassageNotesBubble = memo(function PassageNotesBubble({
               ? isReadMode
                 ? "space-y-3 rounded-md p-3"
                 : "min-h-[96px] space-y-1.5 rounded-md p-2.5"
-              : isReadMode
-                ? "space-y-3 rounded-xl border border-amber-200 bg-amber-50/30 dark:bg-amber-900/20 dark:border-amber-700/50 p-3"
-                : "min-h-[96px] space-y-1.5 rounded-lg border border-amber-200 bg-amber-50/40 dark:bg-amber-900/15 dark:border-amber-700/50 p-2.5"
+              : isCandlelight
+                ? isReadMode
+                  ? "space-y-3 rounded-xl bg-amber-50/25 dark:bg-amber-900/14 p-3"
+                  : "min-h-[96px] space-y-1.5 rounded-lg bg-amber-50/30 dark:bg-amber-900/12 p-2.5"
+                : isReadMode
+                  ? "space-y-3 rounded-xl border border-amber-200 bg-amber-50/30 dark:bg-amber-900/20 dark:border-amber-700/50 p-3"
+                  : "min-h-[96px] space-y-1.5 rounded-lg border border-amber-200 bg-amber-50/40 dark:bg-amber-900/15 dark:border-amber-700/50 p-2.5"
           }
           onClick={(e) => e.stopPropagation()}
           onMouseEnter={onMouseEnter}
@@ -249,24 +254,25 @@ function CollapsedPassageBubble({
         isManuscript
           ? cn("rounded-lg border-0 overflow-visible", "ms-note-hit")
           : cn(
-              "rounded-lg border-l-2 border text-sm",
-              "border-l-amber-400 border-amber-200 bg-amber-50/80 dark:bg-amber-900/20 dark:border-amber-700/50 dark:border-l-amber-600/70",
+              "rounded-lg text-sm",
               !isCandlelight &&
-                "hover:shadow-sm hover:bg-amber-50 dark:hover:bg-amber-800/25",
+                "border-l-2 border border-l-amber-400 border-amber-200 bg-amber-50/80 dark:bg-amber-900/20 dark:border-amber-700/50 dark:border-l-amber-600/70 hover:shadow-sm hover:bg-amber-50 dark:hover:bg-amber-800/25",
               isCandlelight &&
                 cn(
-                  "cl-shadow-amber cl-transition shadow-none",
+                  "bg-amber-50/90 dark:bg-amber-900/22",
+                  "cl-depth-1 cl-transition shadow-none",
                   "hover:bg-amber-50 dark:hover:bg-amber-800/25",
                 ),
             ),
         noteUiVariant === "margin" && !isManuscript && "note-grain",
         isGlowing &&
-          cn(
-            "animate-pulse-subtle ring-1 ring-amber-400/50",
-            !isManuscript &&
-              !isCandlelight &&
-              "shadow-sm shadow-amber-200/60 dark:shadow-amber-950/60",
-          ),
+          (isCandlelight
+            ? "cl-glow-pulse"
+            : cn(
+                "animate-pulse-subtle ring-1 ring-amber-400/50",
+                !isManuscript &&
+                  "shadow-sm shadow-amber-200/60 dark:shadow-amber-950/60",
+              )),
       )}
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
@@ -415,14 +421,18 @@ function ExpandedPassageNote({
             ? isReading
               ? "rounded-lg bg-amber-50/40 dark:bg-amber-900/15 px-4 py-3"
               : "rounded-md bg-amber-50/30 dark:bg-amber-900/12 px-3 py-2 text-sm"
-            : isReading
-              ? "rounded-lg border border-amber-200/70 bg-amber-50/60 dark:bg-amber-900/18 dark:border-amber-700/45 px-4 py-3"
-              : "rounded-md border border-amber-200/70 bg-amber-50/60 dark:bg-amber-900/18 dark:border-amber-700/45 px-3 py-2 text-sm",
+            : isCandlelight
+              ? isReading
+                ? "rounded-lg bg-amber-50/90 dark:bg-amber-900/22 px-4 py-3"
+                : "rounded-md bg-amber-50/90 dark:bg-amber-900/22 px-3 py-2 text-sm"
+              : isReading
+                ? "rounded-lg border border-amber-200/70 bg-amber-50/60 dark:bg-amber-900/18 dark:border-amber-700/45 px-4 py-3"
+                : "rounded-md border border-amber-200/70 bg-amber-50/60 dark:bg-amber-900/18 dark:border-amber-700/45 px-3 py-2 text-sm",
         isMargin && !isManuscript && "note-grain",
         isCandlelight &&
           !isManuscript &&
           !isMargin &&
-          cn("cl-shadow-amber cl-transition shadow-none"),
+          cn("cl-depth-3-amber cl-transition shadow-none"),
       )}
     >
       <div className="flex items-start justify-between gap-2">

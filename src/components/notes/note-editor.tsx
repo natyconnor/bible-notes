@@ -182,8 +182,8 @@ export function NoteEditor({
                 ? cn(
                     "rounded-lg p-2.5 shadow-none",
                     isPassage
-                      ? "border-l-2 border border-amber-200 bg-amber-50/80 dark:bg-amber-900/20 dark:border-amber-700/50 border-l-amber-400 dark:border-l-amber-600/70 cl-shadow-amber cl-lift-on-focus-amber cl-transition-editor-shell"
-                      : "border bg-card cl-shadow cl-lift-on-focus cl-focus-bloom cl-transition-editor-shell",
+                      ? "bg-amber-50/90 dark:bg-amber-900/22 cl-depth-3-amber cl-transition cl-editor-lift-amber cl-focus-bloom"
+                      : "bg-card cl-depth-3 cl-transition cl-editor-lift cl-focus-bloom",
                   )
                 : cn(
                     "rounded-lg p-2.5 shadow-sm",
@@ -252,6 +252,17 @@ export function NoteEditor({
           selectedTagBadgeClassName={cn(
             "text-xs",
             isPassage && "border-amber-300 dark:border-amber-600/50",
+          )}
+          inputClassName={cn(
+            isCandlelightCard &&
+              cn(
+                "border-0 border-b rounded-none bg-transparent px-0 h-7",
+                "border-border/50 focus:border-border/80",
+                "focus-visible:ring-0 focus-visible:ring-offset-0",
+                "placeholder:text-muted-foreground/50",
+                isPassage &&
+                  "border-amber-300/60 focus:border-amber-400/70",
+              ),
           )}
           tourId={tour.tagsTourId}
           tutorialPreviewTags={tour.tutorialPreviewTags}

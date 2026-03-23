@@ -46,16 +46,31 @@ export function NoteBubbleShell({
    * We release it after the enter animation completes so it doesn't permanently
    * clip CSS-only effects like focus rings.
    */
+  const [clipLifecycle, setClipLifecycle] = useState<{
+    state: BubbleState;
+    isCandlelight: boolean;
+  } | null>(null);
   const [clipOverflowForEnter, setClipOverflowForEnter] = useState(false);
+
+  if (
+    clipLifecycle === null ||
+    clipLifecycle.state !== state ||
+    clipLifecycle.isCandlelight !== isCandlelight
+  ) {
+    setClipLifecycle({ state, isCandlelight });
+    if (state === "expanded" && !isCandlelight) {
+      setClipOverflowForEnter(true);
+    }
+  }
+
   const stateRef = useRef(state);
-  stateRef.current = state;
 
   useLayoutEffect(() => {
+    stateRef.current = state;
+
     if (state !== "expanded" || isCandlelight) {
       return;
     }
-
-    setClipOverflowForEnter(true);
 
     const fallbackMs = isManuscript ? 400 : 320;
     const fallbackId = window.setTimeout(() => {
@@ -87,7 +102,7 @@ export function NoteBubbleShell({
           y: opacityTransition,
           height: {
             duration: isManuscript ? 0.24 : 0.22,
-            ease: [0.22, 1, 0.36, 1],
+            ease: [0.22, 1, 0.36, 1] as const,
           },
         }
       : opacityTransition;

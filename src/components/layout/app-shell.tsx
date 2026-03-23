@@ -7,11 +7,13 @@ import { TabBar } from "./tab-bar";
 function AppShellSurface({ children }: { children: ReactNode }) {
   const { variant } = useNoteUiVariant();
   const isManuscript = variant === "manuscript";
+  const isCandlelight = variant === "candlelight";
   return (
     <div
       className={cn(
         "flex flex-col h-screen w-screen overflow-hidden",
         isManuscript ? "app-paper" : "bg-background",
+        isCandlelight && "cl-theme",
       )}
     >
       <TabBar />

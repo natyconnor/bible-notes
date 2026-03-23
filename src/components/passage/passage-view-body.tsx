@@ -12,6 +12,8 @@ import {
   CROSSFADE_TRANSITION,
 } from "./note-animation-config";
 import type { PassageNotesInteraction } from "./hooks/use-passage-notes-interaction";
+import { useNoteUiVariant } from "@/components/notes/use-note-ui-variant";
+import { cn } from "@/lib/utils";
 
 type PassageViewMode = "compose" | "read";
 
@@ -115,21 +117,25 @@ export function PassageViewBody({
     startCreatingPassageNote,
   } = passageNotesInteraction;
 
+  const { variant: noteUiVariant } = useNoteUiVariant();
+  const isCandlelight = noteUiVariant === "candlelight";
+
   return (
-    <ScrollArea
-      className="flex-1 min-h-0 overflow-hidden"
-      viewportRef={viewportRef}
-    >
-      <motion.div
-        key={passageKey}
-        initial={{ opacity: 0, y: 8 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.2, ease: "easeOut" }}
-        ref={containerRef}
-        className={containerClass}
-        onMouseUp={handleMouseUp}
-        onMouseLeave={handleMouseUp}
+    <div className="relative flex-1 min-h-0 overflow-hidden">
+      <ScrollArea
+        className={cn("h-full min-h-0 overflow-hidden")}
+        viewportRef={viewportRef}
       >
+        <motion.div
+          key={passageKey}
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.2, ease: "easeOut" }}
+          ref={containerRef}
+          className={containerClass}
+          onMouseUp={handleMouseUp}
+          onMouseLeave={handleMouseUp}
+        >
         <div>
           <AnimatePresence initial={false} mode="popLayout">
             {filteredVerses.map((item) => {
@@ -284,6 +290,8 @@ export function PassageViewBody({
           </div>
         </div>
       </motion.div>
-    </ScrollArea>
+      </ScrollArea>
+      {isCandlelight ? <div className="cl-vignette" aria-hidden /> : null}
+    </div>
   );
 }

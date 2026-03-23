@@ -237,9 +237,10 @@ function CollapsedBubble({
                 isMargin
                   ? "note-grain border bg-stone-50/60 dark:bg-stone-950/40 border-stone-200/70 dark:border-stone-800/60 hover:bg-stone-50/80"
                   : cn(
-                      "border border-border bg-card",
+                      "bg-card",
+                      !isCandlelight && "border border-border",
                       isCandlelight &&
-                        "cl-shadow cl-transition shadow-none",
+                        "cl-depth-1 cl-transition shadow-none",
                     ),
               ),
         )}
@@ -302,14 +303,15 @@ function StackedBubble({
           isManuscript
             ? cn("rounded-md border-0 overflow-visible", "ms-note-hit")
             : cn(
-                "border rounded-lg",
-                !isCandlelight && "transition-all hover:shadow-sm",
+                "rounded-lg",
+                !isCandlelight && "border transition-all hover:shadow-sm",
                 isMargin
-                  ? "bg-stone-50/60 dark:bg-stone-950/40 border-stone-200/70 dark:border-stone-800/60"
+                  ? "bg-stone-50/60 dark:bg-stone-950/40 border-stone-200/70 dark:border-stone-800/60 border"
                   : cn(
-                      "bg-card border-border",
+                      "bg-card",
+                      !isCandlelight && "border border-border",
                       isCandlelight &&
-                        "cl-shadow cl-transition shadow-none",
+                        "cl-depth-1 cl-transition shadow-none",
                     ),
               ),
         )}
@@ -389,18 +391,21 @@ function ExpandedBubble({
         : "rounded-md px-3 py-2.5 text-sm ink-rule-bottom ms-note-hit ms-ink-group relative overflow-visible"
       : null;
 
+  const classicSurface = isReading
+    ? "border rounded-xl px-4 py-3 shadow-sm bg-card border-border"
+    : "border rounded-lg px-3 py-2.5 shadow-sm text-sm bg-card/95 border-border/90";
+
   return (
     <div
       className={cn(
         manuscriptSurface ??
           marginSurface ??
-          (isReading
-            ? "border rounded-xl px-4 py-3 shadow-sm bg-card border-border"
-            : "border rounded-lg px-3 py-2.5 shadow-sm text-sm bg-card/95 border-border/90"),
+          (!isCandlelight ? classicSurface : null),
         noteUiVariant === "margin" && "note-grain",
         isCandlelight &&
           cn(
-            "cl-specular cl-transition shadow-none",
+            isReading ? "rounded-xl px-4 py-3" : "rounded-lg px-3 py-2.5 text-sm",
+            "bg-card shadow-none cl-depth-3 cl-transition",
           ),
       )}
     >

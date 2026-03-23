@@ -5,6 +5,7 @@ import { VerseTextPane } from "./verse-text-pane";
 import { PassageNotesBubble } from "../passage-notes-bubble";
 import { VerseNotesPill } from "../verse-notes";
 import { NoteEditor } from "@/components/notes/note-editor";
+import { useNoteUiVariant } from "@/components/notes/use-note-ui-variant";
 import type { VerseInteractionHandlers } from "../verse-row";
 import {
   LAYOUT_CORRECTION_TRANSITION,
@@ -117,6 +118,8 @@ export const PassageGroupWithNotes = memo(function PassageGroupWithNotes({
   onPassageBubbleMouseLeave,
   onCollapse,
 }: PassageGroupWithNotesProps) {
+  const { variant: noteUiVariant } = useNoteUiVariant();
+  const isCandlelight = noteUiVariant === "candlelight";
   const anchorVerse = verses[0]?.verseNumber ?? 0;
   const shouldShowInlineEditors = editorMode === "inline";
 
@@ -149,6 +152,7 @@ export const PassageGroupWithNotes = memo(function PassageGroupWithNotes({
           isReadMode
             ? "grid-cols-[minmax(360px,1fr)_minmax(520px,1.4fr)] gap-6"
             : "grid-cols-[minmax(0,1.1fr)_minmax(360px,440px)] gap-5",
+          isCandlelight && "transition-[margin] duration-280 ease-[cubic-bezier(0.22,1,0.36,1)] my-3",
         )}
         data-note-surface
       >
@@ -165,10 +169,9 @@ export const PassageGroupWithNotes = memo(function PassageGroupWithNotes({
             transition={CROSSFADE_TRANSITION}
             className={cn(
               "rounded-lg",
-              "border border-amber-200/70 dark:border-amber-700/40",
-              "bg-amber-50/40 dark:bg-amber-950/20",
-              "ring-1 ring-amber-300/30 dark:ring-amber-600/20",
-              "shadow-sm shadow-amber-100/60 dark:shadow-amber-950/30",
+              isCandlelight
+                ? "bg-amber-100/60 dark:bg-amber-900/20 cl-depth-2 cl-transition"
+                : "bg-amber-100/60 dark:bg-amber-900/20 ring-1 ring-amber-300/30 dark:ring-amber-600/25",
             )}
           >
             {verses.map((verse, index) => (
