@@ -249,7 +249,7 @@ export const VerseRowLeft = memo(function VerseRowLeft({
           : undefined
       }
       className={cn(
-        "group relative h-full rounded-sm transition-[color,background-color,border-color,box-shadow] duration-200 ease-out",
+        "group relative h-full rounded-sm transition-[color,border-color,box-shadow] duration-200 ease-out",
         !isExpanded && "cl-verse-glint",
         isExpanded ? "cursor-text" : "min-h-10 select-none cursor-pointer",
         isSelected &&
