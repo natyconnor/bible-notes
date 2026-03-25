@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { useTutorial } from "@/components/tutorial/tutorial-context";
 import {
   buildTutorialReadingNotes,
@@ -38,6 +38,14 @@ export function usePassageViewTour({
 }: UsePassageViewTourParams): PassageViewTourState {
   const { activeStep, activeTour } = useTutorial();
 
+  const handleClickAwayRef = useRef(handleClickAway);
+  const setViewModeRef = useRef(setViewMode);
+  const handleAddNoteRef = useRef(handleAddNote);
+  const readingTourEnteredRef = useRef(false);
+  handleClickAwayRef.current = handleClickAway;
+  setViewModeRef.current = setViewMode;
+  handleAddNoteRef.current = handleAddNote;
+
   const isAddNoteStep = activeTour === "main" && activeStep?.id === "add-note";
   const isNoteEditorStep =
     activeTour === "main" &&
@@ -50,31 +58,40 @@ export function usePassageViewTour({
   useEffect(() => {
     if (!(isAddNoteStep || isNoteEditorStep)) return;
     if (effectiveViewMode !== "compose") {
-      setViewMode("compose");
+      setViewModeRef.current("compose");
     }
-  }, [effectiveViewMode, setViewMode, isAddNoteStep, isNoteEditorStep]);
+  }, [effectiveViewMode, isAddNoteStep, isNoteEditorStep]);
 
   useEffect(() => {
     if (!isAddNoteStep) return;
-    handleClickAway();
-  }, [handleClickAway, isAddNoteStep]);
+    handleClickAwayRef.current();
+  }, [isAddNoteStep]);
 
   useEffect(() => {
     if (!isNoteEditorStep) return;
 
     const hasVerseOneEditor = openEditors.has("new:1:1");
     if (!hasVerseOneEditor || openEditors.size === 0) {
-      handleAddNote(1);
+      handleAddNoteRef.current(1);
     }
-  }, [openEditors, handleAddNote, isNoteEditorStep]);
+  }, [openEditors, isNoteEditorStep]);
 
+  // Do not list handleClickAway/setViewMode as deps: handleClickAway always
+  // allocates new Sets, which recreates setViewModeWithNotesReset in the parent
+  // and would retrigger this effect forever (max update depth on reading-mode).
   useEffect(() => {
-    if (!isReadingModeStep) return;
-    handleClickAway();
-    if (effectiveViewMode !== "read") {
-      setViewMode("read");
+    if (!isReadingModeStep) {
+      readingTourEnteredRef.current = false;
+      return;
     }
-  }, [effectiveViewMode, handleClickAway, isReadingModeStep, setViewMode]);
+    if (!readingTourEnteredRef.current) {
+      readingTourEnteredRef.current = true;
+      handleClickAwayRef.current();
+    }
+    if (effectiveViewMode !== "read") {
+      setViewModeRef.current("read");
+    }
+  }, [effectiveViewMode, isReadingModeStep]);
 
   const tutorialReadingNotes =
     isReadingModeStep &&
