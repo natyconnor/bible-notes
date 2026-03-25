@@ -9,6 +9,7 @@ describe("resolveTutorialStatus", () => {
       starterTagsSetupCompletedAt: undefined,
       mainTutorialCompletedAt: undefined,
       advancedSearchTutorialCompletedAt: undefined,
+      focusModeTutorialCompletedAt: undefined,
       categoryColors: {},
     });
   });
@@ -19,6 +20,7 @@ describe("resolveTutorialStatus", () => {
         starterTagsSetupCompletedAt: 10,
         mainOnboardingCompletedAt: 20,
         advancedSearchOnboardingCompletedAt: 30,
+        focusModeOnboardingCompletedAt: 40,
         starterTagCategoryColors: { themes: "#abcdef" },
       }),
     ).toEqual({
@@ -26,6 +28,7 @@ describe("resolveTutorialStatus", () => {
       starterTagsSetupCompletedAt: 10,
       mainTutorialCompletedAt: 20,
       advancedSearchTutorialCompletedAt: 30,
+      focusModeTutorialCompletedAt: 40,
       categoryColors: { themes: "#abcdef" },
     });
   });

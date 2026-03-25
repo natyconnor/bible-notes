@@ -2,6 +2,7 @@ interface UserSettingsStatusInput {
   starterTagsSetupCompletedAt?: number;
   mainOnboardingCompletedAt?: number;
   advancedSearchOnboardingCompletedAt?: number;
+  focusModeOnboardingCompletedAt?: number;
   starterTagCategoryColors?: Record<string, string>;
 }
 
@@ -10,6 +11,7 @@ export interface TutorialStatus {
   starterTagsSetupCompletedAt?: number;
   mainTutorialCompletedAt?: number;
   advancedSearchTutorialCompletedAt?: number;
+  focusModeTutorialCompletedAt?: number;
   categoryColors: Record<string, string>;
 }
 
@@ -22,6 +24,7 @@ export function resolveTutorialStatus(
     mainTutorialCompletedAt: settings?.mainOnboardingCompletedAt,
     advancedSearchTutorialCompletedAt:
       settings?.advancedSearchOnboardingCompletedAt,
+    focusModeTutorialCompletedAt: settings?.focusModeOnboardingCompletedAt,
     categoryColors: settings?.starterTagCategoryColors ?? {},
   };
 }

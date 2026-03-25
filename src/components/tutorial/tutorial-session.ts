@@ -7,7 +7,7 @@ function hasWindow(): boolean {
   );
 }
 
-export type TutorialTourName = "main" | "search";
+export type TutorialTourName = "main" | "search" | "focusMode";
 
 export function readActiveTutorialTour(): TutorialTourName | null {
   if (!hasWindow()) return null;
@@ -21,6 +21,7 @@ export function readActiveTutorialTour(): TutorialTourName | null {
 
 export function writeActiveTutorialTour(tour: TutorialTourName | null) {
   if (!hasWindow()) return;
+  if (tour === "focusMode") return;
   try {
     if (tour) {
       window.sessionStorage.setItem(ACTIVE_TUTORIAL_TOUR_KEY, tour);

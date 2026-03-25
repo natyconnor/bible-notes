@@ -77,6 +77,7 @@ vi.mock("@/components/settings/import-export-section", () => ({
 vi.mock("@/components/tutorial/tutorial-context", () => ({
   useTutorial: () => ({
     startTour: startTourMock,
+    isFocusModeTutorialComplete: true,
   }),
 }));
 

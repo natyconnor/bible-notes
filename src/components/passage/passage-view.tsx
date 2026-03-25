@@ -16,6 +16,7 @@ import { usePassageKeyboardShortcuts } from "./hooks/use-passage-keyboard-shortc
 import { usePassageScrollRestoration } from "./hooks/use-passage-scroll-restoration";
 import { usePassageViewTour } from "./hooks/use-passage-view-tour";
 import { api } from "../../../convex/_generated/api";
+import { useTutorial } from "@/components/tutorial/tutorial-context";
 import { PassageViewHeader } from "./passage-view-header";
 import { PassageViewBody } from "./passage-view-body";
 import { PassageViewDialogs } from "./passage-view-dialogs";
@@ -66,6 +67,7 @@ export function PassageView({
       focusSource,
     });
   const { isFocusMode, toggleFocusMode } = useFocusMode();
+  const { activeTour, startTour, isFocusModeTutorialComplete } = useTutorial();
   const passageNotesInteraction = usePassageNotesInteraction(book, chapter, {
     viewMode: effectiveViewMode,
     setViewMode,
@@ -76,14 +78,36 @@ export function PassageView({
     expandedPassageRanges,
     singleVerseNotes,
     passageNotesByAnchor,
+    openVerseKeys,
     openEditors,
     handleAddNote,
     handleClickAway,
+    openVerseNotes,
     showDiscardConfirmation,
     confirmDiscard,
     cancelDiscard,
     setViewModeWithNotesReset,
   } = passageNotesInteraction;
+
+  const handleFocusModeToggle = useCallback(() => {
+    const enabling = !isFocusMode;
+    toggleFocusMode();
+    if (
+      enabling &&
+      !isReadMode &&
+      !isFocusModeTutorialComplete &&
+      activeTour !== "main"
+    ) {
+      startTour("focusMode");
+    }
+  }, [
+    activeTour,
+    isFocusMode,
+    isFocusModeTutorialComplete,
+    isReadMode,
+    startTour,
+    toggleFocusMode,
+  ]);
 
   const chapterHighlights = useQuery(api.highlights.getForChapter, {
     book,
@@ -148,9 +172,11 @@ export function PassageView({
       effectiveViewMode,
       setViewMode: setViewModeWithNotesReset,
       singleVerseNotes,
+      openVerseKeys,
       openEditors,
       handleClickAway,
       handleAddNote,
+      openVerseNotes,
     },
   );
 
@@ -297,7 +323,7 @@ export function PassageView({
     next,
     navigateActiveTab,
     setViewMode: setViewModeWithNotesReset,
-    onToggleFocusMode: toggleFocusMode,
+    onToggleFocusMode: handleFocusModeToggle,
   });
 
   const { isScrolled } = usePassageScrollRestoration({
@@ -350,7 +376,7 @@ export function PassageView({
         noteVisibility={noteVisibility}
         setViewModeWithNotesReset={setViewModeWithNotesReset}
         setNoteVisibility={setNoteVisibility}
-        onToggleFocusMode={toggleFocusMode}
+        onToggleFocusMode={handleFocusModeToggle}
       />
 
       <PassageViewBody

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef } from "react";
+import { FOCUS_MODE_CENTER_VERSE } from "@/components/tutorial/focus-mode-tour";
 import { useTutorial } from "@/components/tutorial/tutorial-context";
 import {
   buildTutorialReadingNotes,
@@ -16,9 +17,11 @@ interface UsePassageViewTourParams {
   effectiveViewMode: PassageViewMode;
   setViewMode: (mode: PassageViewMode) => void;
   singleVerseNotes: Map<number, NoteWithRef[]>;
+  openVerseKeys: Set<number>;
   openEditors: Map<string, EditorSlot>;
   handleClickAway: () => void;
   handleAddNote: (verse: number) => void;
+  openVerseNotes: (verseNumber: number) => void;
 }
 
 export interface PassageViewTourState {
@@ -32,22 +35,28 @@ export function usePassageViewTour({
   effectiveViewMode,
   setViewMode,
   singleVerseNotes,
+  openVerseKeys,
   openEditors,
   handleClickAway,
   handleAddNote,
+  openVerseNotes,
 }: UsePassageViewTourParams): PassageViewTourState {
   const { activeStep, activeTour } = useTutorial();
 
   const handleClickAwayRef = useRef(handleClickAway);
   const setViewModeRef = useRef(setViewMode);
   const handleAddNoteRef = useRef(handleAddNote);
+  const openVerseNotesRef = useRef(openVerseNotes);
+  const openVerseKeysRef = useRef(openVerseKeys);
   const readingTourEnteredRef = useRef(false);
 
   useEffect(() => {
     handleClickAwayRef.current = handleClickAway;
     setViewModeRef.current = setViewMode;
     handleAddNoteRef.current = handleAddNote;
-  }, [handleClickAway, setViewMode, handleAddNote]);
+    openVerseNotesRef.current = openVerseNotes;
+    openVerseKeysRef.current = openVerseKeys;
+  }, [handleClickAway, setViewMode, handleAddNote, openVerseNotes, openVerseKeys]);
 
   const isAddNoteStep = activeTour === "main" && activeStep?.id === "add-note";
   const isNoteEditorStep =
@@ -57,6 +66,15 @@ export function usePassageViewTour({
       activeStep?.id === "inline-links");
   const isReadingModeStep =
     activeTour === "main" && activeStep?.id === "reading-mode";
+
+  useEffect(() => {
+    if (activeTour !== "focusMode") return;
+
+    const wasOpen = openVerseKeysRef.current.has(FOCUS_MODE_CENTER_VERSE);
+    if (!wasOpen) {
+      openVerseNotesRef.current(FOCUS_MODE_CENTER_VERSE);
+    }
+  }, [activeTour]);
 
   useEffect(() => {
     if (!(isAddNoteStep || isNoteEditorStep)) return;

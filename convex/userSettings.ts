@@ -31,6 +31,7 @@ const tutorialStatusValue = v.object({
   starterTagsSetupCompletedAt: v.optional(v.number()),
   mainTutorialCompletedAt: v.optional(v.number()),
   advancedSearchTutorialCompletedAt: v.optional(v.number()),
+  focusModeTutorialCompletedAt: v.optional(v.number()),
   categoryColors: v.record(v.string(), v.string()),
 });
 
@@ -118,6 +119,31 @@ export const completeAdvancedSearchTutorial = mutation({
 
     await ctx.db.patch(settings._id, {
       advancedSearchOnboardingCompletedAt: now,
+      updatedAt: now,
+    });
+
+    return {
+      completedAt: now,
+    };
+  },
+});
+
+export const completeFocusModeTutorial = mutation({
+  args: {},
+  returns: v.object({
+    completedAt: v.number(),
+  }),
+  handler: async (ctx) => {
+    const userId = await getCurrentUserId(ctx);
+    const now = Date.now();
+    const settings = await getOrCreateUserSettings(ctx, userId, now);
+
+    if (!settings) {
+      throw new Error("Unable to initialize user settings");
+    }
+
+    await ctx.db.patch(settings._id, {
+      focusModeOnboardingCompletedAt: now,
       updatedAt: now,
     });
 

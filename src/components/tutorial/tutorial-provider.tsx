@@ -18,6 +18,11 @@ import {
   type TutorialStep as TourStep,
 } from "./tutorial-context";
 import {
+  FOCUS_MODE_CENTER_VERSE,
+  FOCUS_MODE_SPOTLIGHT_VERSE_END,
+  FOCUS_MODE_SPOTLIGHT_VERSE_START,
+} from "./focus-mode-tour";
+import {
   readActiveTutorialTour,
   writeActiveTutorialTour,
   type TutorialTourName,
@@ -28,6 +33,7 @@ interface TutorialStatus {
   starterTagsSetupCompletedAt?: number;
   mainTutorialCompletedAt?: number;
   advancedSearchTutorialCompletedAt?: number;
+  focusModeTutorialCompletedAt?: number;
   categoryColors: Record<string, string>;
 }
 
@@ -133,9 +139,27 @@ const SEARCH_TOUR_STEPS: TourStep[] = [
   },
 ];
 
+const FOCUS_MODE_TOUR_STEPS: TourStep[] = [
+  {
+    id: "focus-verse",
+    title: "Focus on one verse",
+    description:
+      "Open a verse and other verses blur out. Only one verse or passage group stays fully expanded at a time; click another verse to move your focus.",
+    targetIds: Array.from(
+      {
+        length:
+          FOCUS_MODE_SPOTLIGHT_VERSE_END - FOCUS_MODE_SPOTLIGHT_VERSE_START + 1,
+      },
+      (_, i) => `passage-verse-${i + FOCUS_MODE_SPOTLIGHT_VERSE_START}`,
+    ),
+    scrollIntoViewTargetId: `passage-verse-${FOCUS_MODE_CENTER_VERSE}`,
+  },
+];
+
 const TOUR_STEPS: Record<TutorialTourName, TourStep[]> = {
   main: MAIN_TOUR_STEPS,
   search: SEARCH_TOUR_STEPS,
+  focusMode: FOCUS_MODE_TOUR_STEPS,
 };
 
 const DEFAULT_CARD_WIDTH = 320;
@@ -245,6 +269,9 @@ export function TutorialProvider({
   const completeAdvancedSearchTutorial = useMutation(
     api.userSettings.completeAdvancedSearchTutorial,
   );
+  const completeFocusModeTutorial = useMutation(
+    api.userSettings.completeFocusModeTutorial,
+  );
   const [activeTour, setActiveTour] = useState<TutorialTourName | null>(() =>
     readActiveTutorialTour(),
   );
@@ -263,6 +290,9 @@ export function TutorialProvider({
   const isSearchComplete =
     locallyCompletedTours.search === true ||
     tutorialStatus.advancedSearchTutorialCompletedAt !== undefined;
+  const isFocusModeTutorialComplete =
+    locallyCompletedTours.focusMode === true ||
+    tutorialStatus.focusModeTutorialCompletedAt !== undefined;
   const activeSteps = getStepList(activeTour);
   const activeStep = activeSteps[stepIndex] ?? null;
   const isPassageRoute = location.pathname.startsWith("/passage/");
@@ -279,15 +309,21 @@ export function TutorialProvider({
       return;
     }
 
+    const { targetIds, cardAnchorIds, scrollIntoViewTargetId } = activeStep;
+    const scrollIntoViewTargets: string[] | null =
+      scrollIntoViewTargetId !== undefined
+        ? [scrollIntoViewTargetId]
+        : null;
+
     let frameId = 0;
     let hasScrolled = false;
     const updateRect = () => {
-      const elements = getTargetElements(activeStep.targetIds);
+      const elements = getTargetElements(targetIds);
       const rect = getUnionRect(elements);
       setTargetRect(rect);
 
-      if (activeStep.cardAnchorIds) {
-        const anchorElements = getTargetElements(activeStep.cardAnchorIds);
+      if (cardAnchorIds) {
+        const anchorElements = getTargetElements(cardAnchorIds);
         setCardAnchorRect(getUnionRect(anchorElements));
       } else {
         setCardAnchorRect(null);
@@ -295,9 +331,16 @@ export function TutorialProvider({
 
       if (!hasScrolled && rect) {
         hasScrolled = true;
-        const inViewport = rect.top >= 0 && rect.bottom <= window.innerHeight;
-        if (!inViewport) {
-          elements[0].scrollIntoView({ behavior: "smooth", block: "start" });
+        if (scrollIntoViewTargets) {
+          const preferred = getTargetElements(scrollIntoViewTargets)[0];
+          if (preferred) {
+            preferred.scrollIntoView({ behavior: "smooth", block: "center" });
+          }
+        } else {
+          const inViewport = rect.top >= 0 && rect.bottom <= window.innerHeight;
+          if (!inViewport) {
+            elements[0].scrollIntoView({ behavior: "smooth", block: "start" });
+          }
         }
       }
 
@@ -383,8 +426,10 @@ export function TutorialProvider({
           ) {
             await navigate({ to: "/settings" });
           }
-        } else {
+        } else if (tour === "search") {
           await completeAdvancedSearchTutorial({});
+        } else if (tour === "focusMode") {
+          await completeFocusModeTutorial({});
         }
       } finally {
         finishingTourRef.current = null;
@@ -392,6 +437,7 @@ export function TutorialProvider({
     },
     [
       completeAdvancedSearchTutorial,
+      completeFocusModeTutorial,
       completeMainTutorial,
       location.pathname,
       navigate,
@@ -417,6 +463,11 @@ export function TutorialProvider({
             search: {},
           });
         }
+        return;
+      }
+
+      if (tour === "focusMode") {
+        setActiveTour("focusMode");
         return;
       }
 
@@ -474,8 +525,16 @@ export function TutorialProvider({
       isTourActive: (tour) => activeTour === tour,
       isStepActive: (tour, stepId) =>
         activeTour === tour && activeStep?.id === stepId,
+      isFocusModeTutorialComplete,
     }),
-    [activeStep, activeSteps.length, activeTour, startTour, stepIndex],
+    [
+      activeStep,
+      activeSteps.length,
+      activeTour,
+      isFocusModeTutorialComplete,
+      startTour,
+      stepIndex,
+    ],
   );
 
   const spotlightStyle: CSSProperties | undefined = targetRect
@@ -509,7 +568,11 @@ export function TutorialProvider({
             <div className="space-y-3">
               <div className="space-y-1">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-                  {activeTour === "main" ? "App Tour" : "Advanced Search"}
+                  {activeTour === "main"
+                    ? "App Tour"
+                    : activeTour === "focusMode"
+                      ? "Focus mode"
+                      : "Advanced Search"}
                 </p>
                 <h2 className="text-base font-semibold">{activeStep.title}</h2>
                 <p className="text-sm leading-relaxed text-muted-foreground">
@@ -528,21 +591,25 @@ export function TutorialProvider({
                   {stepIndex + 1} / {activeSteps.length}
                 </span>
                 <div className="flex items-center gap-2">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => void finalizeTour(activeTour)}
-                  >
-                    Skip
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleBack}
-                    disabled={stepIndex === 0}
-                  >
-                    Back
-                  </Button>
+                  {activeSteps.length > 1 ? (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => void finalizeTour(activeTour)}
+                    >
+                      Skip
+                    </Button>
+                  ) : null}
+                  {activeSteps.length > 1 ? (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleBack}
+                      disabled={stepIndex === 0}
+                    >
+                      Back
+                    </Button>
+                  ) : null}
                   <Button
                     size="sm"
                     onClick={handleNext}

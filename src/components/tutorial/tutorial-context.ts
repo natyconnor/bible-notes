@@ -9,6 +9,8 @@ export interface TutorialStep {
   targetIds: string[];
   /** When set, the info card anchors to these elements instead of the spotlight rect. */
   cardAnchorIds?: string[];
+  /** If set, this target is scrolled into view (e.g. center) instead of the first spotlight target. */
+  scrollIntoViewTargetId?: string;
 }
 
 export interface TutorialContextValue {
@@ -19,6 +21,7 @@ export interface TutorialContextValue {
   startTour: (tour: TutorialTourName) => void;
   isTourActive: (tour: TutorialTourName) => boolean;
   isStepActive: (tour: TutorialTourName, stepId: string) => boolean;
+  isFocusModeTutorialComplete: boolean;
 }
 
 export const TutorialContext = createContext<TutorialContextValue | null>(null);

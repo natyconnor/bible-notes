@@ -12,6 +12,10 @@ import {
   CROSSFADE_TRANSITION,
 } from "./note-animation-config";
 import type { PassageNotesInteraction } from "./hooks/use-passage-notes-interaction";
+import {
+  FOCUS_MODE_SPOTLIGHT_VERSE_END,
+  FOCUS_MODE_SPOTLIGHT_VERSE_START,
+} from "@/components/tutorial/focus-mode-tour";
 import { cn } from "@/lib/utils";
 
 const EMPTY_FOCUS_MAP = new Map<string, number | null>();
@@ -335,7 +339,10 @@ export function PassageViewBody({
                         item.verseNumber === 1 ? "passage-add-note" : undefined
                       }
                       rowTourId={
-                        item.verseNumber === 1 ? "passage-verse-1" : undefined
+                        item.verseNumber >= FOCUS_MODE_SPOTLIGHT_VERSE_START &&
+                        item.verseNumber <= FOCUS_MODE_SPOTLIGHT_VERSE_END
+                          ? `passage-verse-${item.verseNumber}`
+                          : undefined
                       }
                     />
                   </motion.div>

@@ -42,6 +42,7 @@ vi.mock("@/lib/use-tabs", () => ({
 vi.mock("@/components/tutorial/tutorial-context", () => ({
   useTutorial: () => ({
     isTourActive: () => false,
+    isFocusModeTutorialComplete: true,
   }),
 }));
 
