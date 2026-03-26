@@ -11,11 +11,11 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   clearDevLog,
+  formatDevLogEntryLine,
   getDevLogEntries,
   getMirrorToConsole,
   setMirrorToConsole,
   subscribeDevLog,
-  type DevLogEntry,
   type DevLogLevel,
 } from "@/lib/dev-log";
 import { cn } from "@/lib/utils";
@@ -40,11 +40,6 @@ function writeOverlayOpen(open: boolean): void {
   } catch {
     /* ignore */
   }
-}
-
-function formatEntryLine(entry: DevLogEntry): string {
-  const iso = new Date(entry.ts).toISOString();
-  return `${iso} [${entry.level}] ${entry.channel} ${entry.body}`;
 }
 
 async function copyText(text: string): Promise<boolean> {
@@ -109,12 +104,12 @@ export function DevLogRoot() {
   }, [entries, level, needle]);
 
   const linesAll = useMemo(
-    () => entries.map((e) => formatEntryLine(e)).join("\n"),
+    () => entries.map((e) => formatDevLogEntryLine(e)).join("\n"),
     [entries],
   );
 
   const linesVisible = useMemo(
-    () => visible.map((e) => formatEntryLine(e)).join("\n"),
+    () => visible.map((e) => formatDevLogEntryLine(e)).join("\n"),
     [visible],
   );
 

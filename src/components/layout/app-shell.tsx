@@ -1,4 +1,5 @@
 import { useEffect, type ReactNode } from "react";
+import { FeedbackFab } from "@/components/feedback/feedback-fab";
 import { GRAIN_CONFIG } from "@/lib/candlelight-grain";
 import { TabBar } from "./tab-bar";
 
@@ -37,10 +38,12 @@ function AppShellSurface({ children }: { children: ReactNode }) {
 
   return (
     <div
+      data-feedback-capture-root
       className="flex flex-col h-screen w-screen overflow-hidden bg-background cl-theme cl-grain-full cl-grain-lightfalloff"
       style={{ "--cl-grain-intensity": GRAIN_CONFIG.grainIntensity } as React.CSSProperties}
     >
       <TabBar />
+      <FeedbackFab />
       <div className="flex-1 overflow-hidden">{children}</div>
     </div>
   );

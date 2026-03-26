@@ -138,4 +138,17 @@ export default defineSchema({
       }),
     ),
   }).index("by_label", ["label"]),
+
+  feedbackReports: defineTable({
+    userId: v.id("users"),
+    kind: v.union(v.literal("bug"), v.literal("feature")),
+    description: v.string(),
+    createdAt: v.number(),
+    path: v.optional(v.string()),
+    userAgent: v.optional(v.string()),
+    logsText: v.optional(v.string()),
+    screenshotId: v.optional(v.id("_storage")),
+  })
+    .index("by_createdAt", ["createdAt"])
+    .index("by_userId", ["userId"]),
 });

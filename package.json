@@ -25,6 +25,7 @@
     "convex-helpers": "^0.1.114",
     "fflate": "^0.8.2",
     "framer-motion": "^12.34.4",
+    "html-to-image": "^1.11.13",
     "lucide-react": "^0.575.0",
     "radix-ui": "^1.4.3",
     "react": "^19.2.0",

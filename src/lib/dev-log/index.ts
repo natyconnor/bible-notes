@@ -7,4 +7,8 @@ export {
   setMirrorToConsole,
   subscribeDevLog,
 } from "./store";
+export {
+  formatDevLogEntriesForExport,
+  formatDevLogEntryLine,
+} from "./format-lines";
 export { serializeDevLogArg, serializeDevLogParts } from "./serialize";
