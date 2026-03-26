@@ -398,6 +398,7 @@ export function FeedbackFab() {
           <button
             type="button"
             aria-label="Give feedback on the app"
+            data-passage-dismiss-exempt
             className={cn(
               "fixed bottom-4 left-4 z-9999 flex h-11 w-11 items-center justify-center rounded-full border border-border bg-card text-foreground shadow-lg transition-[transform,box-shadow] hover:scale-105 hover:shadow-xl",
               open &&
@@ -420,6 +421,7 @@ export function FeedbackFab() {
         <DialogContent
           className="z-10020 sm:max-w-md"
           data-capture-ignore
+          data-passage-dismiss-exempt
           overlayClassName="z-10019"
           overlayProps={
             {

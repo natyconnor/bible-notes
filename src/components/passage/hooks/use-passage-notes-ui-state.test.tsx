@@ -51,6 +51,8 @@ describe("usePassageNotesUiState outside-click dismissal", () => {
   let noteSurface: HTMLDivElement;
   let exemptToolbar: HTMLDivElement;
   let exemptPortal: HTMLDivElement;
+  let feedbackFabButton: HTMLButtonElement;
+  let devLogPanel: HTMLDivElement;
 
   beforeEach(() => {
     outsideDiv = document.createElement("div");
@@ -68,11 +70,21 @@ describe("usePassageNotesUiState outside-click dismissal", () => {
     exemptPortal.setAttribute("data-passage-dismiss-exempt", "");
     document.body.appendChild(exemptPortal);
 
+    feedbackFabButton = document.createElement("button");
+    feedbackFabButton.setAttribute("data-passage-dismiss-exempt", "");
+    document.body.appendChild(feedbackFabButton);
+
+    devLogPanel = document.createElement("div");
+    devLogPanel.setAttribute("data-passage-dismiss-exempt", "");
+    document.body.appendChild(devLogPanel);
+
     return () => {
       outsideDiv.remove();
       noteSurface.remove();
       exemptToolbar.remove();
       exemptPortal.remove();
+      feedbackFabButton.remove();
+      devLogPanel.remove();
     };
   });
 
@@ -137,6 +149,31 @@ describe("usePassageNotesUiState outside-click dismissal", () => {
     expect(result.current.openVerseKeys.has(1)).toBe(true);
 
     child.remove();
+  });
+
+  it("does NOT close verse notes when clicking the feedback fab button", () => {
+    const { result } = renderUiState();
+    openVerseNotes(result);
+
+    clickElement(feedbackFabButton);
+
+    expect(result.current.openVerseKeys.has(1)).toBe(true);
+    expect(result.current.selectedVerses.has(1)).toBe(true);
+  });
+
+  it("does NOT close verse notes when clicking inside the dev log panel", () => {
+    const panelAction = document.createElement("button");
+    devLogPanel.appendChild(panelAction);
+
+    const { result } = renderUiState();
+    openVerseNotes(result);
+
+    clickElement(panelAction);
+
+    expect(result.current.openVerseKeys.has(1)).toBe(true);
+    expect(result.current.selectedVerses.has(1)).toBe(true);
+
+    panelAction.remove();
   });
 
   it("preserves dirty editors on outside click", () => {

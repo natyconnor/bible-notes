@@ -139,6 +139,7 @@ export function DevLogRoot() {
         type="button"
         aria-label={open ? "Close dev log panel" : "Open dev log panel"}
         title="Dev log"
+        data-passage-dismiss-exempt
         className={cn(
           "fixed bottom-4 right-4 z-9999 flex h-11 w-11 items-center justify-center rounded-full border border-border bg-card text-foreground shadow-lg transition-[transform,box-shadow] hover:scale-105 hover:shadow-xl",
           open && "ring-2 ring-primary ring-offset-2 ring-offset-background",
@@ -153,6 +154,7 @@ export function DevLogRoot() {
           className="fixed right-4 bottom-18 z-9998 flex h-[min(420px,50vh)] w-[min(560px,calc(100vw-2rem))] flex-col overflow-hidden rounded-lg border border-border bg-card text-card-foreground shadow-xl"
           role="dialog"
           aria-label="Development log"
+          data-passage-dismiss-exempt
         >
           <div className="flex flex-wrap items-center gap-2 border-b border-border px-3 py-2">
             <span className="text-sm font-semibold">Dev log</span>
