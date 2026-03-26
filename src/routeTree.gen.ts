@@ -10,7 +10,9 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as ThemeTestRouteImport } from './routes/theme-test'
+import { Route as TermsRouteImport } from './routes/terms'
 import { Route as SearchRouteImport } from './routes/search'
+import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as SettingsIndexRouteImport } from './routes/settings/index'
 import { Route as SettingsTagsRouteImport } from './routes/settings/tags'
@@ -21,9 +23,19 @@ const ThemeTestRoute = ThemeTestRouteImport.update({
   path: '/theme-test',
   getParentRoute: () => rootRouteImport,
 } as any)
+const TermsRoute = TermsRouteImport.update({
+  id: '/terms',
+  path: '/terms',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SearchRoute = SearchRouteImport.update({
   id: '/search',
   path: '/search',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -49,7 +61,9 @@ const PassagePassageIdRoute = PassagePassageIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/privacy': typeof PrivacyRoute
   '/search': typeof SearchRoute
+  '/terms': typeof TermsRoute
   '/theme-test': typeof ThemeTestRoute
   '/passage/$passageId': typeof PassagePassageIdRoute
   '/settings/tags': typeof SettingsTagsRoute
@@ -57,7 +71,9 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/privacy': typeof PrivacyRoute
   '/search': typeof SearchRoute
+  '/terms': typeof TermsRoute
   '/theme-test': typeof ThemeTestRoute
   '/passage/$passageId': typeof PassagePassageIdRoute
   '/settings/tags': typeof SettingsTagsRoute
@@ -66,7 +82,9 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/privacy': typeof PrivacyRoute
   '/search': typeof SearchRoute
+  '/terms': typeof TermsRoute
   '/theme-test': typeof ThemeTestRoute
   '/passage/$passageId': typeof PassagePassageIdRoute
   '/settings/tags': typeof SettingsTagsRoute
@@ -76,7 +94,9 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/privacy'
     | '/search'
+    | '/terms'
     | '/theme-test'
     | '/passage/$passageId'
     | '/settings/tags'
@@ -84,7 +104,9 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/privacy'
     | '/search'
+    | '/terms'
     | '/theme-test'
     | '/passage/$passageId'
     | '/settings/tags'
@@ -92,7 +114,9 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/privacy'
     | '/search'
+    | '/terms'
     | '/theme-test'
     | '/passage/$passageId'
     | '/settings/tags'
@@ -101,7 +125,9 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  PrivacyRoute: typeof PrivacyRoute
   SearchRoute: typeof SearchRoute
+  TermsRoute: typeof TermsRoute
   ThemeTestRoute: typeof ThemeTestRoute
   PassagePassageIdRoute: typeof PassagePassageIdRoute
   SettingsTagsRoute: typeof SettingsTagsRoute
@@ -117,11 +143,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ThemeTestRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/terms': {
+      id: '/terms'
+      path: '/terms'
+      fullPath: '/terms'
+      preLoaderRoute: typeof TermsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/search': {
       id: '/search'
       path: '/search'
       fullPath: '/search'
       preLoaderRoute: typeof SearchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -157,7 +197,9 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  PrivacyRoute: PrivacyRoute,
   SearchRoute: SearchRoute,
+  TermsRoute: TermsRoute,
   ThemeTestRoute: ThemeTestRoute,
   PassagePassageIdRoute: PassagePassageIdRoute,
   SettingsTagsRoute: SettingsTagsRoute,

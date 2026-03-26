@@ -1,6 +1,7 @@
-import { query } from "./_generated/server";
+import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
-import { getCurrentUserIdOrNull } from "./lib/auth";
+import { getCurrentUserIdOrNull, getCurrentUserId } from "./lib/auth";
+import { deleteAllDataForUser } from "./lib/deleteAccount";
 
 const currentUserValue = v.object({
   id: v.id("users"),
@@ -27,5 +28,15 @@ export const getMe = query({
       name: "name" in user ? readOptionalString(user.name) : null,
       image: "image" in user ? readOptionalString(user.image) : null,
     };
+  },
+});
+
+export const deleteMyAccount = mutation({
+  args: {},
+  returns: v.null(),
+  handler: async (ctx) => {
+    const userId = await getCurrentUserId(ctx);
+    await deleteAllDataForUser(ctx, userId);
+    return null;
   },
 });

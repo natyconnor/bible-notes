@@ -1,4 +1,5 @@
 import { useAuthActions } from "@convex-dev/auth/react";
+import { Link } from "@tanstack/react-router";
 import { type CSSProperties, useEffect, useRef, useState } from "react";
 import { LoginPageAtmosphere } from "@/components/login-page-atmosphere";
 import { devLog } from "@/lib/dev-log";
@@ -230,32 +231,57 @@ export function LoginPage({ isLoading = false }: { isLoading?: boolean }) {
             </div>
           </div>
 
-          <p
-            className="animate-content-slide-in relative z-10 shrink-0 pb-6 text-center text-sm text-white/35"
-            style={{
-              fontFamily: "'Cormorant Garamond', serif",
-              fontWeight: 400,
-              ...slideDelay(480),
-            }}
+          <div
+            className="animate-content-slide-in relative z-10 flex shrink-0 flex-col items-center gap-1.5 pb-6 text-center"
+            style={slideDelay(480)}
           >
-            <a
-              href="https://nathanconnor.dev"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-white/50 underline decoration-white/30 underline-offset-2 transition-colors hover:text-white/70 hover:decoration-white/50"
+            <p
+              className="text-sm text-white/35"
+              style={{
+                fontFamily: "'Cormorant Garamond', serif",
+                fontWeight: 400,
+              }}
             >
-              Check out my other work
-            </a>{" "}
-            ·{" "}
-            <a
-              href="https://github.com/natyconnor/berean"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-white/50 underline decoration-white/30 underline-offset-2 transition-colors hover:text-white/70 hover:decoration-white/50"
+              <a
+                href="https://nathanconnor.dev"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-white/50 underline decoration-white/30 underline-offset-2 transition-colors hover:text-white/70 hover:decoration-white/50"
+              >
+                Check out my other work
+              </a>{" "}
+              ·{" "}
+              <a
+                href="https://github.com/natyconnor/berean"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-white/50 underline decoration-white/30 underline-offset-2 transition-colors hover:text-white/70 hover:decoration-white/50"
+              >
+                GitHub
+              </a>
+            </p>
+            <p
+              className="text-[11px] leading-snug text-white/25"
+              style={{
+                fontFamily: "'Cormorant Garamond', serif",
+                fontWeight: 400,
+              }}
             >
-              GitHub
-            </a>
-          </p>
+              <Link
+                to="/privacy"
+                className="underline decoration-white/20 underline-offset-2 transition-colors hover:text-white/45 hover:decoration-white/35"
+              >
+                Privacy Policy
+              </Link>
+              <span className="mx-1.5 text-white/20">·</span>
+              <Link
+                to="/terms"
+                className="underline decoration-white/20 underline-offset-2 transition-colors hover:text-white/45 hover:decoration-white/35"
+              >
+                Terms of Service
+              </Link>
+            </p>
+          </div>
         </>
       )}
     </div>

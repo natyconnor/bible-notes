@@ -16,6 +16,15 @@ const seedDevChapterNotesMock = vi.fn();
 
 vi.mock("@tanstack/react-router", () => ({
   useNavigate: () => navigateMock,
+  Link: ({
+    to,
+    children,
+    ...props
+  }: { to: string; children: ReactNode } & HTMLAttributes<HTMLAnchorElement>) => (
+    <a href={to} {...props}>
+      {children}
+    </a>
+  ),
 }));
 
 vi.mock("framer-motion", () => ({
@@ -27,6 +36,13 @@ vi.mock("framer-motion", () => ({
       <div {...props}>{children}</div>
     ),
   },
+}));
+
+vi.mock("@convex-dev/auth/react", () => ({
+  useAuthActions: () => ({
+    signIn: vi.fn(),
+    signOut: vi.fn(),
+  }),
 }));
 
 vi.mock("convex/react", () => ({
@@ -45,6 +61,8 @@ vi.mock("convex/react", () => ({
         return setCategoryColorMock;
       case "api.seed.seedDevChapterNotes":
         return seedDevChapterNotesMock;
+      case "api.users.deleteMyAccount":
+        return vi.fn();
       default:
         return vi.fn();
     }
@@ -66,6 +84,9 @@ vi.mock("../../../convex/_generated/api", () => ({
     },
     seed: {
       seedDevChapterNotes: "api.seed.seedDevChapterNotes",
+    },
+    users: {
+      deleteMyAccount: "api.users.deleteMyAccount",
     },
   },
 }));

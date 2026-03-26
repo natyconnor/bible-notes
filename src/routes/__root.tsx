@@ -26,9 +26,12 @@ export const Route = createRootRoute({
   component: RootComponent,
 });
 
+const PUBLIC_LEGAL_PATHS = new Set(["/privacy", "/terms"]);
+
 function RootComponent() {
   const { isAuthenticated, isLoading } = useConvexAuth();
   const location = useLocation();
+  const isPublicLegalPath = PUBLIC_LEGAL_PATHS.has(location.pathname);
   const isSettingsRoute = location.pathname.startsWith("/settings");
   const tutorialStatus = useQuery(
     api.userSettings.getTutorialStatus,
@@ -58,6 +61,14 @@ function RootComponent() {
   }, [minTimePassed]);
 
   const isReady = !isLoading && minTimePassed;
+
+  if (isPublicLegalPath) {
+    return (
+      <ThemeProvider>
+        <Outlet />
+      </ThemeProvider>
+    );
+  }
 
   if (!isReady || !isAuthenticated) {
     return <LoginPage isLoading={!isReady} />;

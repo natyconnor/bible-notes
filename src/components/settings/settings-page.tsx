@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { motion } from "framer-motion";
-import { useNavigate } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { ArrowLeft, Loader2 } from "lucide-react";
 
 import { api } from "../../../convex/_generated/api";
@@ -20,6 +20,7 @@ import { StarterTagsSection } from "@/components/settings/starter-tags-section";
 import { DevSeedSection } from "@/components/settings/dev-seed-section";
 import { TutorialActionsSection } from "@/components/settings/tutorial-actions-section";
 import { DeleteCustomTagDialog } from "@/components/settings/delete-custom-tag-dialog";
+import { DeleteAccountSection } from "@/components/settings/delete-account-section";
 
 interface SeedResultSummary {
   seed: number;
@@ -350,6 +351,24 @@ export function SettingsPage() {
           onReplayMainTour={() => startTour("main")}
           onReplaySearchTour={() => startTour("search")}
         />
+
+        <DeleteAccountSection />
+
+        <section className="rounded-lg border border-border/60 bg-muted/30 px-4 py-3 text-center text-sm text-muted-foreground">
+          <Link
+            to="/privacy"
+            className="underline underline-offset-4 hover:text-foreground"
+          >
+            Privacy Policy
+          </Link>
+          <span className="mx-2">·</span>
+          <Link
+            to="/terms"
+            className="underline underline-offset-4 hover:text-foreground"
+          >
+            Terms of Service
+          </Link>
+        </section>
       </motion.div>
 
       <DeleteCustomTagDialog
