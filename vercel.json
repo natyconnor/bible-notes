@@ -1,5 +1,5 @@
 {
-  "buildCommand": "npx convex deploy && pnpm run build",
+  "buildCommand": "npx convex deploy --cmd 'pnpm run build'",
   "framework": "vite",
   "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
 }
