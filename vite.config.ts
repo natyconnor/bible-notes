@@ -5,6 +5,9 @@ import { TanStackRouterVite } from "@tanstack/router-plugin/vite";
 import { defineConfig } from "vitest/config";
 
 export default defineConfig({
+  define: {
+    __IS_PREVIEW__: JSON.stringify(process.env.VERCEL_ENV === "preview"),
+  },
   plugins: [
     TanStackRouterVite({ target: "react", autoCodeSplitting: true }),
     react(),

@@ -21,6 +21,7 @@ import {
 } from "@/lib/hero-backdrop";
 import { api } from "../../convex/_generated/api";
 import { RootRouteError } from "@/components/error-fallbacks/root-route-error";
+import { usePreviewAutoSignIn } from "@/hooks/use-preview-auto-sign-in";
 
 const MIN_SPLASH_MS = 600;
 
@@ -32,6 +33,7 @@ export const Route = createRootRoute({
 const PUBLIC_LEGAL_PATHS = new Set(["/privacy", "/terms"]);
 
 function RootComponent() {
+  usePreviewAutoSignIn();
   const { isAuthenticated, isLoading } = useConvexAuth();
   const location = useLocation();
   const isPublicLegalPath = PUBLIC_LEGAL_PATHS.has(location.pathname);
@@ -165,6 +167,12 @@ function RootComponent() {
           </TooltipProvider>
         </TabProvider>
       </ThemeProvider>
+
+      {__IS_PREVIEW__ && (
+        <div className="fixed bottom-2 left-2 z-50 rounded bg-amber-500/90 px-2 py-1 text-xs font-medium text-black">
+          Preview Mode
+        </div>
+      )}
 
       {!splashGone && (
         <div
