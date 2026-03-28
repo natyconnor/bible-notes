@@ -1,0 +1,8 @@
+{
+  "setup": [
+    "pnpm install",
+    "npx convex dev"
+  ],
+  "teardown": [],
+  "run": []
+}
