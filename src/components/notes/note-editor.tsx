@@ -16,7 +16,13 @@ import {
 } from "@/lib/note-inline-content";
 import { InlineVerseEditor } from "@/components/notes/editor/inline-verse-editor";
 import { useNoteEditorTour } from "@/components/tutorial/use-note-editor-tour";
-import { formatCommandOrControlShortcut } from "@/lib/keyboard-shortcuts";
+import {
+  formatCommandOrControlShortcut,
+  isApplePlatform,
+} from "@/lib/keyboard-shortcuts";
+
+const kbdShortcutChipClassName =
+  "rounded border bg-muted px-1 py-0 text-[10px] font-medium leading-none text-muted-foreground";
 import { api } from "../../../convex/_generated/api";
 
 interface CurrentChapter {
@@ -228,41 +234,58 @@ export function NoteEditor({
           tourId={tour.tagsTourId}
           tutorialPreviewTags={tour.tutorialPreviewTags}
           tutorialAnimatePreview={tour.tutorialAnimateTagPreview}
+          trailingSlot={
+            <>
+              {!isDialogPresentation && (
+                <TooltipButton
+                  variant="ghost"
+                  size="sm"
+                  onClick={onCancel}
+                  tooltip="Cancel (Esc)"
+                >
+                  Cancel
+                </TooltipButton>
+              )}
+              <TooltipButton
+                variant="default"
+                size="sm"
+                onClick={() => {
+                  void handleSave();
+                }}
+                disabled={!plainText || isSaving}
+                tooltip={
+                  !plainText
+                    ? "Enter content to save"
+                    : isSaving
+                      ? "Saving note..."
+                      : `Save note (${formatCommandOrControlShortcut("Enter")})`
+                }
+              >
+                {isSaving ? "Saving..." : "Save"}
+              </TooltipButton>
+            </>
+          }
         />
       </div>
 
-      <div className="flex gap-2 justify-end">
-        {!isDialogPresentation && (
-          <TooltipButton
-            variant="ghost"
-            size="sm"
-            onClick={onCancel}
-            tooltip="Cancel (Esc)"
-          >
-            Cancel
-          </TooltipButton>
+      <p className="flex flex-wrap items-center justify-end gap-1 text-xs text-muted-foreground">
+        {isApplePlatform() ? (
+          <>
+            <kbd className={kbdShortcutChipClassName} aria-label="Command">
+              ⌘
+            </kbd>
+            <kbd className={kbdShortcutChipClassName}>Enter</kbd>
+          </>
+        ) : (
+          <>
+            <kbd className={kbdShortcutChipClassName}>Ctrl</kbd>
+            <span aria-hidden className="text-[10px] text-muted-foreground/80">
+              +
+            </span>
+            <kbd className={kbdShortcutChipClassName}>Enter</kbd>
+          </>
         )}
-        <TooltipButton
-          variant="default"
-          size="sm"
-          onClick={() => {
-            void handleSave();
-          }}
-          disabled={!plainText || isSaving}
-          tooltip={
-            !plainText
-              ? "Enter content to save"
-              : isSaving
-                ? "Saving note..."
-                : `Save note (${formatCommandOrControlShortcut("Enter")})`
-          }
-        >
-          {isSaving ? "Saving..." : "Save"}
-        </TooltipButton>
-      </div>
-
-      <p className="text-right text-xs text-muted-foreground">
-        {formatCommandOrControlShortcut("Enter")} to save
+        <span>to save</span>
       </p>
     </div>
   );
