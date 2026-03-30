@@ -7,6 +7,7 @@ import {
   useRef,
   useState,
   type CSSProperties,
+  type ReactNode,
 } from "react";
 import { X } from "lucide-react";
 
@@ -40,6 +41,8 @@ interface TagPickerProps {
   tourId?: string;
   tutorialPreviewTags?: string[];
   tutorialAnimatePreview?: boolean;
+  /** Renders after the input on the same row (e.g. Save). Narrows the dropdown anchor when using popoverDropdown. */
+  trailingSlot?: ReactNode;
 }
 
 export function TagPicker({
@@ -59,6 +62,7 @@ export function TagPicker({
   tourId,
   tutorialPreviewTags = [],
   tutorialAnimatePreview = false,
+  trailingSlot,
 }: TagPickerProps) {
   const [input, setInput] = useState("");
   const [isFocused, setIsFocused] = useState(false);
@@ -154,6 +158,113 @@ export function TagPicker({
       : animatedTutorialInput
     : input;
 
+  const inputAndSuggestions = (
+    <>
+      <Input
+        ref={inputRef}
+        placeholder={inputPlaceholder}
+        value={displayedInputValue}
+        onChange={(event) => {
+          if (shouldAnimatePreviewTag) return;
+          setInput(event.target.value);
+          setHighlightedSuggestion(0);
+        }}
+        onFocus={() => setIsFocused(true)}
+        onBlur={() => {
+          setTimeout(() => setIsFocused(false), 120);
+        }}
+        onKeyDown={(event) => {
+          if (shouldAnimatePreviewTag) {
+            event.preventDefault();
+            return;
+          }
+          if ((event.metaKey || event.ctrlKey) && event.key === "Enter") {
+            return;
+          }
+          if (event.key === "ArrowDown" && suggestions.length > 0) {
+            event.preventDefault();
+            setHighlightedSuggestion((prev) => (prev + 1) % suggestions.length);
+            return;
+          }
+
+          if (event.key === "ArrowUp" && suggestions.length > 0) {
+            event.preventDefault();
+            setHighlightedSuggestion((prev) =>
+              prev === 0 ? suggestions.length - 1 : prev - 1,
+            );
+            return;
+          }
+
+          if (event.key === "Enter") {
+            const highlighted = suggestions[activeSuggestionIndex];
+            if (highlighted) {
+              event.preventDefault();
+              handleSelectSuggestion(highlighted);
+              return;
+            }
+
+            if (allowCreate) {
+              event.preventDefault();
+              handleCreateTag(input);
+            }
+            return;
+          }
+
+          if (event.key === "," && allowCreate) {
+            event.preventDefault();
+            handleCreateTag(input);
+            return;
+          }
+
+          if (
+            event.key === "Backspace" &&
+            input.length === 0 &&
+            selectedTags.length > 0
+          ) {
+            event.preventDefault();
+            onRemoveTag(selectedTags[selectedTags.length - 1]);
+            return;
+          }
+
+          if (event.key === "Escape" && clearInputOnEscape) {
+            setInput("");
+            setHighlightedSuggestion(0);
+          }
+        }}
+        className={cn("h-8 text-sm", inputClassName)}
+      />
+
+      {isFocused && suggestions.length > 0 && (
+        <div
+          className={
+            popoverDropdown
+              ? "absolute left-0 right-0 top-full z-50 mt-1 max-h-48 overflow-y-auto rounded-md border bg-popover p-1 shadow-lg"
+              : "rounded-md border bg-popover p-1"
+          }
+        >
+          {suggestions.map((tag, index) => (
+            <button
+              key={`suggestion-${tag}`}
+              type="button"
+              className={cn(
+                "w-full rounded-sm px-2 py-1 text-left text-xs transition-colors",
+                index === activeSuggestionIndex
+                  ? "bg-accent text-accent-foreground"
+                  : "hover:bg-accent/60",
+              )}
+              onMouseDown={(event) => {
+                event.preventDefault();
+                handleSelectSuggestion(tag);
+              }}
+            >
+              {tag}
+            </button>
+          ))}
+        </div>
+      )}
+    </>
+  );
+
   return (
     <div className="space-y-2" {...(tourId ? { "data-tour-id": tourId } : {})}>
       {(selectedTags.length > 0 ||
@@ -200,109 +311,23 @@ export function TagPicker({
         </div>
       )}
 
-      <div className={popoverDropdown ? "relative" : "space-y-2"}>
-        <Input
-          ref={inputRef}
-          placeholder={inputPlaceholder}
-          value={displayedInputValue}
-          onChange={(event) => {
-            if (shouldAnimatePreviewTag) return;
-            setInput(event.target.value);
-            setHighlightedSuggestion(0);
-          }}
-          onFocus={() => setIsFocused(true)}
-          onBlur={() => {
-            setTimeout(() => setIsFocused(false), 120);
-          }}
-          onKeyDown={(event) => {
-            if (shouldAnimatePreviewTag) {
-              event.preventDefault();
-              return;
-            }
-            if (event.key === "ArrowDown" && suggestions.length > 0) {
-              event.preventDefault();
-              setHighlightedSuggestion(
-                (prev) => (prev + 1) % suggestions.length,
-              );
-              return;
-            }
-
-            if (event.key === "ArrowUp" && suggestions.length > 0) {
-              event.preventDefault();
-              setHighlightedSuggestion((prev) =>
-                prev === 0 ? suggestions.length - 1 : prev - 1,
-              );
-              return;
-            }
-
-            if (event.key === "Enter") {
-              const highlighted = suggestions[activeSuggestionIndex];
-              if (highlighted) {
-                event.preventDefault();
-                handleSelectSuggestion(highlighted);
-                return;
-              }
-
-              if (allowCreate) {
-                event.preventDefault();
-                handleCreateTag(input);
-              }
-              return;
-            }
-
-            if (event.key === "," && allowCreate) {
-              event.preventDefault();
-              handleCreateTag(input);
-              return;
-            }
-
-            if (
-              event.key === "Backspace" &&
-              input.length === 0 &&
-              selectedTags.length > 0
-            ) {
-              event.preventDefault();
-              onRemoveTag(selectedTags[selectedTags.length - 1]);
-              return;
-            }
-
-            if (event.key === "Escape" && clearInputOnEscape) {
-              setInput("");
-              setHighlightedSuggestion(0);
-            }
-          }}
-          className={cn("h-8 text-sm", inputClassName)}
-        />
-
-        {isFocused && suggestions.length > 0 && (
+      {trailingSlot ? (
+        <div className="flex items-center gap-2">
           <div
-            className={
-              popoverDropdown
-                ? "absolute left-0 right-0 top-full z-50 mt-1 max-h-48 overflow-y-auto rounded-md border bg-popover p-1 shadow-lg"
-                : "rounded-md border bg-popover p-1"
-            }
+            className={cn(
+              "min-w-0 flex-1",
+              popoverDropdown ? "relative" : "space-y-2",
+            )}
           >
-            {suggestions.map((tag, index) => (
-              <button
-                key={`suggestion-${tag}`}
-                type="button"
-                className={cn(
-                  "w-full rounded-sm px-2 py-1 text-left text-xs transition-colors",
-                  index === activeSuggestionIndex
-                    ? "bg-accent text-accent-foreground"
-                    : "hover:bg-accent/60",
-                )}
-                onMouseDown={(event) => {
-                  event.preventDefault();
-                  handleSelectSuggestion(tag);
-                }}
-              >
-                {tag}
-              </button>
-            ))}
+            {inputAndSuggestions}
           </div>
-        )}
-      </div>
+          <div className="flex shrink-0 items-center gap-2">{trailingSlot}</div>
+        </div>
+      ) : (
+        <div className={popoverDropdown ? "relative" : "space-y-2"}>
+          {inputAndSuggestions}
+        </div>
+      )}
     </div>
   );
 }
