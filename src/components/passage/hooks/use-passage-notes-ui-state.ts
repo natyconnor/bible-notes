@@ -9,6 +9,7 @@ import {
 import type { Id } from "../../../../convex/_generated/dataModel";
 import { useVerseSelection } from "@/hooks/use-verse-selection";
 import { logInteraction } from "@/lib/dev-log";
+import { getChapterVerseCount } from "@/lib/bible-verse-counts";
 import type { NoteBody } from "@/lib/note-inline-content";
 import type { VerseRef } from "@/lib/verse-ref-utils";
 import type { NoteWithRef } from "@/components/notes/model/note-model";
@@ -681,6 +682,26 @@ export function usePassageNotesUiState({
     });
   }, []);
 
+  const focusModeAdvanceToVerse = useCallback(
+    (verseNumber: number) => {
+      addNewDraft({
+        book,
+        chapter,
+        startVerse: verseNumber,
+        endVerse: verseNumber,
+      });
+
+      const existingNotes = singleVerseNotes.get(verseNumber) ?? [];
+      setOpenVerseKeys(
+        existingNotes.length > 0 ? new Set([verseNumber]) : new Set(),
+      );
+      setOpenPassageKeys(new Set());
+      setViewSelectedVerses(new Set([verseNumber]));
+      setIsPassageSelection(false);
+    },
+    [addNewDraft, book, chapter, singleVerseNotes],
+  );
+
   const handleSaveNew = useCallback(
     async (verseRef: VerseRef, body: NoteBody, tags: string[]) => {
       await onSaveNewNote(verseRef, body, tags);
@@ -694,14 +715,29 @@ export function usePassageNotesUiState({
         }
       } else {
         if (isFocusMode) {
+          const nextVerse = verseRef.startVerse + 1;
+          const chapterVerseCount = getChapterVerseCount(book, chapter);
+          if (chapterVerseCount !== null && nextVerse <= chapterVerseCount) {
+            focusModeAdvanceToVerse(nextVerse);
+            return;
+          }
           setOpenVerseKeys(new Set([verseRef.startVerse]));
           setOpenPassageKeys(new Set());
+          setViewSelectedVerses(new Set([verseRef.startVerse]));
+          setIsPassageSelection(false);
         } else {
           setOpenVerseKeys((prev) => new Set(prev).add(verseRef.startVerse));
         }
       }
     },
-    [isFocusMode, onSaveNewNote, removeEditor],
+    [
+      book,
+      chapter,
+      focusModeAdvanceToVerse,
+      isFocusMode,
+      onSaveNewNote,
+      removeEditor,
+    ],
   );
 
   const handleSaveEdit = useCallback(

@@ -2,6 +2,7 @@ import { act, renderHook } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { Id } from "../../../../convex/_generated/dataModel";
 import type { NoteWithRef } from "@/components/notes/model/note-model";
+import { EMPTY_NOTE_BODY } from "@/lib/note-inline-content";
 import {
   usePassageNotesUiState,
   type PassageNotesUiState,
@@ -552,5 +553,177 @@ describe("usePassageNotesUiState editor cancellation", () => {
     expect(result.current.selectedVerses.has(1)).toBe(false);
     expect(result.current.isPassageSelection).toBe(false);
     expect(clearSelectionMock).toHaveBeenCalled();
+  });
+});
+
+describe("usePassageNotesUiState focus mode save behavior", () => {
+  it("advances to the next verse draft after saving a single-verse note", async () => {
+    const { result } = renderHook(() =>
+      usePassageNotesUiState({
+        ...defaultOptions(),
+        isFocusMode: true,
+      }),
+    );
+
+    act(() => {
+      result.current.handleAddNote(1);
+    });
+
+    await act(async () => {
+      await result.current.handleSaveNew(
+        {
+          book: "Genesis",
+          chapter: 1,
+          startVerse: 1,
+          endVerse: 1,
+        },
+        EMPTY_NOTE_BODY,
+        [],
+      );
+    });
+
+    expect(result.current.openEditors.size).toBe(1);
+    expect(result.current.openEditors.has("new:2:2")).toBe(true);
+    expect(result.current.selectedVerses).toEqual(new Set([2]));
+    expect(result.current.openPassageKeys.size).toBe(0);
+    expect(result.current.openVerseKeys.size).toBe(0);
+  });
+
+  it("opens the next verse notes when the auto-advanced verse already has notes", async () => {
+    const nextVerseNote: NoteWithRef = {
+      noteId: "n2" as Id<"notes">,
+      content: "",
+      tags: [],
+      verseRef: {
+        book: "Genesis",
+        chapter: 1,
+        startVerse: 2,
+        endVerse: 2,
+      },
+      createdAt: 0,
+    };
+
+    const { result } = renderHook(() =>
+      usePassageNotesUiState({
+        ...defaultOptions(),
+        isFocusMode: true,
+        singleVerseNotes: new Map([[2, [nextVerseNote]]]),
+      }),
+    );
+
+    act(() => {
+      result.current.handleAddNote(1);
+    });
+
+    await act(async () => {
+      await result.current.handleSaveNew(
+        {
+          book: "Genesis",
+          chapter: 1,
+          startVerse: 1,
+          endVerse: 1,
+        },
+        EMPTY_NOTE_BODY,
+        [],
+      );
+    });
+
+    expect(result.current.openEditors.size).toBe(1);
+    expect(result.current.openEditors.has("new:2:2")).toBe(true);
+    expect(result.current.selectedVerses).toEqual(new Set([2]));
+    expect(result.current.openVerseKeys).toEqual(new Set([2]));
+    expect(result.current.openPassageKeys.size).toBe(0);
+  });
+
+  it("stops at the end of the chapter when saving the final verse", async () => {
+    const { result } = renderHook(() =>
+      usePassageNotesUiState({
+        ...defaultOptions(),
+        isFocusMode: true,
+      }),
+    );
+
+    act(() => {
+      result.current.handleAddNote(31);
+    });
+
+    await act(async () => {
+      await result.current.handleSaveNew(
+        {
+          book: "Genesis",
+          chapter: 1,
+          startVerse: 31,
+          endVerse: 31,
+        },
+        EMPTY_NOTE_BODY,
+        [],
+      );
+    });
+
+    expect(result.current.openEditors.size).toBe(0);
+    expect(result.current.openVerseKeys).toEqual(new Set([31]));
+    expect(result.current.openPassageKeys.size).toBe(0);
+  });
+
+  it("keeps passage-note saves unchanged in focus mode", async () => {
+    const { result } = renderHook(() =>
+      usePassageNotesUiState({
+        ...defaultOptions(),
+        isFocusMode: true,
+      }),
+    );
+
+    act(() => {
+      result.current.startCreatingPassageNote({
+        book: "Genesis",
+        chapter: 1,
+        startVerse: 3,
+        endVerse: 5,
+      });
+    });
+
+    await act(async () => {
+      await result.current.handleSaveNew(
+        {
+          book: "Genesis",
+          chapter: 1,
+          startVerse: 3,
+          endVerse: 5,
+        },
+        EMPTY_NOTE_BODY,
+        [],
+      );
+    });
+
+    expect(result.current.openEditors.size).toBe(0);
+    expect(result.current.openPassageKeys).toEqual(new Set([3]));
+    expect(result.current.openVerseKeys.size).toBe(0);
+  });
+
+  it("keeps non-focus single-verse saves unchanged", async () => {
+    const { result } = renderHook(() =>
+      usePassageNotesUiState(defaultOptions()),
+    );
+
+    act(() => {
+      result.current.handleAddNote(1);
+    });
+
+    await act(async () => {
+      await result.current.handleSaveNew(
+        {
+          book: "Genesis",
+          chapter: 1,
+          startVerse: 1,
+          endVerse: 1,
+        },
+        EMPTY_NOTE_BODY,
+        [],
+      );
+    });
+
+    expect(result.current.openEditors.size).toBe(0);
+    expect(result.current.openEditors.has("new:2:2")).toBe(false);
+    expect(result.current.openVerseKeys).toEqual(new Set([1]));
   });
 });
