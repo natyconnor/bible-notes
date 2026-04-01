@@ -459,51 +459,50 @@ export function usePassageNotesUiState({
   // --- Reset on chapter change ---
 
   useEffect(() => {
-    queueMicrotask(() => {
-      readPassageAutoOpenSuppressedRef.current.clear();
-      activeEditorKeyRef.current = null;
-      lastActiveTargetRef.current = null;
-      setCurrentFocusTarget(null);
-      setViewSelectedVerses(new Set());
-      setHoveredVerse(null);
-      setHoveredSingleBubble(null);
-      setHoveredPassageBubble(null);
-      setOpenVerseKeys(new Set());
-      setOpenPassageKeys(new Set());
-      setOpenEditors(new Map());
-      setEditorHasChanges(new Set());
-      setIsPassageSelection(false);
-    });
+    readPassageAutoOpenSuppressedRef.current.clear();
+    activeEditorKeyRef.current = null;
+    lastActiveTargetRef.current = null;
+    setCurrentFocusTarget(null);
+    setViewSelectedVerses(new Set());
+    setHoveredVerse(null);
+    setHoveredSingleBubble(null);
+    setHoveredPassageBubble(null);
+    setOpenVerseKeys(new Set());
+    setOpenPassageKeys(new Set());
+    setOpenEditors(new Map());
+    setEditorHasChanges(new Set());
+    setIsPassageSelection(false);
   }, [book, chapter]);
 
-  // After chapter reset (microtask above), open passage groups in read mode when
-  // the passage span has no per-verse notes. Re-run when note data loads.
+  // After chapter reset, open passage groups in read mode when the passage span
+  // has no per-verse notes. Re-run when note data loads.
   useEffect(() => {
     if (viewMode !== "read") return;
-    queueMicrotask(() => {
-      setOpenPassageKeys((prev) => {
-        const next = new Set(prev);
-        const suppressed = readPassageAutoOpenSuppressedRef.current;
-        for (const [anchor, notes] of passageNotesByAnchor) {
-          if (notes.length === 0) continue;
-          if (suppressed.has(anchor)) continue;
-          let minVerse = Infinity;
-          let maxVerse = -Infinity;
-          for (const note of notes) {
-            minVerse = Math.min(minVerse, note.verseRef.startVerse);
-            maxVerse = Math.max(maxVerse, note.verseRef.endVerse);
-          }
-          let hasVerseNoteInRange = false;
-          for (let v = minVerse; v <= maxVerse; v++) {
-            if ((singleVerseNotes.get(v)?.length ?? 0) > 0) {
-              hasVerseNoteInRange = true;
-              break;
-            }
-          }
-          if (!hasVerseNoteInRange) next.add(anchor);
+    setOpenPassageKeys((prev) => {
+      let next: Set<number> | null = null;
+      const suppressed = readPassageAutoOpenSuppressedRef.current;
+      for (const [anchor, notes] of passageNotesByAnchor) {
+        if (notes.length === 0) continue;
+        if (suppressed.has(anchor)) continue;
+        let minVerse = Infinity;
+        let maxVerse = -Infinity;
+        for (const note of notes) {
+          minVerse = Math.min(minVerse, note.verseRef.startVerse);
+          maxVerse = Math.max(maxVerse, note.verseRef.endVerse);
         }
-        return next;
-      });
+        let hasVerseNoteInRange = false;
+        for (let v = minVerse; v <= maxVerse; v++) {
+          if ((singleVerseNotes.get(v)?.length ?? 0) > 0) {
+            hasVerseNoteInRange = true;
+            break;
+          }
+        }
+        if (!hasVerseNoteInRange && !prev.has(anchor)) {
+          next ??= new Set(prev);
+          next.add(anchor);
+        }
+      }
+      return next ?? prev;
     });
   }, [viewMode, passageNotesByAnchor, singleVerseNotes]);
 

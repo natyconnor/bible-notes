@@ -1,5 +1,5 @@
 import { act, renderHook } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { Id } from "../../../../convex/_generated/dataModel";
 import type { NoteWithRef } from "@/components/notes/model/note-model";
 import { EMPTY_NOTE_BODY } from "@/lib/note-inline-content";
@@ -87,15 +87,15 @@ describe("usePassageNotesUiState outside-click dismissal", () => {
     devLogPanel = document.createElement("div");
     devLogPanel.setAttribute("data-passage-dismiss-exempt", "");
     document.body.appendChild(devLogPanel);
+  });
 
-    return () => {
-      outsideDiv.remove();
-      noteSurface.remove();
-      exemptToolbar.remove();
-      exemptPortal.remove();
-      feedbackFabButton.remove();
-      devLogPanel.remove();
-    };
+  afterEach(() => {
+    outsideDiv.remove();
+    noteSurface.remove();
+    exemptToolbar.remove();
+    exemptPortal.remove();
+    feedbackFabButton.remove();
+    devLogPanel.remove();
   });
 
   function renderUiState() {
