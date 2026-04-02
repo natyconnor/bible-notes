@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.5.0](https://github.com/natyconnor/berean/compare/v1.4.1...v1.5.0) (2026-04-02)
+
+
+### Features
+
+* add a build id from vercel deploy or git sha and use to compare to see if client is out of date. Show refresh message if so ([#46](https://github.com/natyconnor/berean/issues/46)) ([5b4df2f](https://github.com/natyconnor/berean/commit/5b4df2f2a60e72ddfe8f13fff86e11000c295056))
+
 ## [1.4.1](https://github.com/natyconnor/berean/compare/v1.4.0...v1.4.1) (2026-03-30)
 
 
