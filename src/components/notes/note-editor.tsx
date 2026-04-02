@@ -156,13 +156,9 @@ export function NoteEditor({
       onKeyDown={handleKeyDown}
       onFocusCapture={onFocusWithin}
     >
-      <div
-        className="flex items-center justify-between"
-      >
+      <div className="flex items-center justify-between">
         <Badge variant="secondary" className="text-xs">
-        {isPassage ? (
-          <BookOpen className="h-3 w-3 shrink-0" />
-        ) : null}
+          {isPassage ? <BookOpen className="h-3 w-3 shrink-0" /> : null}
           {formatVerseRef(verseRef)}
         </Badge>
         <TooltipButton
