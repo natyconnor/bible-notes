@@ -36,7 +36,6 @@ interface NoteEditorProps {
   initialBody?: NoteBody;
   initialTags?: string[];
   variant?: "default" | "passage";
-  presentation?: "card" | "dialog";
   currentChapter?: CurrentChapter;
   onSave: (body: NoteBody, tags: string[]) => void | Promise<void>;
   onCancel: () => void;
@@ -50,7 +49,6 @@ export function NoteEditor({
   initialBody,
   initialTags = [],
   variant = "default",
-  presentation = "card",
   currentChapter,
   onSave,
   onCancel,
@@ -144,52 +142,41 @@ export function NoteEditor({
   );
 
   const isPassage = variant === "passage";
-  const isDialogPresentation = presentation === "dialog";
   const plainText = noteBodyToPlainText(body).trim();
-  const showEditorHeaderRow = !isPassage || !isDialogPresentation;
-  const isCandlelightCard = !isDialogPresentation && presentation === "card";
 
   return (
     <div
       className={cn(
         "space-y-3",
-        isDialogPresentation
-          ? "px-1 pb-1"
-          : cn(
-              "rounded-lg p-2.5 shadow-none",
-              isPassage
-                ? "bg-amber-50/90 dark:bg-amber-900/22 cl-depth-3-amber cl-transition cl-editor-lift-amber cl-focus-bloom"
-                : "bg-card cl-depth-3 cl-transition cl-editor-lift cl-focus-bloom",
-            ),
+        "rounded-lg p-2.5 shadow-none",
+        isPassage
+          ? "bg-amber-50/90 dark:bg-amber-900/22 cl-depth-3-amber cl-transition cl-editor-lift-amber cl-focus-bloom"
+          : "bg-card cl-depth-3 cl-transition cl-editor-lift cl-focus-bloom",
       )}
       onKeyDown={handleKeyDown}
       onFocusCapture={onFocusWithin}
     >
-      {showEditorHeaderRow ? (
-        <div
-          className={cn(
-            "flex items-center",
-            isPassage ? "justify-end" : "justify-between",
-          )}
+      <div
+        className={cn(
+          "flex items-center",
+          isPassage ? "justify-end" : "justify-between",
+        )}
+      >
+        {!isPassage ? (
+          <Badge variant="secondary" className="text-xs">
+            {formatVerseRef(verseRef)}
+          </Badge>
+        ) : null}
+        <TooltipButton
+          variant="ghost"
+          size="icon"
+          className="h-6 w-6"
+          onClick={onCancel}
+          tooltip="Cancel"
         >
-          {!isPassage ? (
-            <Badge variant="secondary" className="text-xs">
-              {formatVerseRef(verseRef)}
-            </Badge>
-          ) : null}
-          {!isDialogPresentation ? (
-            <TooltipButton
-              variant="ghost"
-              size="icon"
-              className="h-6 w-6"
-              onClick={onCancel}
-              tooltip="Cancel"
-            >
-              <X className="h-3.5 w-3.5" />
-            </TooltipButton>
-          ) : null}
-        </div>
-      ) : null}
+          <X className="h-3.5 w-3.5" />
+        </TooltipButton>
+      </div>
 
       <InlineVerseEditor
         initialBody={initialEditorBody}
@@ -198,8 +185,8 @@ export function NoteEditor({
           currentChapter ?? { book: verseRef.book, chapter: verseRef.chapter }
         }
         onChange={handleEditorChange}
-        className={cn(isDialogPresentation ? "min-h-[180px]" : "min-h-[96px]")}
-        editorChrome={isDialogPresentation ? "dialog" : "candlelight"}
+        className="min-h-[96px]"
+        editorChrome="candlelight"
         tourId={tour.bodyTourId}
         tutorialPreviewText={tour.tutorialPreviewText}
         tutorialAnimateText={tour.tutorialAnimateText}
@@ -225,30 +212,25 @@ export function NoteEditor({
             isPassage && "border-amber-300 dark:border-amber-600/50",
           )}
           inputClassName={cn(
-            isCandlelightCard &&
-              cn(
-                "border-0 border-b rounded-none bg-transparent px-0 h-7",
-                "border-border/50 focus:border-border/80",
-                "focus-visible:ring-0 focus-visible:ring-offset-0",
-                "placeholder:text-muted-foreground/50",
-                isPassage && "border-amber-300/60 focus:border-amber-400/70",
-              ),
+            "border-0 border-b rounded-none bg-transparent px-0 h-7",
+            "border-border/50 focus:border-border/80",
+            "focus-visible:ring-0 focus-visible:ring-offset-0",
+            "placeholder:text-muted-foreground/50",
+            isPassage && "border-amber-300/60 focus:border-amber-400/70",
           )}
           tourId={tour.tagsTourId}
           tutorialPreviewTags={tour.tutorialPreviewTags}
           tutorialAnimatePreview={tour.tutorialAnimateTagPreview}
           trailingSlot={
             <>
-              {!isDialogPresentation && (
-                <TooltipButton
-                  variant="ghost"
-                  size="sm"
-                  onClick={onCancel}
-                  tooltip="Cancel (Esc)"
-                >
-                  Cancel
-                </TooltipButton>
-              )}
+              <TooltipButton
+                variant="ghost"
+                size="sm"
+                onClick={onCancel}
+                tooltip="Cancel (Esc)"
+              >
+                Cancel
+              </TooltipButton>
               <TooltipButton
                 variant="default"
                 size="sm"
