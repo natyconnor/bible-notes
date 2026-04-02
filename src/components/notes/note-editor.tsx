@@ -2,7 +2,7 @@ import { useState, useCallback, useEffect, useMemo } from "react";
 import { useQuery } from "convex-helpers/react/cache";
 import { TooltipButton } from "@/components/ui/tooltip-button";
 import { Badge } from "@/components/ui/badge";
-import { X } from "lucide-react";
+import { BookOpen, X } from "lucide-react";
 import { TagPicker } from "@/components/tags/tag-picker";
 import { cn } from "@/lib/utils";
 import { useStarterTagBadgeStyle } from "@/lib/tag-color-styles";
@@ -157,16 +157,14 @@ export function NoteEditor({
       onFocusCapture={onFocusWithin}
     >
       <div
-        className={cn(
-          "flex items-center",
-          isPassage ? "justify-end" : "justify-between",
-        )}
+        className="flex items-center justify-between"
       >
-        {!isPassage ? (
-          <Badge variant="secondary" className="text-xs">
-            {formatVerseRef(verseRef)}
-          </Badge>
+        <Badge variant="secondary" className="text-xs">
+        {isPassage ? (
+          <BookOpen className="h-3 w-3 shrink-0" />
         ) : null}
+          {formatVerseRef(verseRef)}
+        </Badge>
         <TooltipButton
           variant="ghost"
           size="icon"
