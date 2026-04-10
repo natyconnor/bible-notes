@@ -7,6 +7,7 @@ import {
   type VerseHoverState,
   type VerseFocusState,
   type VerseInteractionHandlers,
+  type PassageHeartControl,
 } from "../verse-row";
 import { HighlightToolbar } from "../highlight-toolbar";
 import { HighlightMarkPopover } from "../highlight-mark-popover";
@@ -38,6 +39,8 @@ export interface VerseTextPaneProps {
   forceAddButtonVisible?: boolean;
   addNoteTourId?: string;
   rowTourId?: string;
+  passageHeart?: PassageHeartControl | null;
+  isInHoveredSavedPassage?: boolean;
 }
 
 export const VerseTextPane = memo(function VerseTextPane({
@@ -60,6 +63,8 @@ export const VerseTextPane = memo(function VerseTextPane({
   forceAddButtonVisible = false,
   addNoteTourId,
   rowTourId,
+  passageHeart = null,
+  isInHoveredSavedPassage = false,
 }: VerseTextPaneProps) {
   const verseTextRef = useRef<HTMLSpanElement>(null);
 
@@ -101,6 +106,8 @@ export const VerseTextPane = memo(function VerseTextPane({
         forceAddButtonVisible={forceAddButtonVisible}
         addNoteTourId={addNoteTourId}
         rowTourId={rowTourId}
+        passageHeart={passageHeart}
+        isInHoveredSavedPassage={isInHoveredSavedPassage}
         handlers={handlers}
         variant={variant}
         density={density}

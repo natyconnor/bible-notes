@@ -64,6 +64,40 @@ export function PassageView({
     error,
     retry: retryPassage,
   } = useEsvPassage(book, chapter);
+  const savedVersesForChapter = useQuery(api.savedVerses.listForChapter, {
+    book,
+    chapter,
+  });
+  const toggleSavedMutation = useMutation(api.savedVerses.toggle);
+  const handleToggleSaved = useCallback(
+    (startVerse: number, endVerse: number) => {
+      void toggleSavedMutation({
+        book,
+        chapter,
+        startVerse,
+        endVerse,
+      })
+        .then((result) => {
+          logInteraction("savedVerses", "toggled", {
+            book,
+            chapter,
+            startVerse,
+            endVerse,
+            result,
+          });
+        })
+        .catch((err) => {
+          logInteraction("savedVerses", "toggle-failed", {
+            book,
+            chapter,
+            startVerse,
+            endVerse,
+            message: err instanceof Error ? err.message : "unknown-error",
+          });
+        });
+    },
+    [book, chapter, toggleSavedMutation],
+  );
   const [noteVisibility, setNoteVisibility] = useState<NoteVisibility>("all");
   const viewportRef = useRef<HTMLDivElement>(null);
   const { navigateActiveTab } = useTabs();
@@ -439,8 +473,8 @@ export function PassageView({
     : "grid-cols-[minmax(0,1.1fr)_minmax(360px,440px)] gap-5";
   const topGridClass = cn("grid", passageGridClass);
   const containerClass = isReadMode
-    ? "max-w-[1400px] mx-auto px-6 pb-16"
-    : "max-w-[1320px] mx-auto px-5 pb-16";
+    ? "max-w-[1400px] mx-auto pl-24 pr-6 pb-16"
+    : "max-w-[1320px] mx-auto pl-24 pr-5 pb-16";
   const focusStartVerse = focusRange?.startVerse;
   const focusEndVerse = focusRange?.endVerse;
   const focusRequestKey = hasFocusRange
@@ -597,6 +631,8 @@ export function PassageView({
         onCreateHighlight={handleCreateHighlight}
         onDeleteHighlight={handleDeleteHighlight}
         onRecolorHighlight={handleRecolorHighlight}
+        savedVersesForChapter={savedVersesForChapter}
+        onToggleSaved={handleToggleSaved}
       />
 
       <PassageViewDialogs

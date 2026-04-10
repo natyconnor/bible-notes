@@ -14,6 +14,94 @@ import {
   LAYOUT_CORRECTION_TRANSITION,
   NOTE_ENTER_TRANSITION,
 } from "../note-animation-config";
+import { Heart } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import type { PassageHeartControl } from "../verse-row";
+
+const SavedPassagePill = memo(function SavedPassagePill({
+  startVerse,
+  endVerse,
+  onHoverEnter,
+  onHoverLeave,
+  onToggleSavedPassage,
+}: {
+  startVerse: number;
+  endVerse: number;
+  onHoverEnter: (startVerse: number, endVerse: number) => void;
+  onHoverLeave: () => void;
+  onToggleSavedPassage: (startVerse: number, endVerse: number) => void;
+}) {
+  const [confirmOpen, setConfirmOpen] = useState(false);
+
+  return (
+    <>
+      <button
+        type="button"
+        className={cn(
+          "group relative inline-flex max-w-none shrink-0 flex-nowrap items-center gap-1 overflow-hidden whitespace-nowrap rounded-full border border-red-300/60 bg-white/90 px-1.5 py-0.5 shadow-sm backdrop-blur-sm transition-colors",
+          "hover:border-red-400/80",
+          "dark:border-red-500/40 dark:bg-neutral-900/80 dark:hover:border-red-400/60",
+        )}
+        onMouseEnter={() => onHoverEnter(startVerse, endVerse)}
+        onMouseLeave={onHoverLeave}
+        onClick={(e) => {
+          e.stopPropagation();
+          setConfirmOpen(true);
+        }}
+        aria-label={`Hearted passage: verses ${startVerse}–${endVerse}. Click to remove.`}
+      >
+        <span
+          aria-hidden
+          className="pointer-events-none absolute inset-0 rounded-full bg-gradient-to-br from-red-400/35 via-rose-200/45 to-amber-50/30 opacity-0 transition-opacity duration-300 ease-out group-hover:opacity-100 dark:from-red-600/45 dark:via-red-950/55 dark:to-neutral-950/40"
+        />
+        <span className="relative z-10 flex shrink-0 flex-nowrap items-center gap-1">
+          <Heart className="h-3 w-3 shrink-0 fill-red-500 text-red-500 dark:fill-red-400 dark:text-red-400" />
+          <span className="whitespace-nowrap text-[10px] font-medium leading-none tabular-nums text-muted-foreground">
+            {startVerse}–{endVerse}
+          </span>
+        </span>
+      </button>
+      <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+        <DialogContent showCloseButton>
+          <DialogHeader>
+            <DialogTitle>Remove this passage?</DialogTitle>
+            <DialogDescription>
+              This will remove verses {startVerse}–{endVerse} from your hearted
+              list. You can heart the passage again anytime from the reader.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setConfirmOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              onClick={() => {
+                onToggleSavedPassage(startVerse, endVerse);
+                setConfirmOpen(false);
+              }}
+            >
+              Unheart passage
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+});
 
 export interface CurrentChapter {
   book: string;
@@ -94,6 +182,15 @@ export interface VerseRowWithNotesProps {
   forceAddButtonVisible?: boolean;
   addNoteTourId?: string;
   rowTourId?: string;
+  passageHeart?: PassageHeartControl | null;
+  isInHoveredSavedPassage?: boolean;
+  savedPassagesAtAnchor?: Array<{
+    startVerse: number;
+    endVerse: number;
+  }>;
+  onSavedPassageHoverEnter?: (startVerse: number, endVerse: number) => void;
+  onSavedPassageHoverLeave?: () => void;
+  onToggleSavedPassage?: (startVerse: number, endVerse: number) => void;
 }
 
 export const VerseRowWithNotes = memo(function VerseRowWithNotes({
@@ -143,6 +240,12 @@ export const VerseRowWithNotes = memo(function VerseRowWithNotes({
   forceAddButtonVisible = false,
   addNoteTourId,
   rowTourId,
+  passageHeart = null,
+  isInHoveredSavedPassage = false,
+  savedPassagesAtAnchor,
+  onSavedPassageHoverEnter,
+  onSavedPassageHoverLeave,
+  onToggleSavedPassage,
 }: VerseRowWithNotesProps) {
   const [isExitingSingleNote, setIsExitingSingleNote] = useState(false);
   const [isExitingPassageNote, setIsExitingPassageNote] = useState(false);
@@ -288,6 +391,27 @@ export const VerseRowWithNotes = memo(function VerseRowWithNotes({
         )}
         style={focusDimStyle}
       >
+        {savedPassagesAtAnchor &&
+          savedPassagesAtAnchor.length > 0 &&
+          onSavedPassageHoverEnter &&
+          onSavedPassageHoverLeave &&
+          onToggleSavedPassage && (
+            <div
+              className="pointer-events-auto absolute top-1/2 right-full z-20 mr-2 flex -translate-y-1/2 flex-col items-end gap-1"
+              data-saved-passage-pill-slot
+            >
+              {savedPassagesAtAnchor.map((span) => (
+                <SavedPassagePill
+                  key={`${span.startVerse}-${span.endVerse}`}
+                  startVerse={span.startVerse}
+                  endVerse={span.endVerse}
+                  onHoverEnter={onSavedPassageHoverEnter}
+                  onHoverLeave={onSavedPassageHoverLeave}
+                  onToggleSavedPassage={onToggleSavedPassage}
+                />
+              ))}
+            </div>
+          )}
         <motion.div
           layout="position"
           transition={{ layout: LAYOUT_CORRECTION_TRANSITION }}
@@ -323,6 +447,8 @@ export const VerseRowWithNotes = memo(function VerseRowWithNotes({
             forceAddButtonVisible={forceAddButtonVisible}
             addNoteTourId={addNoteTourId}
             rowTourId={rowTourId}
+            passageHeart={passageHeart}
+            isInHoveredSavedPassage={isInHoveredSavedPassage}
             handlers={{
               onAddNote,
               onMouseDown,

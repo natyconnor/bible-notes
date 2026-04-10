@@ -11,7 +11,11 @@ import { VerseTextPane } from "./verse-text-pane";
 import { PassageNotesBubble } from "../passage-notes-bubble";
 import { VerseNotesPill } from "../verse-notes";
 import { NoteEditor } from "@/components/notes/note-editor";
-import type { VerseInteractionHandlers } from "../verse-row";
+import {
+  PassageHeartAnimatedButton,
+  type VerseInteractionHandlers,
+  type PassageHeartControl,
+} from "../verse-row";
 import {
   LAYOUT_CORRECTION_TRANSITION,
   CROSSFADE_TRANSITION,
@@ -75,6 +79,8 @@ interface PassageGroupWithNotesProps {
   onPassageBubbleMouseEnter: (verseNumber: number) => void;
   onPassageBubbleMouseLeave: () => void;
   onCollapse: () => void;
+  groupPassageHeart: PassageHeartControl | null;
+  hoveredSavedPassage?: { startVerse: number; endVerse: number } | null;
 }
 
 const NOOP_HANDLERS: VerseInteractionHandlers = {
@@ -130,6 +136,8 @@ export const PassageGroupWithNotes = memo(function PassageGroupWithNotes({
   onPassageBubbleMouseEnter,
   onPassageBubbleMouseLeave,
   onCollapse,
+  groupPassageHeart,
+  hoveredSavedPassage = null,
 }: PassageGroupWithNotesProps) {
   const [isExitingPassageNote, setIsExitingPassageNote] = useState(false);
   const anchorVerse = verses[0]?.verseNumber ?? 0;
@@ -192,26 +200,43 @@ export const PassageGroupWithNotes = memo(function PassageGroupWithNotes({
             transition={CROSSFADE_TRANSITION}
             className="flex h-full min-h-0 flex-col justify-center rounded-lg bg-amber-100/60 dark:bg-amber-900/20 cl-depth-2 cl-transition"
           >
-            <div className="flex flex-col">
-              {verses.map((verse, index) => (
-                <VerseTextPane
-                  key={verse.verseNumber}
-                  verseNumber={verse.verseNumber}
-                  text={verse.text}
-                  selection={EMPTY_SELECTION}
-                  noteIndicator={EMPTY_NOTE_INDICATOR}
-                  hover={EMPTY_HOVER}
-                  isExpanded={true}
-                  variant="groupedPassage"
-                  showCollapseControl={index === 0}
-                  onCollapseVerse={handleCollapseGroup}
-                  highlights={highlightsByVerse.get(verse.verseNumber)}
-                  onCreateHighlight={onCreateHighlight}
-                  onDeleteHighlight={onDeleteHighlight}
-                  onRecolorHighlight={onRecolorHighlight}
-                  handlers={NOOP_HANDLERS}
-                />
-              ))}
+            <div className="flex">
+              {groupPassageHeart && (
+                <div className="flex shrink-0 items-center pl-2">
+                  <PassageHeartAnimatedButton
+                    passageHeart={groupPassageHeart}
+                    shouldFlipTooltipBelow={false}
+                    alwaysVisible
+                    size="large"
+                  />
+                </div>
+              )}
+              <div className="flex flex-1 flex-col">
+                {verses.map((verse, index) => (
+                  <VerseTextPane
+                    key={verse.verseNumber}
+                    verseNumber={verse.verseNumber}
+                    text={verse.text}
+                    selection={EMPTY_SELECTION}
+                    noteIndicator={EMPTY_NOTE_INDICATOR}
+                    hover={EMPTY_HOVER}
+                    isExpanded={true}
+                    variant="groupedPassage"
+                    showCollapseControl={index === 0}
+                    onCollapseVerse={handleCollapseGroup}
+                    highlights={highlightsByVerse.get(verse.verseNumber)}
+                    onCreateHighlight={onCreateHighlight}
+                    onDeleteHighlight={onDeleteHighlight}
+                    onRecolorHighlight={onRecolorHighlight}
+                    isInHoveredSavedPassage={
+                      hoveredSavedPassage !== null &&
+                      verse.verseNumber >= hoveredSavedPassage.startVerse &&
+                      verse.verseNumber <= hoveredSavedPassage.endVerse
+                    }
+                    handlers={NOOP_HANDLERS}
+                  />
+                ))}
+              </div>
             </div>
           </motion.div>
         </motion.div>
