@@ -52,6 +52,7 @@ export interface VerseInteractionHandlers {
 export interface PassageHeartControl {
   filled: boolean;
   onToggle: () => void;
+  alwaysVisible?: boolean;
 }
 
 interface VerseRowLeftProps {
@@ -73,6 +74,8 @@ interface VerseRowLeftProps {
   rowTourId?: string;
   /** When set, shows a heart toggle (including when expanded, e.g. grouped passage). */
   passageHeart?: PassageHeartControl | null;
+  /** When true, shows a red gradient to indicate this verse is in a hovered saved-passage range. */
+  isInHoveredSavedPassage?: boolean;
   handlers: VerseInteractionHandlers;
   variant?: "default" | "groupedPassage";
   density?: "default" | "reading";
@@ -113,7 +116,7 @@ const EXPANDED = {
 const GROUPED_EXPANDED = {
   paddingTop: "0.625rem", // tighter vertical gap between grouped verses
   paddingBottom: "0.625rem",
-  paddingLeft: "1.25rem",
+  paddingLeft: "0.5rem",
   paddingRight: "1.25rem",
   verseNumberFontSize: "0.875rem", // text-sm
   textFontSize: "1.25rem", // text-xl — slightly smaller than solo expanded
@@ -123,156 +126,168 @@ const GROUPED_EXPANDED = {
 const HEART_BURST_SPARK_DEGREES = [0, 45, 90, 135, 180, 225, 270, 315] as const;
 const HEART_BURST_SPARK_DISTANCE_PX = 22;
 
-const PassageHeartAnimatedButton = memo(function PassageHeartAnimatedButton({
-  passageHeart,
-  shouldFlipTooltipBelow,
-}: {
-  passageHeart: PassageHeartControl;
-  shouldFlipTooltipBelow: boolean;
-}) {
-  const reduceMotion = useReducedMotion();
-  const [fxKey, setFxKey] = useState(0);
-  const [playHeartAnim, setPlayHeartAnim] = useState(false);
-  const [optimisticFilled, setOptimisticFilled] = useState(passageHeart.filled);
-  // Track server value so we can reset optimistic state when it changes.
-  // https://react.dev/learn/you-might-not-need-an-effect#adjusting-some-state-when-a-prop-changes
-  const [prevServerFilled, setPrevServerFilled] = useState(passageHeart.filled);
-  if (passageHeart.filled !== prevServerFilled) {
-    setPrevServerFilled(passageHeart.filled);
-    setOptimisticFilled(passageHeart.filled);
-  }
+export const PassageHeartAnimatedButton = memo(
+  function PassageHeartAnimatedButton({
+    passageHeart,
+    shouldFlipTooltipBelow,
+    alwaysVisible = false,
+    size = "default",
+  }: {
+    passageHeart: PassageHeartControl;
+    shouldFlipTooltipBelow: boolean;
+    alwaysVisible?: boolean;
+    size?: "default" | "large";
+  }) {
+    const reduceMotion = useReducedMotion();
+    const [fxKey, setFxKey] = useState(0);
+    const [playHeartAnim, setPlayHeartAnim] = useState(false);
+    const [optimisticFilled, setOptimisticFilled] = useState(
+      passageHeart.filled,
+    );
+    // Track server value so we can reset optimistic state when it changes.
+    // https://react.dev/learn/you-might-not-need-an-effect#adjusting-some-state-when-a-prop-changes
+    const [prevServerFilled, setPrevServerFilled] = useState(
+      passageHeart.filled,
+    );
+    if (passageHeart.filled !== prevServerFilled) {
+      setPrevServerFilled(passageHeart.filled);
+      setOptimisticFilled(passageHeart.filled);
+    }
 
-  return (
-    <div
-      className={cn(
-        "group/heart relative flex w-full min-h-8 items-center justify-center overflow-visible transition-opacity",
-        optimisticFilled ? "opacity-100" : "opacity-0 group-hover:opacity-100",
-      )}
-    >
-      {fxKey > 0 && !reduceMotion ? (
-        <span
-          key={fxKey}
-          className="pointer-events-none absolute inset-0 overflow-visible"
-          aria-hidden
-        >
+    return (
+      <div
+        className={cn(
+          "group/heart relative flex w-full min-h-8 items-center justify-center overflow-visible transition-opacity",
+          alwaysVisible || passageHeart.alwaysVisible || optimisticFilled
+            ? "opacity-100"
+            : "opacity-0 group-hover:opacity-100",
+        )}
+      >
+        {fxKey > 0 && !reduceMotion ? (
           <span
-            className="absolute rounded-full bg-red-500/65 dark:bg-red-400/60"
-            style={{
-              width: 40,
-              height: 40,
-              top: "50%",
-              left: "50%",
-              marginLeft: -20,
-              marginTop: -20,
-              animation:
-                "heart-burst-puff 0.55s cubic-bezier(0.22, 1, 0.36, 1) forwards",
-            }}
-          />
-          {HEART_BURST_SPARK_DEGREES.map((deg, i) => {
-            const r = (deg * Math.PI) / 180;
-            const tx = Math.cos(r) * HEART_BURST_SPARK_DISTANCE_PX;
-            const ty = Math.sin(r) * HEART_BURST_SPARK_DISTANCE_PX;
-            return (
-              <span
-                key={deg}
-                className="absolute rounded-full bg-red-500 dark:bg-red-400"
-                style={
-                  {
-                    width: 6,
-                    height: 6,
-                    top: "50%",
-                    left: "50%",
-                    marginLeft: -3,
-                    marginTop: -3,
-                    "--spark-tx": `${tx}px`,
-                    "--spark-ty": `${ty}px`,
-                    animation: `heart-burst-spark 0.45s cubic-bezier(0.22, 1, 0.36, 1) ${i * 0.025}s forwards`,
-                  } as React.CSSProperties
-                }
-              />
-            );
-          })}
-        </span>
-      ) : null}
-      <motion.button
-        type="button"
-        aria-label={
-          optimisticFilled ? "Remove from hearted verses" : "Heart this verse"
-        }
-        aria-pressed={optimisticFilled}
-        className={cn(
-          "relative z-10 flex h-full min-h-9 min-w-9 items-center justify-center rounded px-2 hover:bg-primary/10",
-          optimisticFilled &&
-            "text-red-500 dark:text-red-400 hover:text-red-600 dark:hover:text-red-300",
-        )}
-        onMouseDown={(e) => {
-          e.preventDefault();
-          e.stopPropagation();
-        }}
-        disabled={playHeartAnim}
-        aria-busy={playHeartAnim}
-        onClick={(e) => {
-          e.stopPropagation();
-          const nextFilled = !optimisticFilled;
-          setOptimisticFilled(nextFilled);
-          if (nextFilled && !reduceMotion) {
-            setFxKey((k) => k + 1);
-            setPlayHeartAnim(true);
+            key={fxKey}
+            className="pointer-events-none absolute inset-0 overflow-visible"
+            aria-hidden
+          >
+            <span
+              className="absolute rounded-full bg-red-500/65 dark:bg-red-400/60"
+              style={{
+                width: 40,
+                height: 40,
+                top: "50%",
+                left: "50%",
+                marginLeft: -20,
+                marginTop: -20,
+                animation:
+                  "heart-burst-puff 0.55s cubic-bezier(0.22, 1, 0.36, 1) forwards",
+              }}
+            />
+            {HEART_BURST_SPARK_DEGREES.map((deg, i) => {
+              const r = (deg * Math.PI) / 180;
+              const tx = Math.cos(r) * HEART_BURST_SPARK_DISTANCE_PX;
+              const ty = Math.sin(r) * HEART_BURST_SPARK_DISTANCE_PX;
+              return (
+                <span
+                  key={deg}
+                  className="absolute rounded-full bg-red-500 dark:bg-red-400"
+                  style={
+                    {
+                      width: 6,
+                      height: 6,
+                      top: "50%",
+                      left: "50%",
+                      marginLeft: -3,
+                      marginTop: -3,
+                      "--spark-tx": `${tx}px`,
+                      "--spark-ty": `${ty}px`,
+                      animation: `heart-burst-spark 0.45s cubic-bezier(0.22, 1, 0.36, 1) ${i * 0.025}s forwards`,
+                    } as React.CSSProperties
+                  }
+                />
+              );
+            })}
+          </span>
+        ) : null}
+        <motion.button
+          type="button"
+          aria-label={
+            optimisticFilled ? "Remove from hearted verses" : "Heart this verse"
           }
-          passageHeart.onToggle();
-        }}
-        whileTap={
-          reduceMotion
-            ? undefined
-            : {
-                scale: 0.92,
-                transition: { duration: 0.08, ease: [0.22, 1, 0.36, 1] },
-              }
-        }
-      >
-        <motion.span
-          className="inline-flex"
-          initial={false}
-          animate={
-            playHeartAnim
-              ? {
-                  y: [0, -6, -1.5, 0],
-                  scale: [1, 1.12, 1.04, 1],
-                }
-              : { y: 0, scale: 1 }
-          }
-          transition={
-            playHeartAnim
-              ? {
-                  duration: 0.45,
-                  times: [0, 0.32, 0.62, 1],
-                  ease: [0.22, 1, 0.36, 1],
-                }
-              : { duration: 0.15 }
-          }
-          onAnimationComplete={() => {
-            setPlayHeartAnim((p) => (p ? false : p));
+          aria-pressed={optimisticFilled}
+          className={cn(
+            "relative z-10 flex h-full min-h-9 min-w-9 items-center justify-center rounded px-2 hover:bg-primary/10",
+            optimisticFilled &&
+              "text-red-500 dark:text-red-400 hover:text-red-600 dark:hover:text-red-300",
+          )}
+          onMouseDown={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
           }}
+          disabled={playHeartAnim}
+          aria-busy={playHeartAnim}
+          onClick={(e) => {
+            e.stopPropagation();
+            const nextFilled = !optimisticFilled;
+            setOptimisticFilled(nextFilled);
+            if (nextFilled && !reduceMotion) {
+              setFxKey((k) => k + 1);
+              setPlayHeartAnim(true);
+            }
+            passageHeart.onToggle();
+          }}
+          whileTap={
+            reduceMotion
+              ? undefined
+              : {
+                  scale: 0.92,
+                  transition: { duration: 0.08, ease: [0.22, 1, 0.36, 1] },
+                }
+          }
         >
-          <Heart
-            className={cn(
-              "h-[18px] w-[18px]",
-              optimisticFilled ? "fill-current" : "text-primary",
-            )}
-          />
-        </motion.span>
-      </motion.button>
-      <span
-        className={cn(
-          "pointer-events-none absolute left-1/2 z-50 -translate-x-1/2 whitespace-nowrap rounded-md bg-foreground px-3 py-1.5 text-xs text-background opacity-0 transition-opacity group-hover/heart:opacity-100",
-          shouldFlipTooltipBelow ? "top-full mt-1.5" : "bottom-full mb-1.5",
-        )}
-      >
-        {optimisticFilled ? "Unheart" : "Heart"}
-      </span>
-    </div>
-  );
-});
+          <motion.span
+            className="inline-flex"
+            initial={false}
+            animate={
+              playHeartAnim
+                ? {
+                    y: [0, -6, -1.5, 0],
+                    scale: [1, 1.12, 1.04, 1],
+                  }
+                : { y: 0, scale: 1 }
+            }
+            transition={
+              playHeartAnim
+                ? {
+                    duration: 0.45,
+                    times: [0, 0.32, 0.62, 1],
+                    ease: [0.22, 1, 0.36, 1],
+                  }
+                : { duration: 0.15 }
+            }
+            onAnimationComplete={() => {
+              setPlayHeartAnim((p) => (p ? false : p));
+            }}
+          >
+            <Heart
+              className={cn(
+                size === "large" ? "h-[22px] w-[22px]" : "h-[18px] w-[18px]",
+                optimisticFilled ? "fill-current" : "text-primary",
+              )}
+            />
+          </motion.span>
+        </motion.button>
+        <span
+          className={cn(
+            "pointer-events-none absolute left-1/2 z-50 -translate-x-1/2 whitespace-nowrap rounded-md bg-foreground px-3 py-1.5 text-xs text-background opacity-0 transition-opacity group-hover/heart:opacity-100",
+            shouldFlipTooltipBelow ? "top-full mt-1.5" : "bottom-full mb-1.5",
+          )}
+        >
+          {optimisticFilled ? "Unheart" : "Heart"}
+        </span>
+      </div>
+    );
+  },
+);
 
 export const VerseRowLeft = memo(function VerseRowLeft({
   verseNumber,
@@ -292,6 +307,7 @@ export const VerseRowLeft = memo(function VerseRowLeft({
   addNoteTourId,
   rowTourId,
   passageHeart = null,
+  isInHoveredSavedPassage = false,
   handlers,
   variant = "default",
   density = "default",
@@ -544,6 +560,13 @@ export const VerseRowLeft = memo(function VerseRowLeft({
           aria-hidden
         />
       )}
+      <div
+        className={cn(
+          "absolute left-0 top-0 bottom-0 w-28 pointer-events-none rounded-l-sm bg-gradient-to-r from-red-500/[0.12] to-transparent dark:from-red-400/10 transition-opacity duration-300 ease-out",
+          isInHoveredSavedPassage ? "opacity-100" : "opacity-0",
+        )}
+        aria-hidden
+      />
       <div className="relative flex h-full items-center">
         <div className="flex w-full gap-2">
           <motion.span

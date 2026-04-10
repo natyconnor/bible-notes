@@ -473,8 +473,8 @@ export function PassageView({
     : "grid-cols-[minmax(0,1.1fr)_minmax(360px,440px)] gap-5";
   const topGridClass = cn("grid", passageGridClass);
   const containerClass = isReadMode
-    ? "max-w-[1400px] mx-auto px-6 pb-16"
-    : "max-w-[1320px] mx-auto px-5 pb-16";
+    ? "max-w-[1400px] mx-auto pl-24 pr-6 pb-16"
+    : "max-w-[1320px] mx-auto pl-24 pr-5 pb-16";
   const focusStartVerse = focusRange?.startVerse;
   const focusEndVerse = focusRange?.endVerse;
   const focusRequestKey = hasFocusRange

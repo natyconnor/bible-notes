@@ -40,6 +40,7 @@ export interface VerseTextPaneProps {
   addNoteTourId?: string;
   rowTourId?: string;
   passageHeart?: PassageHeartControl | null;
+  isInHoveredSavedPassage?: boolean;
 }
 
 export const VerseTextPane = memo(function VerseTextPane({
@@ -63,6 +64,7 @@ export const VerseTextPane = memo(function VerseTextPane({
   addNoteTourId,
   rowTourId,
   passageHeart = null,
+  isInHoveredSavedPassage = false,
 }: VerseTextPaneProps) {
   const verseTextRef = useRef<HTMLSpanElement>(null);
 
@@ -105,6 +107,7 @@ export const VerseTextPane = memo(function VerseTextPane({
         addNoteTourId={addNoteTourId}
         rowTourId={rowTourId}
         passageHeart={passageHeart}
+        isInHoveredSavedPassage={isInHoveredSavedPassage}
         handlers={handlers}
         variant={variant}
         density={density}

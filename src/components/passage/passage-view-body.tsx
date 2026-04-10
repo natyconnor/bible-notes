@@ -1,4 +1,4 @@
-import { useMemo, type RefObject } from "react";
+import { useCallback, useMemo, useState, type RefObject } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import type { NoteWithRef } from "@/components/notes/model/note-model";
 import type { HighlightRange } from "@/lib/highlight-utils";
@@ -134,7 +134,48 @@ export function PassageViewBody({
     startCreatingPassageNote,
   } = passageNotesInteraction;
 
-  const savedSpans = savedVersesForChapter ?? [];
+  const savedSpans = useMemo(
+    () => savedVersesForChapter ?? [],
+    [savedVersesForChapter],
+  );
+
+  const savedPassagesByAnchor = useMemo(() => {
+    const map = new Map<
+      number,
+      Array<{ startVerse: number; endVerse: number }>
+    >();
+    for (const span of savedSpans) {
+      if (span.startVerse === span.endVerse) continue;
+      const arr = map.get(span.startVerse) ?? [];
+      arr.push(span);
+      map.set(span.startVerse, arr);
+    }
+    return map;
+  }, [savedSpans]);
+
+  const [hoveredSavedPassage, setHoveredSavedPassage] = useState<{
+    startVerse: number;
+    endVerse: number;
+  } | null>(null);
+
+  const handleSavedPassageHoverEnter = useCallback(
+    (startVerse: number, endVerse: number) => {
+      setHoveredSavedPassage({ startVerse, endVerse });
+    },
+    [],
+  );
+
+  const handleSavedPassageHoverLeave = useCallback(() => {
+    setHoveredSavedPassage(null);
+  }, []);
+
+  const isInHoveredSavedPassage = useCallback(
+    (verseNumber: number) =>
+      hoveredSavedPassage !== null &&
+      verseNumber >= hoveredSavedPassage.startVerse &&
+      verseNumber <= hoveredSavedPassage.endVerse,
+    [hoveredSavedPassage],
+  );
 
   const multiVersePassageSelection =
     isPassageSelection && selectedVerses.size > 1;
@@ -159,6 +200,7 @@ export function PassageViewBody({
       return {
         filled: hasExactSavedSpan(savedSpans, passageSelectLo, passageSelectHi),
         onToggle: () => onToggleSaved(passageSelectLo, passageSelectHi),
+        alwaysVisible: true,
       };
     }
     return {
@@ -274,6 +316,7 @@ export function PassageViewBody({
                         viewMode={effectiveViewMode}
                         currentChapter={{ book, chapter }}
                         groupPassageHeart={groupPassageHeart}
+                        hoveredSavedPassage={hoveredSavedPassage}
                         highlightsByVerse={highlightsByVerse}
                         onCreateHighlight={onCreateHighlight}
                         onDeleteHighlight={onDeleteHighlight}
@@ -417,6 +460,15 @@ export function PassageViewBody({
                       passageHeart={passageHeartForSingleVerse(
                         item.verseNumber,
                       )}
+                      isInHoveredSavedPassage={isInHoveredSavedPassage(
+                        item.verseNumber,
+                      )}
+                      savedPassagesAtAnchor={savedPassagesByAnchor.get(
+                        item.verseNumber,
+                      )}
+                      onSavedPassageHoverEnter={handleSavedPassageHoverEnter}
+                      onSavedPassageHoverLeave={handleSavedPassageHoverLeave}
+                      onToggleSavedPassage={onToggleSaved}
                     />
                   </motion.div>
                 );
