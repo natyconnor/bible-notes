@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.7.4](https://github.com/natyconnor/berean/compare/v1.7.3...v1.7.4) (2026-05-05)
+
+
+### Bug Fixes
+
+* remove the chapter navigator in the toolbar since the plus button does the same thing. Also remove right border on plus button ([#77](https://github.com/natyconnor/berean/issues/77)) ([abb7ff0](https://github.com/natyconnor/berean/commit/abb7ff0221d22ffd9ccaa46ce2e28a00ccf70089))
+
 ## [1.7.3](https://github.com/natyconnor/berean/compare/v1.7.2...v1.7.3) (2026-05-02)
 
 
