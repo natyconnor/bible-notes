@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.7.7](https://github.com/natyconnor/berean/compare/v1.7.6...v1.7.7) (2026-05-11)
+
+
+### Bug Fixes
+
+* normalize for all kinds of quotes so that they don't appear as difference when grading verse memory ([#84](https://github.com/natyconnor/berean/issues/84)) ([734a7ed](https://github.com/natyconnor/berean/commit/734a7ed720024df271305fa9f465dd06b0462ada))
+
 ## [1.7.6](https://github.com/natyconnor/berean/compare/v1.7.5...v1.7.6) (2026-05-07)
 
 
