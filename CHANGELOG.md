@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.7.7](https://github.com/natyconnor/berean/compare/v1.7.6...v1.7.7) (2026-05-11)
+
+
+### Bug Fixes
+
+* normalize for all kinds of quotes so that they don't appear as difference when grading verse memory ([#84](https://github.com/natyconnor/berean/issues/84)) ([734a7ed](https://github.com/natyconnor/berean/commit/734a7ed720024df271305fa9f465dd06b0462ada))
+
+## [1.7.6](https://github.com/natyconnor/berean/compare/v1.7.5...v1.7.6) (2026-05-07)
+
+
+### Bug Fixes
+
+* **ui:** chapter header gap and passage notes bubble layout animation ([#81](https://github.com/natyconnor/berean/issues/81)) ([99ec732](https://github.com/natyconnor/berean/commit/99ec73254fb37532d1d783888b867793d85dd578))
+
 ## [1.7.5](https://github.com/natyconnor/berean/compare/v1.7.4...v1.7.5) (2026-05-05)
 
 
