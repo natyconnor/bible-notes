@@ -383,6 +383,9 @@ function parseSegmentsFromNodeList(
     }
 
     if (node.tagName === "BR") {
+      if (node.dataset.noteBreakSentinel === "true") {
+        continue;
+      }
       pushLineBreak();
       continue;
     }
@@ -550,6 +553,67 @@ function replaceQueryWithPill(match: ActiveQueryMatch, refValue: VerseRef) {
   match.node.parentNode?.insertBefore(pill, match.node.nextSibling);
   match.node.parentNode?.insertBefore(afterNode, pill.nextSibling);
   placeCaretAfterNode(afterNode);
+}
+
+/** Layout-only break so a trailing `<br>` shows a visible new line in contenteditable. */
+function createSentinelLineBreak(documentRef: Document): HTMLBRElement {
+  const br = documentRef.createElement("br");
+  br.dataset.noteBreakSentinel = "true";
+  return br;
+}
+
+function needsSentinelLineBreak(
+  root: HTMLElement,
+  lineBreak: HTMLBRElement,
+): boolean {
+  let sibling: ChildNode | null = lineBreak.nextSibling;
+  while (sibling) {
+    if (sibling.nodeType === Node.TEXT_NODE) {
+      if ((sibling.textContent ?? "").length > 0) {
+        return false;
+      }
+    } else if (sibling instanceof HTMLElement && sibling.tagName === "BR") {
+      if (sibling.dataset.noteBreakSentinel === "true") {
+        return false;
+      }
+      return false;
+    } else {
+      return false;
+    }
+    sibling = sibling.nextSibling;
+  }
+
+  return lineBreak.parentElement === root;
+}
+
+function insertLineBreakAtCursor(root: HTMLElement) {
+  const documentRef = root.ownerDocument;
+  const selection = window.getSelection();
+  if (!selection || selection.rangeCount === 0) {
+    const lineBreak = documentRef.createElement("br");
+    const caretAnchor = documentRef.createTextNode("");
+    root.append(lineBreak, createSentinelLineBreak(documentRef), caretAnchor);
+    placeCaretAfterNode(caretAnchor);
+    return;
+  }
+
+  const range = selection.getRangeAt(0);
+  range.deleteContents();
+
+  const lineBreak = documentRef.createElement("br");
+  range.insertNode(lineBreak);
+
+  const caretAnchor = documentRef.createTextNode("");
+  lineBreak.parentNode?.insertBefore(caretAnchor, lineBreak.nextSibling);
+
+  if (needsSentinelLineBreak(root, lineBreak)) {
+    lineBreak.parentNode?.insertBefore(
+      createSentinelLineBreak(documentRef),
+      caretAnchor.nextSibling,
+    );
+  }
+
+  placeCaretAfterNode(caretAnchor);
 }
 
 function insertPlainTextAtCursor(root: HTMLElement, text: string) {
@@ -1192,7 +1256,7 @@ export function InlineVerseEditor({
             event.preventDefault();
             const editor = editorRef.current;
             if (editor) {
-              insertPlainTextAtCursor(editor, "\n");
+              insertLineBreakAtCursor(editor);
               emitChange("enterKey");
             }
             return;

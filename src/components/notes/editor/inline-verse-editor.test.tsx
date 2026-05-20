@@ -137,6 +137,41 @@ describe("InlineVerseEditor", () => {
     expect(noteBodyToPlainText(latestBody)).toBe("This is line 1\n");
   });
 
+  it("adds a layout sentinel break at end without duplicating stored line breaks", () => {
+    let latestBody: NoteBody = EMPTY_NOTE_BODY;
+
+    render(
+      <InlineVerseEditor
+        initialBody={EMPTY_NOTE_BODY}
+        verseRef={{ book: "John", chapter: 3, startVerse: 16, endVerse: 16 }}
+        onChange={(body) => {
+          latestBody = body;
+        }}
+      />,
+    );
+
+    const editor = screen.getByRole("textbox");
+    editor.innerHTML = "This is line 1";
+    const textNode = editor.firstChild;
+    if (!(textNode instanceof Text)) {
+      throw new Error("Expected text node");
+    }
+    placeCaretAtEnd(textNode);
+    act(() => {
+      fireEvent.input(editor);
+    });
+
+    act(() => {
+      fireEvent.keyDown(editor, { key: "Enter" });
+    });
+
+    expect(noteBodyToPlainText(latestBody)).toBe("This is line 1\n");
+    const sentinelBreaks = editor.querySelectorAll(
+      "br[data-note-break-sentinel='true']",
+    );
+    expect(sentinelBreaks.length).toBe(1);
+  });
+
   it("still intercepts Enter for an active verse query", () => {
     const onChange = vi.fn();
 
