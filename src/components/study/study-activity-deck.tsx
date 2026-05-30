@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion, type Variants } from "framer-motion";
-import { Shuffle, SkipForward, Timer } from "lucide-react";
+import { ListOrdered, Shuffle, SkipForward, Timer } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { formatVerseRef } from "@/lib/verse-ref-utils";
@@ -258,6 +258,17 @@ export function StudyActivityDeck({
     setShuffleNonce((n) => n + 1);
   }
 
+  function handleRestoreOrder() {
+    if (totalCards < 2) return;
+    setQueue(initialQueue);
+    setPosition(0);
+    setFlipped(false);
+    setCompletedIds(new Set());
+    setTypedById({});
+    setExitDirection(null);
+    setSecondsRemaining(TEACH_TIMER_SECONDS);
+  }
+
   function handleTypedAnswerChange(value: string) {
     if (!currentCardId) return;
     setTypedById((prev) => ({ ...prev, [currentCardId]: value }));
@@ -284,11 +295,15 @@ export function StudyActivityDeck({
         scopeLabel={scopeLabel}
         onRestart={handleRestart}
         onShuffle={handleShuffle}
+        onRestoreOrder={
+          cards[0]?.type === "verse-memory" ? handleRestoreOrder : undefined
+        }
       />
     );
   }
 
   const currentCardActivity: ActivityType = currentCard.type;
+  const isVerseMemoryDeck = cards[0]?.type === "verse-memory";
 
   const isTeachRevealed = isTeachCard && flipped;
 
@@ -297,18 +312,34 @@ export function StudyActivityDeck({
       <div className="mx-auto w-full max-w-2xl space-y-2">
         <div className="relative flex min-h-7 items-center justify-center">
           {totalCards >= 2 && (
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              className="absolute left-0 h-7 gap-1.5 text-muted-foreground hover:text-foreground"
-              onClick={handleShuffle}
-              disabled={isInitialShuffle}
-              aria-label="Shuffle deck and start over"
-            >
-              <Shuffle className="h-3.5 w-3.5 shrink-0" />
-              <span className="text-xs">Shuffle</span>
-            </Button>
+            <div className="absolute left-0 flex items-center">
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="h-7 gap-1.5 text-muted-foreground hover:text-foreground"
+                onClick={handleShuffle}
+                disabled={isInitialShuffle}
+                aria-label="Shuffle deck and start over"
+              >
+                <Shuffle className="h-3.5 w-3.5 shrink-0" />
+                <span className="text-xs">Shuffle</span>
+              </Button>
+              {isVerseMemoryDeck && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 gap-1.5 text-muted-foreground hover:text-foreground"
+                  onClick={handleRestoreOrder}
+                  disabled={isInitialShuffle}
+                  aria-label="Restore original verse order and start over"
+                >
+                  <ListOrdered className="h-3.5 w-3.5 shrink-0" />
+                  <span className="text-xs">In order</span>
+                </Button>
+              )}
+            </div>
           )}
           <p className="text-xs uppercase tracking-wide text-muted-foreground">
             {activityLabel(currentCardActivity)}

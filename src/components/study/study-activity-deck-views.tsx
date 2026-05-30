@@ -1,4 +1,4 @@
-import { RotateCcw, Shuffle } from "lucide-react";
+import { ListOrdered, RotateCcw, Shuffle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { StudyCard } from "./study-card-model";
 
@@ -20,6 +20,7 @@ interface StudyDeckCompleteStateProps {
   scopeLabel: string;
   onRestart: () => void;
   onShuffle: () => void;
+  onRestoreOrder?: () => void;
 }
 
 export function StudyDeckCompleteState({
@@ -27,6 +28,7 @@ export function StudyDeckCompleteState({
   scopeLabel,
   onRestart,
   onShuffle,
+  onRestoreOrder,
 }: StudyDeckCompleteStateProps) {
   const totalCards = cards.length;
   return (
@@ -44,6 +46,12 @@ export function StudyDeckCompleteState({
           <Button onClick={onShuffle} variant="outline" className="gap-2">
             <Shuffle className="h-4 w-4" />
             Shuffle
+          </Button>
+        )}
+        {onRestoreOrder && totalCards >= 2 && (
+          <Button onClick={onRestoreOrder} variant="outline" className="gap-2">
+            <ListOrdered className="h-4 w-4" />
+            In order
           </Button>
         )}
       </div>
